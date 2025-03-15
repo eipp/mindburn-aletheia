@@ -1,0 +1,53 @@
+service: aletheia-worker-bot
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    BOT_TOKEN: ${ssm:/aletheia/${self:provider.stage}/bot-token}
+    ENVIRONMENT: ${self:provider.stage}
+    WEBHOOK_DOMAIN: ${ssm:/aletheia/${self:provider.stage}/webhook-domain}
+    TASK_QUEUE_URL: ${ssm:/aletheia/${self:provider.stage}/task-queue-url}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-user-data
+            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-tasks
+            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-bot-sessions
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource: ${ssm:/aletheia/${self:provider.stage}/task-queue-arn}
+
+plugins:
+  - serverless-plugin-typescript
+
+package:
+  patterns:
+    - '!node_modules/.pnpm/**'
+    - '!test/**'
+    - '!.git/**'
+    - '!README.md'
+
+functions:
+  webhook:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /webhook/{token}
+          method: post
+          request:
+            parameters:
+              paths:
+                token: true 
