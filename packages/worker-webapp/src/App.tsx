@@ -1,30 +1,63 @@
 import { useEffect } from 'react';
-import { MantineProvider } from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WebApp } from '@twa-dev/sdk';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import AppRouter from './routes';
-import { theme } from './styles/theme';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
 
-const manifestUrl = 'https://aletheia.mindburn.org/tonconnect-manifest.json';
+// Pages
+import Dashboard from './pages/Dashboard';
+import TaskFeed from './pages/TaskFeed';
+import TaskVerification from './pages/TaskVerification';
+import Profile from './pages/Profile';
+import Training from './pages/Training';
+import Wallet from './pages/Wallet';
+
+// Components
+import Layout from './components/Layout';
+
+// Utils & Hooks
+import { initTelegramApp } from './utils/telegram';
+import { useAppTheme } from './theme';
+import { useStore } from './store';
 
 function App() {
+  const { initializeWorker } = useStore();
+  const theme = useAppTheme();
+
   useEffect(() => {
-    WebApp.ready();
-    WebApp.expand();
-  }, []);
+    // Initialize Telegram Mini App
+    initTelegramApp();
+
+    // Initialize worker data
+    initializeWorker();
+  }, [initializeWorker]);
 
   return (
-    <Provider store={store}>
-      <TonConnectUIProvider manifestUrl={manifestUrl}>
-        <MantineProvider theme={theme} defaultColorScheme="dark">
-          <Notifications position="top-right" />
-          <AppRouter />
-        </MantineProvider>
-      </TonConnectUIProvider>
-    </Provider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          height: 'var(--tg-viewport-stable-height)',
+          overflow: 'hidden',
+          bgcolor: 'background.default',
+          color: 'text.primary'
+        }}
+      >
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/tasks" element={<TaskFeed />} />
+              <Route path="/verify/:taskId" element={<TaskVerification />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/training" element={<Training />} />
+              <Route path="/wallet" element={<Wallet />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </Box>
+    </ThemeProvider>
   );
 }
 

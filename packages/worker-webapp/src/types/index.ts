@@ -1,33 +1,144 @@
 export enum TaskType {
-  TEXT_VERIFICATION = 'TEXT_VERIFICATION',
-  IMAGE_VERIFICATION = 'IMAGE_VERIFICATION',
-  AUDIO_VERIFICATION = 'AUDIO_VERIFICATION',
-  VIDEO_VERIFICATION = 'VIDEO_VERIFICATION',
+  TEXT = 'text',
+  IMAGE = 'image',
+  CODE = 'code',
+  DATA = 'data',
+  AUDIO = 'audio'
 }
 
 export enum TaskStatus {
-  PENDING = 'PENDING',
-  ASSIGNED = 'ASSIGNED',
-  SUBMITTED = 'SUBMITTED',
-  VERIFIED = 'VERIFIED',
-  REJECTED = 'REJECTED',
+  AVAILABLE = 'available',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  URGENT = 'urgent'
+}
+
+export enum EvidenceType {
+  SCREENSHOT = 'screenshot',
+  TEXT = 'text',
+  LINK = 'link',
+  FILE = 'file'
+}
+
+export interface Evidence {
+  type: EvidenceType;
+  content: string;
+  timestamp: number;
+}
+
+export interface VerificationStep {
+  id: string;
+  title: string;
+  instruction: string;
+  requiredEvidence: EvidenceType[];
+  minConfidence: number;
 }
 
 export interface Task {
   id: string;
+  title: string;
+  description: string;
   type: TaskType;
   status: TaskStatus;
-  data: {
-    content: string;
-    instructions: string;
-    options?: string[];
-    metadata?: Record<string, unknown>;
-  };
   reward: number;
-  deadline: number;
-  assignedTo?: string;
+  timeLimit: number; // in minutes
+  estimatedDuration: number; // in minutes
+  content: string;
+  steps: VerificationStep[];
+  guidelines: string;
+  evidenceTypes: EvidenceType[];
+  requiredSkills: string[];
+  createdAt: number;
+  expiresAt: number;
+}
+
+export interface TaskFilters {
+  type?: TaskType;
+  duration?: 'short' | 'medium' | 'long';
+  reward?: 'low' | 'medium' | 'high';
+  skills?: string[];
+  status?: TaskStatus;
+}
+
+export interface Verification {
+  taskId: string;
+  responses: Record<string, any>;
+  confidence: Record<string, number>;
+  evidence: Record<string, Evidence[]>;
+  timeSpent: number;
   submittedAt?: number;
-  result?: TaskSubmission;
+  status?: 'pending' | 'approved' | 'rejected';
+  feedback?: string;
+  reward?: number;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  avatar?: string;
+  skills: string[];
+  rating: number;
+  completedTasks: number;
+  successRate: number;
+  balance: number;
+  level: number;
+  experience: number;
+  badges: Badge[];
+  joinedAt: number;
+  lastActive: number;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: number;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'reward' | 'withdrawal';
+  amount: number;
+  status: 'pending' | 'completed' | 'failed';
+  timestamp: number;
+  details: {
+    taskId?: string;
+    address?: string;
+    txHash?: string;
+  };
+}
+
+export interface TrainingModule {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  reward: number;
+  status: 'locked' | 'available' | 'completed';
+  prerequisites: string[];
+  skills: string[];
+  content: {
+    type: 'video' | 'text' | 'quiz';
+    data: any;
+  }[];
+}
+
+export interface TrainingProgress {
+  completedModules: string[];
+  currentModule?: string;
+  earnedRewards: number;
+  skillLevels: Record<string, number>;
+  nextAvailableModules: string[];
+}
+
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
+  is_premium?: boolean;
 }
 
 export interface TaskSubmission {
