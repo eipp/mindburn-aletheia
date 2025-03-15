@@ -1,0 +1,36 @@
+{
+  "name": "infrastructure",
+  "version": "1.0.0",
+  "description": "AWS CDK Infrastructure for Aletheia Mindburn",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy:dev": "cdk deploy --context env=dev",
+    "deploy:staging": "cdk deploy --context env=staging",
+    "deploy:prod": "cdk deploy --context env=prod",
+    "diff:dev": "cdk diff --context env=dev",
+    "diff:staging": "cdk diff --context env=staging",
+    "diff:prod": "cdk diff --context env=prod",
+    "synth:dev": "cdk synth --context env=dev",
+    "synth:staging": "cdk synth --context env=staging",
+    "synth:prod": "cdk synth --context env=prod",
+    "destroy:dev": "cdk destroy --context env=dev",
+    "destroy:staging": "cdk destroy --context env=staging",
+    "destroy:prod": "cdk destroy --context env=prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.114.1-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.114.1-alpha.0",
+    "@types/node": "22.13.10",
+    "aws-cdk": "2.1004.0",
+    "aws-cdk-lib": "2.184.1",
+    "constructs": "10.4.2",
+    "esbuild": "0.25.1",
+    "typescript": "5.8.2"
+  }
+}
