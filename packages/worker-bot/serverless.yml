@@ -1,0 +1,152 @@
+service: mindburn-worker-bot
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 1792
+  timeout: 30
+  logRetentionInDays: 14
+  
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    BOT_TOKEN: ${ssm:/mindburn/${self:provider.stage}/bot/worker/token}
+    WEBHOOK_DOMAIN: ${ssm:/mindburn/${self:provider.stage}/bot/worker/domain}
+    WEBHOOK_PATH: ${ssm:/mindburn/${self:provider.stage}/bot/worker/path}
+    AWS_REGION: ${self:provider.region}
+    DYNAMODB_TABLE_PREFIX: mindburn_worker_bot_${self:provider.stage}_
+    DYNAMODB_SESSIONS_TABLE: sessions
+    DYNAMODB_USERS_TABLE: users
+    DYNAMODB_TASKS_TABLE: tasks
+    TON_NETWORK: ${self:provider.stage, 'testnet'}
+    TON_ENDPOINT: ${ssm:/mindburn/${self:provider.stage}/ton/endpoint}
+    TON_API_KEY: ${ssm:/mindburn/${self:provider.stage}/ton/api_key}
+    API_URL: ${ssm:/mindburn/${self:provider.stage}/api/url}
+    API_KEY: ${ssm:/mindburn/${self:provider.stage}/api/key}
+    LOG_LEVEL: info
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:provider.environment.DYNAMODB_TABLE_PREFIX}*
+
+functions:
+  webhook:
+    handler: dist/index.handler
+    events:
+      - httpApi:
+          path: /webhook/telegram/worker-bot
+          method: post
+    vpc:
+      securityGroupIds:
+        - ${ssm:/mindburn/${self:provider.stage}/vpc/security_group_id}
+      subnetIds:
+        - ${ssm:/mindburn/${self:provider.stage}/vpc/subnet_id_1}
+        - ${ssm:/mindburn/${self:provider.stage}/vpc/subnet_id_2}
+
+resources:
+  Resources:
+    SessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_PREFIX}${self:provider.environment.DYNAMODB_SESSIONS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: expires
+          Enabled: true
+
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_PREFIX}${self:provider.environment.DYNAMODB_USERS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    TasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_PREFIX}${self:provider.environment.DYNAMODB_TASKS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: status
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: StatusIndex
+            KeySchema:
+              - AttributeName: status
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+
+    TransactionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_PREFIX}transactions
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserTransactionsIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+package:
+  patterns:
+    - '!node_modules/.prisma/**'
+    - '!node_modules/@prisma/client/libquery_engine-*'
+    - '!node_modules/prisma/libquery_engine-*'
+    - '!node_modules/@prisma/client/runtime/**'
+    - '!node_modules/prisma/runtime/**'
+    - '!tests/**'
+    - '!coverage/**'
+    - '!.env*'
+    - '!tsconfig.json'
+    - '!jest.config.js'
+    - '!.eslintrc.js'
+    - '!.prettierrc'
+    - '!README.md' 
