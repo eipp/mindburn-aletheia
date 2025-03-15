@@ -1,17 +1,6 @@
-import { TonClient, WalletContractV4, internal } from 'ton';
-import { mnemonicToPrivateKey } from 'ton-crypto';
-import { validateTonAddress, calculateFee } from '../utils/wallet';
-
-export interface Transaction {
-  id: string;
-  type: 'reward' | 'withdrawal' | 'deposit' | 'referral' | 'training';
-  amount: number;
-  timestamp: number;
-  status: 'pending' | 'completed' | 'failed';
-  address: string;
-  hash?: string;
-  message?: string;
-}
+import { TonClient } from '@ton/ton';
+import { validateTonAddress, validateTransactionData, getTransactionExplorerUrl } from '@mindburn/shared/utils/ton';
+import { Transaction, TransactionType, TransactionStatus } from '@mindburn/shared/types';
 
 export interface WalletBalance {
   available: number;
@@ -19,17 +8,13 @@ export interface WalletBalance {
   total: number;
 }
 
-class WalletService {
+export class WalletService {
   private client: TonClient;
-  private endpoint: string;
-  private apiKey: string;
 
   constructor() {
-    this.endpoint = process.env.TON_ENDPOINT || 'https://toncenter.com/api/v2/jsonRPC';
-    this.apiKey = process.env.TON_API_KEY || '';
     this.client = new TonClient({
-      endpoint: this.endpoint,
-      apiKey: this.apiKey
+      endpoint: import.meta.env.VITE_TON_ENDPOINT || 'https://toncenter.com/api/v2/jsonRPC',
+      apiKey: import.meta.env.VITE_TON_API_KEY
     });
   }
 
@@ -39,24 +24,13 @@ class WalletService {
         throw new Error('Invalid TON address');
       }
 
-      const response = await fetch(`${this.endpoint}/getBalance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': this.apiKey
-        },
-        body: JSON.stringify({ address })
-      });
+      const balance = await this.client.getBalance(address);
+      const pendingBalance = BigInt(0); // Implement pending balance logic if needed
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch balance');
-      }
-
-      const data = await response.json();
       return {
-        available: data.balance / 1e9,
-        pending: data.pendingBalance / 1e9,
-        total: (data.balance + data.pendingBalance) / 1e9
+        available: Number(balance) / 1e9,
+        pending: Number(pendingBalance) / 1e9,
+        total: Number(balance + pendingBalance) / 1e9
       };
     } catch (error) {
       console.error('Error fetching balance:', error);
@@ -70,29 +44,16 @@ class WalletService {
         throw new Error('Invalid TON address');
       }
 
-      const response = await fetch(`${this.endpoint}/getTransactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': this.apiKey
-        },
-        body: JSON.stringify({ address, limit })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
-      }
-
-      const data = await response.json();
-      return data.transactions.map((tx: any) => ({
-        id: tx.id,
-        type: tx.type,
-        amount: tx.amount / 1e9,
-        timestamp: tx.timestamp,
-        status: tx.status,
-        address: tx.address,
-        hash: tx.hash,
-        message: tx.message
+      const transactions = await this.client.getTransactions(address, limit);
+      
+      return transactions.map(tx => ({
+        id: tx.hash,
+        userId: address,
+        type: this.determineTransactionType(tx),
+        amount: Number(tx.value) / 1e9,
+        status: TransactionStatus.COMPLETED,
+        createdAt: tx.time * 1000,
+        updatedAt: tx.time * 1000
       }));
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -100,66 +61,33 @@ class WalletService {
     }
   }
 
+  private determineTransactionType(tx: any): TransactionType {
+    // Implement logic to determine transaction type based on your requirements
+    return tx.inbound ? TransactionType.REWARD : TransactionType.WITHDRAWAL;
+  }
+
   async withdraw(params: {
     fromAddress: string;
     toAddress: string;
     amount: number;
-    secretKey: Uint8Array;
+    balance: number;
   }): Promise<{ hash: string }> {
-    try {
-      const { fromAddress, toAddress, amount, secretKey } = params;
+    const validation = validateTransactionData({
+      amount: params.amount,
+      address: params.toAddress,
+      balance: params.balance,
+      minWithdrawal: 1
+    });
 
-      if (!validateTonAddress(fromAddress) || !validateTonAddress(toAddress)) {
-        throw new Error('Invalid address');
-      }
-
-      const wallet = WalletContractV4.create({
-        publicKey: secretKey.slice(32),
-        workchain: 0
-      });
-
-      const seqno = await wallet.getSeqno();
-      const transfer = wallet.createTransfer({
-        secretKey,
-        seqno,
-        messages: [
-          internal({
-            to: toAddress,
-            value: amount * 1e9,
-            bounce: false
-          })
-        ]
-      });
-
-      const result = await this.client.sendTransaction(transfer);
-      return { hash: result.hash };
-    } catch (error) {
-      console.error('Error withdrawing TON:', error);
-      throw error;
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '));
     }
+
+    // Implement withdrawal logic using TON Connect or your preferred method
+    throw new Error('Withdrawal not implemented');
   }
 
-  async createWallet(mnemonic: string[]): Promise<{ address: string; secretKey: Uint8Array }> {
-    try {
-      const keyPair = await mnemonicToPrivateKey(mnemonic);
-      const wallet = WalletContractV4.create({
-        publicKey: keyPair.publicKey,
-        workchain: 0
-      });
-
-      return {
-        address: wallet.address.toString(),
-        secretKey: keyPair.secretKey
-      };
-    } catch (error) {
-      console.error('Error creating wallet:', error);
-      throw error;
-    }
+  getExplorerUrl(txHash: string): string {
+    return getTransactionExplorerUrl(txHash, import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet');
   }
-
-  async estimateWithdrawalFee(amount: number): Promise<number> {
-    return calculateFee(amount);
-  }
-}
-
-export const walletService = new WalletService(); 
+} 

@@ -1,94 +1,169 @@
 import create from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { Task, TaskFilters, Verification } from '../types';
-import { api } from '../services/api';
+import { BaseTask, TaskType, TaskStatus, WorkerProfile, Transaction } from '@mindburn/shared/types';
+import { WalletService } from '../services/wallet';
 
-interface Store {
-  // Tasks
-  tasks: Task[];
-  task: Task | null;
-  isLoading: boolean;
-  error: string | null;
-  
-  // Actions
-  fetchTasks: (filters: TaskFilters) => Promise<void>;
-  fetchTask: (taskId: string) => Promise<void>;
-  submitVerification: (verification: Verification) => Promise<boolean>;
-  
-  // Worker Profile
-  profile: {
+interface ExtendedTask extends BaseTask {
+  title: string;
+  description: string;
+  reward: number;
+  timeLimit: number;
+  estimatedDuration: number;
+  content: string;
+  steps: {
     id: string;
-    name: string;
-    skills: string[];
-    rating: number;
-    completedTasks: number;
-    balance: number;
-  } | null;
-  fetchProfile: () => Promise<void>;
-  updateProfile: (data: Partial<Store['profile']>) => Promise<void>;
+    title: string;
+    description: string;
+    type: 'text' | 'choice' | 'rating' | 'evidence';
+    options?: string[];
+    required: boolean;
+  }[];
+  guidelines: string;
+  evidenceTypes: ('image' | 'video' | 'audio' | 'document')[];
+  requiredSkills: string[];
 }
 
-export const useStore = create<Store>()(
+interface VerificationData {
+  taskId: string;
+  responses: Record<string, any>;
+  confidence: Record<string, number>;
+  evidence: Record<string, { type: string; url: string; description?: string; }[]>;
+  timeSpent: number;
+}
+
+interface State {
+  isLoading: boolean;
+  error: string | null;
+  tasks: ExtendedTask[];
+  task: ExtendedTask | null;
+  profile: WorkerProfile | null;
+  transactions: Transaction[];
+  walletService: WalletService;
+  fetchTasks: () => Promise<void>;
+  fetchTask: (id: string) => Promise<void>;
+  fetchProfile: () => Promise<void>;
+  fetchTransactions: () => Promise<void>;
+  submitVerification: (data: VerificationData) => Promise<boolean>;
+  updateProfile: (updates: Partial<WorkerProfile>) => Promise<void>;
+  connectWallet: (address: string) => Promise<void>;
+  withdrawFunds: (amount: number, address: string) => Promise<void>;
+}
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+
+export const useStore = create<State>()(
   devtools(
     (set, get) => ({
-      // Initial state
-      tasks: [],
-      task: null,
       isLoading: false,
       error: null,
+      tasks: [],
+      task: null,
       profile: null,
+      transactions: [],
+      walletService: new WalletService(),
 
-      // Task actions
-      fetchTasks: async (filters: TaskFilters) => {
+      fetchTasks: async () => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          const tasks = await api.tasks.list(filters);
+          const response = await fetch(`${API_BASE_URL}/tasks`);
+          if (!response.ok) throw new Error('Failed to fetch tasks');
+          const tasks = await response.json();
           set({ tasks, isLoading: false });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: (error as Error).message, isLoading: false });
         }
       },
 
-      fetchTask: async (taskId: string) => {
+      fetchTask: async (id: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          const task = await api.tasks.get(taskId);
+          const response = await fetch(`${API_BASE_URL}/tasks/${id}`);
+          if (!response.ok) throw new Error('Failed to fetch task');
+          const task = await response.json();
           set({ task, isLoading: false });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: (error as Error).message, isLoading: false });
         }
       },
 
-      submitVerification: async (verification: Verification) => {
+      fetchProfile: async () => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          await api.verifications.submit(verification);
+          const response = await fetch(`${API_BASE_URL}/profile`);
+          if (!response.ok) throw new Error('Failed to fetch profile');
+          const profile = await response.json();
+          set({ profile, isLoading: false });
+        } catch (error) {
+          set({ error: (error as Error).message, isLoading: false });
+        }
+      },
+
+      fetchTransactions: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(`${API_BASE_URL}/transactions`);
+          if (!response.ok) throw new Error('Failed to fetch transactions');
+          const transactions = await response.json();
+          set({ transactions, isLoading: false });
+        } catch (error) {
+          set({ error: (error as Error).message, isLoading: false });
+        }
+      },
+
+      submitVerification: async (data: VerificationData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(`${API_BASE_URL}/tasks/${data.taskId}/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!response.ok) throw new Error('Failed to submit verification');
           set({ isLoading: false });
           return true;
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: (error as Error).message, isLoading: false });
           return false;
         }
       },
 
-      // Profile actions
-      fetchProfile: async () => {
+      updateProfile: async (updates: Partial<WorkerProfile>) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          const profile = await api.profile.get();
+          const response = await fetch(`${API_BASE_URL}/profile`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
+          });
+          if (!response.ok) throw new Error('Failed to update profile');
+          const profile = await response.json();
           set({ profile, isLoading: false });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: (error as Error).message, isLoading: false });
         }
       },
 
-      updateProfile: async (data: Partial<Store['profile']>) => {
+      connectWallet: async (address: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          const profile = await api.profile.update(data);
-          set({ profile, isLoading: false });
+          const { walletService } = get();
+          const balance = await walletService.getBalance(address);
+          await get().updateProfile({ walletAddress: address });
+          set({ isLoading: false });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: (error as Error).message, isLoading: false });
+        }
+      },
+
+      withdrawFunds: async (amount: number, address: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { walletService } = get();
+          await walletService.withdraw(amount, address);
+          await get().fetchTransactions();
+          set({ isLoading: false });
+        } catch (error) {
+          set({ error: (error as Error).message, isLoading: false });
         }
       }
     })
