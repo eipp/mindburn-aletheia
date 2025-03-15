@@ -1,53 +1,156 @@
-service: aletheia-worker-bot
+service: aletheia-worker-interface
 
 provider:
   name: aws
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  memorySize: 256
-  timeout: 30
+  
+  tracing:
+    apiGateway: true
+    lambda: true
+  
+  logs:
+    restApi:
+      accessLogging: true
+      executionLogging: true
+      level: INFO
+      fullExecutionData: true
+      roleManagedExternally: false
+  
+  logRetentionInDays: 30
+  
   environment:
-    BOT_TOKEN: ${ssm:/aletheia/${self:provider.stage}/bot-token}
-    ENVIRONMENT: ${self:provider.stage}
-    WEBHOOK_DOMAIN: ${ssm:/aletheia/${self:provider.stage}/webhook-domain}
-    TASK_QUEUE_URL: ${ssm:/aletheia/${self:provider.stage}/task-queue-url}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: --enable-source-maps
+    STAGE: ${self:provider.stage}
+    LOG_LEVEL: ${self:custom.logLevels.${self:provider.stage}}
+    KMS_KEY_ID: ${ssm:/aletheia/${self:provider.stage}/field-encryption-key-id}
+    USER_POOL_ID: ${ssm:/aletheia/${self:provider.stage}/user-pool-id}
+    USER_POOL_CLIENT_ID: ${ssm:/aletheia/${self:provider.stage}/user-pool-client-id}
+  
+  tags:
+    Environment: ${self:provider.stage}
+    Project: aletheia
+    Component: worker-interface
+
   iam:
     role:
       statements:
         - Effect: Allow
           Action:
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:Query
-          Resource:
-            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-user-data
-            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-tasks
-            - arn:aws:dynamodb:${self:provider.region}:*:table/aletheia-${self:provider.stage}-bot-sessions
+            - kms:Decrypt
+            - kms:Encrypt
+            - kms:GenerateDataKey
+          Resource: ${ssm:/aletheia/${self:provider.stage}/field-encryption-key-arn}
         - Effect: Allow
           Action:
-            - sqs:SendMessage
-          Resource: ${ssm:/aletheia/${self:provider.stage}/task-queue-arn}
+            - secretsmanager:GetSecretValue
+          Resource: 
+            - arn:aws:secretsmanager:${self:provider.region}:*:secret:/aletheia/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminInitiateAuth
+            - cognito-idp:AdminRespondToAuthChallenge
+          Resource: ${ssm:/aletheia/${self:provider.stage}/user-pool-arn}
 
-plugins:
-  - serverless-plugin-typescript
+  httpApi:
+    cors: true
+    authorizers:
+      cognito:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.${self:provider.region}.amazonaws.com/${ssm:/aletheia/${self:provider.stage}/user-pool-id}
+        audience:
+          - ${ssm:/aletheia/${self:provider.stage}/user-pool-client-id}
 
-package:
-  patterns:
-    - '!node_modules/.pnpm/**'
-    - '!test/**'
-    - '!.git/**'
-    - '!README.md'
+custom:
+  logLevels:
+    dev: DEBUG
+    staging: INFO
+    prod: INFO
+  
+  webpack:
+    webpackConfig: webpack.config.js
+    includeModules: true
+    packager: pnpm
+    excludeFiles: test/**
+
+  prune:
+    automatic: true
+    number: 3
+
+  securityHeaders:
+    contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+    strictTransportSecurity: "max-age=31536000; includeSubDomains"
+    xContentTypeOptions: "nosniff"
+    xFrameOptions: "DENY"
+    referrerPolicy: "strict-origin-when-cross-origin"
+    xssProtection: "1; mode=block"
 
 functions:
-  webhook:
-    handler: src/index.handler
+  health:
+    handler: src/handlers/health.handler
     events:
       - http:
-          path: /webhook/{token}
+          path: health
+          method: get
+    tracing: Active
+    logRetentionInDays: ${self:provider.logRetentionInDays}
+
+  commands:
+    handler: src/handlers/commands.handler
+    events:
+      - http:
+          path: commands
           method: post
-          request:
-            parameters:
-              paths:
-                token: true 
+          authorizer:
+            name: cognito
+            type: COGNITO_USER_POOLS
+            authorizerId: !Ref ApiGatewayAuthorizer
+          cors: true
+    tracing: Active
+    logRetentionInDays: ${self:provider.logRetentionInDays}
+
+resources:
+  Resources:
+    ApiGatewayAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognito-authorizer
+        Type: COGNITO_USER_POOLS
+        IdentitySource: method.request.header.Authorization
+        RestApiId: !Ref ApiGatewayRestApi
+        ProviderARNs:
+          - ${ssm:/aletheia/${self:provider.stage}/user-pool-arn}
+
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId: !Ref ApiGatewayRestApi
+
+    GatewayResponseDefault5XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId: !Ref ApiGatewayRestApi
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-prune-plugin
+
+package:
+  individually: true 

@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # LocalStack for AWS services emulation
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb,sqs,ssm
+      - DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./docker/localstack:/docker-entrypoint-initaws.d
+      - ./data/localstack:/tmp/localstack
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  # TON Local Node
+  ton-node:
+    image: tonlabs/local-node:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data/ton:/ton-node/db
+    environment:
+      - NETWORK_TYPE=LOCAL
+
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+
+  # Worker Interface (Telegram Bot + Mini App)
+  worker-interface:
+    build:
+      context: ./packages/worker-interface
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./packages/worker-interface:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - AWS_ENDPOINT=http://localstack:4566
+      - REDIS_URL=redis://redis:6379
+      - TON_ENDPOINT=http://ton-node:8080
+    depends_on:
+      - localstack
+      - redis
+      - ton-node
+
+  # Worker WebApp
+  worker-webapp:
+    build:
+      context: ./packages/worker-webapp
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./packages/worker-webapp:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - VITE_TON_ENDPOINT=http://ton-node:8080
+    depends_on:
+      - worker-interface
+
+  # Development Tools
+  dev-tools:
+    build:
+      context: ./docker/dev-tools
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    ports:
+      - "9229:9229" # Node.js debugger
+    environment:
+      - NODE_ENV=development
+    command: tail -f /dev/null 

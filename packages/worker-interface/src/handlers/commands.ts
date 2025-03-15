@@ -9,7 +9,7 @@ import logger from '../utils/logger';
 const composer = new Composer<BotContext>();
 
 // Start command - initiates registration
-composer.command('start', async (ctx) => {
+composer.command('start', async (ctx: BotContext) => {
   if (ctx.session.state !== UserState.INITIAL) {
     await ctx.reply('Welcome back! Use /help to see available commands.');
     return;
@@ -26,7 +26,7 @@ composer.command('start', async (ctx) => {
 });
 
 // Register command
-composer.command('register', async (ctx) => {
+composer.command('register', async (ctx: BotContext) => {
   if (ctx.session.state !== UserState.INITIAL) {
     await ctx.reply('You are already registered! Use /tasks to start working.');
     return;
@@ -44,7 +44,7 @@ composer.command('register', async (ctx) => {
 });
 
 // Wallet command - handles TON wallet connection
-composer.command('wallet', async (ctx) => {
+composer.command('wallet', async (ctx: BotContext) => {
   if (ctx.session.state === UserState.INITIAL) {
     await ctx.reply('Please register first using /register');
     return;
@@ -59,7 +59,7 @@ composer.command('wallet', async (ctx) => {
 });
 
 // Tasks command - shows available tasks
-composer.command('tasks', async (ctx) => {
+composer.command('tasks', async (ctx: BotContext) => {
   if (!ctx.session.walletAddress) {
     await ctx.reply('Please connect your TON wallet first using /wallet');
     return;
@@ -103,7 +103,12 @@ composer.command('tasks', async (ctx) => {
 });
 
 // Accept task command
-composer.command('accept', async (ctx) => {
+composer.command('accept', async (ctx: BotContext) => {
+  if (!ctx.message || !('text' in ctx.message)) {
+    await ctx.reply('Invalid command format.');
+    return;
+  }
+
   const taskId = ctx.message.text.split(' ')[1];
   if (!taskId) {
     await ctx.reply('Please provide a task ID: /accept <task_id>');
@@ -136,11 +141,9 @@ composer.command('accept', async (ctx) => {
       ExpressionAttributeValues: {
         ':status': TaskStatus.ASSIGNED,
         ':userId': ctx.session.userId,
-      },
-      ConditionExpression: '#status = :pendingStatus',
-      ExpressionAttributeValues: {
         ':pendingStatus': TaskStatus.PENDING,
       },
+      ConditionExpression: '#status = :pendingStatus',
     }));
 
     ctx.session.currentTask = taskId;
@@ -159,7 +162,12 @@ composer.command('accept', async (ctx) => {
 });
 
 // Submit task command
-composer.command('submit', async (ctx) => {
+composer.command('submit', async (ctx: BotContext) => {
+  if (!ctx.message || !('text' in ctx.message)) {
+    await ctx.reply('Invalid command format.');
+    return;
+  }
+
   if (!ctx.session.currentTask) {
     await ctx.reply('No active task. Use /tasks to find a task.');
     return;
@@ -211,7 +219,7 @@ composer.command('submit', async (ctx) => {
 });
 
 // Stats command
-composer.command('stats', async (ctx) => {
+composer.command('stats', async (ctx: BotContext) => {
   await ctx.reply(
     'Your Statistics:\n\n' +
     `Total Tasks: ${ctx.session.totalTasks}\n` +
@@ -223,7 +231,7 @@ composer.command('stats', async (ctx) => {
 });
 
 // Help command
-composer.command('help', async (ctx) => {
+composer.command('help', async (ctx: BotContext) => {
   await ctx.reply(
     'Available Commands:\n\n' +
     '/start - Start the bot\n' +

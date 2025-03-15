@@ -5,6 +5,8 @@ import { loggerMiddleware, authMiddleware, errorHandler } from './middleware';
 import commandHandlers from './handlers/commands';
 import logger from './utils/logger';
 import { TableNames } from './services/aws';
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import { UserSession } from './types';
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -24,7 +26,7 @@ for (const envVar of requiredEnvVars) {
 const bot = new Telegraf<BotContext>(process.env.BOT_TOKEN!);
 
 // Session store configuration
-const sessionStore = new DynamoDBSessionStore({
+const sessionStore = new DynamoDBSessionStore<UserSession>({
   tableName: TableNames.SESSIONS,
   ttl: 30 * 24 * 60 * 60, // 30 days
 });
@@ -39,7 +41,7 @@ bot.use(errorHandler);
 bot.use(commandHandlers);
 
 // Error handling
-bot.catch((err: Error) => {
+bot.catch((err: unknown, ctx: BotContext) => {
   logger.error('Unhandled bot error', { error: err });
 });
 
@@ -51,9 +53,9 @@ if (process.env.ENVIRONMENT !== 'dev') {
   bot.telegram.setWebhook(`${domain}${path}`);
   
   // Export handler for AWS Lambda
-  export const handler = async (event: any) => {
+  export const handler = async (event: APIGatewayProxyEvent) => {
     try {
-      const body = JSON.parse(event.body);
+      const body = JSON.parse(event.body || '{}');
       await bot.handleUpdate(body);
       return { statusCode: 200, body: '' };
     } catch (error) {

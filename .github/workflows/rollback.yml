@@ -1,0 +1,165 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+      version:
+        description: 'Version to rollback to'
+        required: true
+        type: string
+
+jobs:
+  rollback-infrastructure:
+    name: Rollback Infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ github.event.inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd infrastructure
+          pnpm install
+
+      - name: Deploy previous version
+        run: |
+          cd infrastructure
+          pnpm cdk deploy --require-approval never
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+
+  rollback-worker-interface:
+    name: Rollback Worker Interface
+    needs: rollback-infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ github.event.inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd packages/worker-interface
+          pnpm install
+
+      - name: Deploy previous version
+        run: |
+          cd packages/worker-interface
+          pnpm deploy:${{ github.event.inputs.environment }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          VERSION: ${{ github.event.inputs.version }}
+
+  rollback-worker-webapp:
+    name: Rollback Worker WebApp
+    needs: rollback-infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ github.event.inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd packages/worker-webapp
+          pnpm install
+
+      - name: Build
+        run: |
+          cd packages/worker-webapp
+          pnpm build
+        env:
+          VITE_VERSION: ${{ github.event.inputs.version }}
+
+      - name: Deploy previous version
+        run: |
+          cd packages/worker-webapp
+          pnpm deploy:${{ github.event.inputs.environment }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+
+  verify:
+    name: Verify Rollback
+    needs: [rollback-worker-interface, rollback-worker-webapp]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Health check Worker Interface
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: ${{ secrets.WORKER_INTERFACE_URL }}/health
+          max-attempts: 3
+          retry-delay: 5s
+
+      - name: Health check Worker WebApp
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: ${{ secrets.WORKER_WEBAPP_URL }}
+          max-attempts: 3
+          retry-delay: 5s
+
+  notify:
+    name: Notify Rollback Status
+    needs: [verify]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send Telegram notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🔄 Rollback Status: ${{ job.status }}
+            Environment: ${{ github.event.inputs.environment }}
+            Version: v${{ github.event.inputs.version }}
+            
+            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} 

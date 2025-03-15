@@ -1,0 +1,339 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia API
+  description: API for the Mindburn Aletheia AI verification platform
+  version: 1.0.0
+  contact:
+    name: Mindburn Team
+    url: https://github.com/mindburn/aletheia
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.aletheia.mindburn.org/v1
+    description: Production server
+  - url: https://api.staging.aletheia.mindburn.org/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development
+
+tags:
+  - name: Tasks
+    description: Task management endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Verification
+    description: Verification result endpoints
+  - name: Payments
+    description: Payment management endpoints
+  - name: Analytics
+    description: Analytics and reporting endpoints
+
+paths:
+  /tasks:
+    post:
+      tags:
+        - Tasks
+      summary: Create a new verification task
+      operationId: createTask
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    
+    get:
+      tags:
+        - Tasks
+      summary: List verification tasks
+      operationId: listTasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, completed, failed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  total:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tasks/{taskId}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task details
+      operationId: getTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /verification/submit:
+    post:
+      tags:
+        - Verification
+      summary: Submit verification result
+      operationId: submitVerification
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationInput'
+      responses:
+        '200':
+          description: Verification submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /payments/balance:
+    get:
+      tags:
+        - Payments
+      summary: Get user balance
+      operationId: getBalance
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TaskInput:
+      type: object
+      required:
+        - type
+        - data
+        - reward
+      properties:
+        type:
+          type: string
+          enum: [classification, validation, annotation]
+        data:
+          type: object
+          description: Task-specific data
+        reward:
+          type: number
+          format: float
+          minimum: 0
+        instructions:
+          type: string
+        metadata:
+          type: object
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [classification, validation, annotation]
+        status:
+          type: string
+          enum: [pending, active, completed, failed]
+        data:
+          type: object
+        reward:
+          type: number
+          format: float
+        instructions:
+          type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationInput:
+      type: object
+      required:
+        - taskId
+        - result
+      properties:
+        taskId:
+          type: string
+        result:
+          type: object
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        metadata:
+          type: object
+
+    VerificationResult:
+      type: object
+      properties:
+        id:
+          type: string
+        taskId:
+          type: string
+        workerId:
+          type: string
+        result:
+          type: object
+        confidence:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        reward:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+
+    Balance:
+      type: object
+      properties:
+        available:
+          type: number
+          format: float
+        pending:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: TON
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error' 

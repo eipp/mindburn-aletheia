@@ -5,7 +5,7 @@ import { docClient } from '../services/aws';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { TableNames } from '../services/aws';
 
-export const loggerMiddleware: Middleware<BotContext> = async (ctx, next) => {
+export const loggerMiddleware: Middleware<BotContext> = async (ctx: BotContext, next) => {
   const start = Date.now();
   await next();
   const ms = Date.now() - start;
@@ -18,7 +18,7 @@ export const loggerMiddleware: Middleware<BotContext> = async (ctx, next) => {
   });
 };
 
-export const authMiddleware: Middleware<BotContext> = async (ctx, next) => {
+export const authMiddleware: Middleware<BotContext> = async (ctx: BotContext, next) => {
   if (!ctx.from) {
     logger.warn('No user in context');
     return;
@@ -52,7 +52,7 @@ export const authMiddleware: Middleware<BotContext> = async (ctx, next) => {
   }
 };
 
-export const errorHandler: Middleware<BotContext> = async (ctx, next) => {
+export const errorHandler: Middleware<BotContext> = async (ctx: BotContext, next) => {
   try {
     await next();
   } catch (error) {
