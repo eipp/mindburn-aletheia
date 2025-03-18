@@ -36,7 +36,11 @@ export const validateTaskInput = (input: TaskCreationInput): ValidationResult =>
     }
 
     // Validate minimum verifier level
-    if (typeof vr.minVerifierLevel !== 'number' || vr.minVerifierLevel < 1 || vr.minVerifierLevel > 10) {
+    if (
+      typeof vr.minVerifierLevel !== 'number' ||
+      vr.minVerifierLevel < 1 ||
+      vr.minVerifierLevel > 10
+    ) {
       errors.push('Minimum verifier level must be between 1 and 10');
     }
 
@@ -53,16 +57,21 @@ export const validateTaskInput = (input: TaskCreationInput): ValidationResult =>
     }
 
     // Validate verification threshold
-    if (typeof vr.verificationThreshold !== 'number' || 
-        vr.verificationThreshold < 1 || 
-        vr.verificationThreshold > 10) {
+    if (
+      typeof vr.verificationThreshold !== 'number' ||
+      vr.verificationThreshold < 1 ||
+      vr.verificationThreshold > 10
+    ) {
       errors.push('Verification threshold must be between 1 and 10');
     }
 
     // Validate timeout minutes
-    if (typeof vr.timeoutMinutes !== 'number' || 
-        vr.timeoutMinutes < 5 || 
-        vr.timeoutMinutes > 1440) { // Max 24 hours
+    if (
+      typeof vr.timeoutMinutes !== 'number' ||
+      vr.timeoutMinutes < 5 ||
+      vr.timeoutMinutes > 1440
+    ) {
+      // Max 24 hours
       errors.push('Timeout must be between 5 minutes and 24 hours');
     }
   }
@@ -73,7 +82,8 @@ export const validateTaskInput = (input: TaskCreationInput): ValidationResult =>
       errors.push('Metadata must be an object');
     } else {
       const metadataSize = JSON.stringify(input.metadata).length;
-      if (metadataSize > 4096) { // 4KB limit
+      if (metadataSize > 4096) {
+        // 4KB limit
         errors.push('Metadata size exceeds 4KB limit');
       }
     }
@@ -81,7 +91,7 @@ export const validateTaskInput = (input: TaskCreationInput): ValidationResult =>
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -93,7 +103,7 @@ export const validateTaskType = (type: string): boolean => {
     'CODE_REVIEW',
     'TRANSLATION_REVIEW',
     'CONTENT_MODERATION',
-    'FACT_CHECKING'
+    'FACT_CHECKING',
   ];
   return validTypes.includes(type);
-}; 
+};

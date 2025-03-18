@@ -23,8 +23,8 @@ export const i18n = new I18n({
     },
     formatDate: (date: Date | string | number) => {
       return new Intl.DateTimeFormat().format(new Date(date));
-    }
-  }
+    },
+  },
 });
 
 // Add language detection
@@ -32,7 +32,7 @@ i18n.use((ctx, next) => {
   try {
     // Get user's language preference from Telegram
     const languageCode = ctx.from?.language_code;
-    
+
     if (languageCode && i18n.availableLocales().includes(languageCode)) {
       ctx.i18n.locale(languageCode);
     } else {
@@ -42,6 +42,6 @@ i18n.use((ctx, next) => {
     logger.error('Language detection error:', error);
     ctx.i18n.locale(i18n.defaultLanguage);
   }
-  
+
   return next();
-}); 
+});

@@ -181,4 +181,4 @@ export class SecurityStack extends cdk.Stack {
       value: this.encryptionKey.keyArn,
     });
   }
-} 
+}

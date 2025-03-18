@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export interface ApprovalStage {
@@ -128,24 +128,22 @@ const envMap: Record<string, string> = {
   'auditSettings.retainHistoryDays': 'RETAIN_HISTORY_DAYS',
   'auditSettings.requireComments': 'REQUIRE_COMMENTS',
   'emergencyBypass.enabled': 'EMERGENCY_BYPASS_ENABLED',
-  'emergencyBypass.requiredApprovers': 'EMERGENCY_APPROVERS_REQUIRED'
+  'emergencyBypass.requiredApprovers': 'EMERGENCY_APPROVERS_REQUIRED',
 };
 
 export const validateConfig = createConfigValidator<ApprovalWorkflowConfig>({
   schema: ApprovalWorkflowSchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['emergencyBypass.allowedRoles']),
     createPerformanceValidator({
       'approvalExpiration.durationHours': 168, // 1 week
-      'auditSettings.retainHistoryDays': 180
-    })
-  ]
+      'auditSettings.retainHistoryDays': 180,
+    }),
+  ],
 });
 
 export function getConfig(): ApprovalWorkflowConfig {
   return validateConfig({});
-} 
+}

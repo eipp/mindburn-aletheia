@@ -88,8 +88,14 @@ Standardized logging across all services:
 ```typescript
 import { logger } from '@mindburn/shared';
 
-logger.info('Operation completed successfully', { userId: '123', operation: 'verification' });
-logger.error('Failed to process payment', { error: err, transactionId: 'tx123' });
+logger.info('Operation completed successfully', {
+  userId: '123',
+  operation: 'verification',
+});
+logger.error('Failed to process payment', {
+  error: err,
+  transactionId: 'tx123',
+});
 logger.warn('Rate limit approaching', { currentRate: 95, limit: 100 });
 ```
 

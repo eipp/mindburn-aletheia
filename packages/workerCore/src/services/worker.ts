@@ -1,9 +1,4 @@
-import {
-  WorkerTask,
-  TaskStatus,
-  WorkerVerification,
-  Evidence
-} from '@mindburn/shared';
+import { WorkerTask, TaskStatus, WorkerVerification, Evidence } from '@mindburn/shared';
 import {
   WorkerProfile,
   WorkerPreferences,
@@ -11,7 +6,7 @@ import {
   WorkSession,
   TaskSubmission,
   ValidationResult,
-  WorkerError
+  WorkerError,
 } from '../types';
 
 export class WorkerService {
@@ -30,7 +25,10 @@ export class WorkerService {
     throw new Error('Not implemented');
   }
 
-  async updatePreferences(workerId: string, preferences: Partial<WorkerPreferences>): Promise<WorkerPreferences> {
+  async updatePreferences(
+    workerId: string,
+    preferences: Partial<WorkerPreferences>
+  ): Promise<WorkerPreferences> {
     // Implementation placeholder
     throw new Error('Not implemented');
   }
@@ -101,7 +99,7 @@ export class WorkerService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -110,20 +108,26 @@ export class WorkerService {
     throw new Error('Not implemented');
   }
 
-  async getTaskHistory(workerId: string, filters?: {
-    status?: TaskStatus;
-    startDate?: Date;
-    endDate?: Date;
-    type?: string;
-  }): Promise<TaskAssignment[]> {
+  async getTaskHistory(
+    workerId: string,
+    filters?: {
+      status?: TaskStatus;
+      startDate?: Date;
+      endDate?: Date;
+      type?: string;
+    }
+  ): Promise<TaskAssignment[]> {
     // Implementation placeholder
     throw new Error('Not implemented');
   }
 
-  async getEarnings(workerId: string, period?: {
-    start: Date;
-    end: Date;
-  }): Promise<{
+  async getEarnings(
+    workerId: string,
+    period?: {
+      start: Date;
+      end: Date;
+    }
+  ): Promise<{
     total: number;
     pending: number;
     completed: number;
@@ -132,4 +136,4 @@ export class WorkerService {
     // Implementation placeholder
     throw new Error('Not implemented');
   }
-} 
+}

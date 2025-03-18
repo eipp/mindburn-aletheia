@@ -1,4 +1,4 @@
-import { 
+import {
   ModelRegistry,
   ModelGovernance,
   LoggerService,
@@ -7,7 +7,7 @@ import {
   ModelStatus,
   VersionHistoryEntry,
   VersionComparison,
-  VersionUpdateRequest
+  VersionUpdateRequest,
 } from '@mindburn/shared';
 import * as semver from 'semver';
 import { z } from 'zod';
@@ -18,11 +18,13 @@ const VersionUpdateSchema = z.object({
   updateType: z.enum(['major', 'minor', 'patch']),
   changes: z.array(z.string()),
   author: z.string(),
-  performance: z.object({
-    accuracy: z.number(),
-    confidence: z.number(),
-    latency: z.number(),
-  }).optional(),
+  performance: z
+    .object({
+      accuracy: z.number(),
+      confidence: z.number(),
+      latency: z.number(),
+    })
+    .optional(),
 });
 
 export class ModelVersioning {
@@ -48,7 +50,7 @@ export class ModelVersioning {
       this.logger.info('Creating new model version', {
         modelId,
         version,
-        type
+        type,
       });
 
       // Validate version format
@@ -68,13 +70,15 @@ export class ModelVersioning {
         modelId,
         version,
         status: 'development',
-        changelog: [{
-          version,
-          date: new Date().toISOString(),
-          author: metadata.governance.owner,
-          changes: metadata.changelog || [],
-          type,
-        }],
+        changelog: [
+          {
+            version,
+            date: new Date().toISOString(),
+            author: metadata.governance.owner,
+            changes: metadata.changelog || [],
+            type,
+          },
+        ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
@@ -84,18 +88,18 @@ export class ModelVersioning {
         version,
         type,
         author: metadata.governance.owner,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model version created successfully', {
         modelId,
-        version
+        version,
       });
     } catch (error) {
       this.logger.error('Failed to create model version', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
@@ -112,7 +116,7 @@ export class ModelVersioning {
         modelId,
         version,
         targetStatus,
-        approver
+        approver,
       });
 
       // Check compliance before promotion
@@ -131,20 +135,20 @@ export class ModelVersioning {
         version,
         targetStatus,
         approver,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model version promoted successfully', {
         modelId,
         version,
-        targetStatus
+        targetStatus,
       });
     } catch (error) {
       this.logger.error('Failed to promote model version', {
         modelId,
         version,
         targetStatus,
-        error
+        error,
       });
       throw error;
     }
@@ -160,11 +164,11 @@ export class ModelVersioning {
       this.logger.info('Retiring model version', {
         modelId,
         version,
-        approver
+        approver,
       });
 
       await this.registry.updateModelStatus(modelId, version, 'retired', approver);
-      
+
       await this.registry.addChangelogEntry(modelId, version, {
         author: approver,
         changes: [`Retired: ${reason}`],
@@ -176,18 +180,18 @@ export class ModelVersioning {
         version,
         approver,
         reason,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model version retired successfully', {
         modelId,
-        version
+        version,
       });
     } catch (error) {
       this.logger.error('Failed to retire model version', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
@@ -213,14 +217,14 @@ export class ModelVersioning {
 
       this.logger.info('Version history retrieved', {
         modelId,
-        versionCount: history.length
+        versionCount: history.length,
       });
 
       return history;
     } catch (error) {
       this.logger.error('Failed to get version history', {
         modelId,
-        error
+        error,
       });
       throw error;
     }
@@ -235,7 +239,7 @@ export class ModelVersioning {
       this.logger.info('Comparing model versions', {
         modelId,
         version1,
-        version2
+        version2,
       });
 
       const [model1, model2] = await Promise.all([
@@ -263,7 +267,7 @@ export class ModelVersioning {
         performanceDiff,
         changes,
         riskLevelChanged: model1.governance.riskLevel !== model2.governance.riskLevel,
-        complianceStatusChanged: 
+        complianceStatusChanged:
           model1.governance.complianceStatus !== model2.governance.complianceStatus,
       };
 
@@ -272,14 +276,14 @@ export class ModelVersioning {
         version1,
         version2,
         comparison,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Version comparison completed', {
         modelId,
         version1,
         version2,
-        changeCount: changes.length
+        changeCount: changes.length,
       });
 
       return comparison;
@@ -288,7 +292,7 @@ export class ModelVersioning {
         modelId,
         version1,
         version2,
-        error
+        error,
       });
       throw error;
     }
@@ -306,7 +310,7 @@ export class ModelVersioning {
         modelId,
         fromVersion,
         toVersion,
-        approver
+        approver,
       });
 
       const [currentModel, targetModel] = await Promise.all([
@@ -342,22 +346,22 @@ export class ModelVersioning {
         toVersion,
         approver,
         reason,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model version rolled back successfully', {
         modelId,
         fromVersion,
-        toVersion
+        toVersion,
       });
     } catch (error) {
       this.logger.error('Failed to rollback version', {
         modelId,
         fromVersion,
         toVersion,
-        error
+        error,
       });
       throw error;
     }
   }
-} 
+}

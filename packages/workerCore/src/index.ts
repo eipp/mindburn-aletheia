@@ -8,5 +8,5 @@ export {
   WorkerTask,
   WorkerVerification,
   Evidence,
-  VerificationStrategy
-} from '@mindburn/shared'; 
+  VerificationStrategy,
+} from '@mindburn/shared';

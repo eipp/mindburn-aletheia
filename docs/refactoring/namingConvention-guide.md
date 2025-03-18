@@ -4,14 +4,14 @@ This guide establishes standardized naming conventions for the Mindburn Aletheia
 
 ## File Naming Conventions
 
-| File Type | Convention | Example |
-|-----------|------------|---------|
-| Regular TypeScript/JavaScript files | camelCase | `userService.ts`, `apiClient.js` |
-| React Components | PascalCase | `UserProfile.tsx`, `PaymentForm.jsx` |
-| Test files | camelCase with `.test` or `.spec` suffix | `userService.test.ts`, `apiClient.spec.js` |
-| Configuration files | camelCase with `.config` suffix | `webpack.config.js`, `jest.config.js` |
-| Type definition files | camelCase with `.types` suffix | `user.types.ts`, `payment.types.ts` |
-| Directory names | kebab-case | `user-profiles/`, `payment-system/` |
+| File Type                           | Convention                               | Example                                    |
+| ----------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Regular TypeScript/JavaScript files | camelCase                                | `userService.ts`, `apiClient.js`           |
+| React Components                    | PascalCase                               | `UserProfile.tsx`, `PaymentForm.jsx`       |
+| Test files                          | camelCase with `.test` or `.spec` suffix | `userService.test.ts`, `apiClient.spec.js` |
+| Configuration files                 | camelCase with `.config` suffix          | `webpack.config.js`, `jest.config.js`      |
+| Type definition files               | camelCase with `.types` suffix           | `user.types.ts`, `payment.types.ts`        |
+| Directory names                     | kebab-case                               | `user-profiles/`, `payment-system/`        |
 
 ## Code Naming Conventions
 
@@ -59,7 +59,7 @@ const API_BASE_URL = 'https://api.example.com';
 enum PaymentType {
   CREDIT_CARD = 'credit_card',
   BANK_TRANSFER = 'bank_transfer',
-  CRYPTOCURRENCY = 'cryptocurrency'
+  CRYPTOCURRENCY = 'cryptocurrency',
 }
 ```
 
@@ -180,6 +180,7 @@ These naming conventions will be enforced through:
 To migrate existing code to these conventions:
 
 1. Run the renaming script with dry-run mode:
+
    ```
    node scripts/refactoring/rename-files.js --dry-run
    ```
@@ -187,6 +188,7 @@ To migrate existing code to these conventions:
 2. Review the proposed changes
 
 3. Apply the changes:
+
    ```
    node scripts/refactoring/rename-files.js --update-imports
    ```
@@ -201,4 +203,4 @@ Some exceptions to these rules may be necessary:
 2. Generated code
 3. Third-party code
 
-In these cases, document the exception in the file or in a README.md file in the directory. 
+In these cases, document the exception in the file or in a README.md file in the directory.

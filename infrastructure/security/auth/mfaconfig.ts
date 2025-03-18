@@ -17,7 +17,7 @@ export class MfaAuthStack extends cdk.Stack {
       mfa: cognito.Mfa.REQUIRED,
       mfaSecondFactor: {
         otp: true,
-        sms: false
+        sms: false,
       },
       passwordPolicy: {
         minLength: 12,
@@ -28,7 +28,7 @@ export class MfaAuthStack extends cdk.Stack {
         tempPasswordValidity: cdk.Duration.days(1),
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
-      removalPolicy: cdk.RemovalPolicy.RETAIN
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
     // Create admin group
@@ -46,25 +46,27 @@ export class MfaAuthStack extends cdk.Stack {
     });
 
     // Add admin permissions
-    adminRole.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:*',
-        'lambda:InvokeFunction',
-        'kms:Decrypt',
-        'secretsmanager:GetSecretValue'
-      ],
-      resources: ['*'],
-      conditions: {
-        'StringEquals': {
-          'aws:RequestTag/Environment': '${environment}',
-          'aws:RequestTag/Service': 'mindburn-aletheia'
+    adminRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:*',
+          'lambda:InvokeFunction',
+          'kms:Decrypt',
+          'secretsmanager:GetSecretValue',
+        ],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:RequestTag/Environment': '${environment}',
+            'aws:RequestTag/Service': 'mindburn-aletheia',
+          },
+          Bool: {
+            'aws:MultiFactorAuthPresent': 'true',
+          },
         },
-        'Bool': {
-          'aws:MultiFactorAuthPresent': 'true'
-        }
-      }
-    }));
+      })
+    );
 
     // Create app client
     const client = userPool.addClient('AdminAppClient', {
@@ -78,11 +80,7 @@ export class MfaAuthStack extends cdk.Stack {
         flows: {
           authorizationCodeGrant: true,
         },
-        scopes: [
-          cognito.OAuthScope.EMAIL,
-          cognito.OAuthScope.OPENID,
-          cognito.OAuthScope.PROFILE,
-        ],
+        scopes: [cognito.OAuthScope.EMAIL, cognito.OAuthScope.OPENID, cognito.OAuthScope.PROFILE],
         callbackUrls: ['https://admin.mindburn-aletheia.com/callback'],
       },
     });
@@ -95,4 +93,4 @@ export class MfaAuthStack extends cdk.Stack {
       value: client.userPoolClientId,
     });
   }
-} 
+}

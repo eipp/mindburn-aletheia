@@ -9,7 +9,7 @@ const logger = createLogger('taskCreationHandler');
 const dynamodb = new DynamoDB.DocumentClient();
 const stepFunctions = new StepFunctions();
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandler = async event => {
   try {
     const taskInput: TaskCreationInput = JSON.parse(event.body || '{}');
     const userId = event.requestContext.authorizer?.userId;
@@ -17,7 +17,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     if (!userId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized - Missing user ID' })
+        body: JSON.stringify({ error: 'Unauthorized - Missing user ID' }),
       };
     }
 
@@ -26,7 +26,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     if (!validationResult.isValid) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: validationResult.errors.join(', ') })
+        body: JSON.stringify({ error: validationResult.errors.join(', ') }),
       };
     }
 
@@ -43,41 +43,47 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         languageCodes: taskInput.verificationRequirements.languageCodes,
         urgency: taskInput.verificationRequirements.urgency,
         verificationThreshold: taskInput.verificationRequirements.verificationThreshold,
-        timeoutMinutes: taskInput.verificationRequirements.timeoutMinutes
+        timeoutMinutes: taskInput.verificationRequirements.timeoutMinutes,
       },
       metadata: taskInput.metadata || {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: userId,
-      completedVerifications: 0
+      completedVerifications: 0,
     };
 
     // Calculate expiration time
     if (task.verificationRequirements.timeoutMinutes) {
       const expirationTime = new Date();
-      expirationTime.setMinutes(expirationTime.getMinutes() + task.verificationRequirements.timeoutMinutes);
+      expirationTime.setMinutes(
+        expirationTime.getMinutes() + task.verificationRequirements.timeoutMinutes
+      );
       task.expiresAt = expirationTime.toISOString();
     }
 
     // Store task in DynamoDB
-    await dynamodb.put({
-      TableName: process.env.TASKS_TABLE!,
-      Item: task,
-      ConditionExpression: 'attribute_not_exists(taskId)'
-    }).promise();
+    await dynamodb
+      .put({
+        TableName: process.env.TASKS_TABLE!,
+        Item: task,
+        ConditionExpression: 'attribute_not_exists(taskId)',
+      })
+      .promise();
 
     // Start Step Functions workflow
     const workflowInput = {
       taskId: task.taskId,
       verificationRequirements: task.verificationRequirements,
-      expiresAt: task.expiresAt
+      expiresAt: task.expiresAt,
     };
 
-    await stepFunctions.startExecution({
-      stateMachineArn: process.env.TASK_WORKFLOW_STATE_MACHINE_ARN!,
-      name: `task-${task.taskId}`,
-      input: JSON.stringify(workflowInput)
-    }).promise();
+    await stepFunctions
+      .startExecution({
+        stateMachineArn: process.env.TASK_WORKFLOW_STATE_MACHINE_ARN!,
+        name: `task-${task.taskId}`,
+        input: JSON.stringify(workflowInput),
+      })
+      .promise();
 
     logger.info('Task created successfully', { taskId: task.taskId });
 
@@ -85,23 +91,22 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       statusCode: 201,
       body: JSON.stringify({
         message: 'Task created successfully',
-        task
-      })
+        task,
+      }),
     };
-
   } catch (error) {
     logger.error('Failed to create task', { error });
 
     if (error.name === 'ConditionalCheckFailedException') {
       return {
         statusCode: 409,
-        body: JSON.stringify({ error: 'Task ID already exists' })
+        body: JSON.stringify({ error: 'Task ID already exists' }),
       };
     }
-    
+
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-}; 
+};

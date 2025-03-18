@@ -19,7 +19,7 @@ export class AuthService {
     // Check if email exists
     const existingDev = await ddb.get({
       TableName: DEVELOPERS_TABLE,
-      Key: { email: data.email }
+      Key: { email: data.email },
     });
 
     if (existingDev.Item) {
@@ -47,12 +47,12 @@ export class AuthService {
       lastName: data.lastName,
       status: 'active',
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     await ddb.put({
       TableName: DEVELOPERS_TABLE,
-      Item: developer
+      Item: developer,
     });
 
     logger.info('Developer registered successfully', { developerId });
@@ -61,7 +61,7 @@ export class AuthService {
       developerId,
       email: data.email,
       apiKey,
-      createdAt: now
+      createdAt: now,
     };
   }
 
@@ -71,7 +71,7 @@ export class AuthService {
     // Get developer record
     const result = await ddb.get({
       TableName: DEVELOPERS_TABLE,
-      Key: { email: data.email }
+      Key: { email: data.email },
     });
 
     if (!result.Item) {
@@ -87,11 +87,9 @@ export class AuthService {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { developerId: developer.developerId },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = jwt.sign({ developerId: developer.developerId }, JWT_SECRET, {
+      expiresIn: '24h',
+    });
 
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
@@ -101,7 +99,7 @@ export class AuthService {
     return {
       token,
       expiresAt: expiresAt.toISOString(),
-      developerId: developer.developerId
+      developerId: developer.developerId,
     };
   }
 
@@ -118,8 +116,8 @@ export class AuthService {
         status: 'active',
         createdAt: now,
         lastUsed: null,
-        expiresAt: null
-      }
+        expiresAt: null,
+      },
     });
 
     logger.info('Generated new API key', { apiKeyId });
@@ -132,7 +130,7 @@ export class AuthService {
 
     const result = await ddb.get({
       TableName: API_KEYS_TABLE,
-      Key: { apiKeyId }
+      Key: { apiKeyId },
     });
 
     if (!result.Item || result.Item.status !== 'active') {
@@ -147,8 +145,8 @@ export class AuthService {
         Key: { apiKeyId },
         UpdateExpression: 'SET lastUsed = :now',
         ExpressionAttributeValues: {
-          ':now': new Date().toISOString()
-        }
+          ':now': new Date().toISOString(),
+        },
       });
     }
 
@@ -161,25 +159,26 @@ export class AuthService {
       IndexName: 'DeveloperIdIndex',
       KeyConditionExpression: 'developerId = :developerId',
       ExpressionAttributeValues: {
-        ':developerId': developerId
-      }
+        ':developerId': developerId,
+      },
     });
 
     return {
-      apiKeys: result.Items?.map(item => ({
-        apiKeyId: item.apiKeyId,
-        lastUsed: item.lastUsed,
-        createdAt: item.createdAt,
-        expiresAt: item.expiresAt,
-        status: item.status
-      })) || []
+      apiKeys:
+        result.Items?.map(item => ({
+          apiKeyId: item.apiKeyId,
+          lastUsed: item.lastUsed,
+          createdAt: item.createdAt,
+          expiresAt: item.expiresAt,
+          status: item.status,
+        })) || [],
     };
   }
 
   async revokeApiKey(developerId: string, apiKeyId: string) {
     const result = await ddb.get({
       TableName: API_KEYS_TABLE,
-      Key: { apiKeyId }
+      Key: { apiKeyId },
     });
 
     if (!result.Item || result.Item.developerId !== developerId) {
@@ -191,16 +190,16 @@ export class AuthService {
       Key: { apiKeyId },
       UpdateExpression: 'SET #status = :status, updatedAt = :now',
       ExpressionAttributeNames: {
-        '#status': 'status'
+        '#status': 'status',
       },
       ExpressionAttributeValues: {
         ':status': 'revoked',
-        ':now': new Date().toISOString()
-      }
+        ':now': new Date().toISOString(),
+      },
     });
 
     logger.info('API key revoked', { apiKeyId });
 
     return true;
   }
-} 
+}

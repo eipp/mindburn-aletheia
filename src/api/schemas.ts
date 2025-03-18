@@ -21,9 +21,9 @@ export const submissionSchema = Joi.object({
     canvas: Joi.string(),
     webgl: Joi.string(),
     fonts: Joi.array().items(Joi.string()),
-    audio: Joi.string()
+    audio: Joi.string(),
   }).required(),
-  metadata: Joi.object().default({})
+  metadata: Joi.object().default({}),
 });
 
 export const webhookSchema = Joi.object({
@@ -32,20 +32,20 @@ export const webhookSchema = Joi.object({
   data: Joi.object({
     workerId: Joi.string().when('type', {
       is: 'fraud_alert',
-      then: Joi.required()
+      then: Joi.required(),
     }),
     taskId: Joi.string().when('type', {
       is: 'quality_update',
-      then: Joi.required()
+      then: Joi.required(),
     }),
     alertLevel: Joi.string().valid('low', 'medium', 'high', 'critical'),
     message: Joi.string().required(),
-    details: Joi.object().required()
-  }).required()
+    details: Joi.object().required(),
+  }).required(),
 });
 
 export const metricsQuerySchema = Joi.object({
   startTime: Joi.date().iso().required(),
   endTime: Joi.date().iso().required(),
-  granularity: Joi.string().valid('minute', 'hour', 'day').default('hour')
-}); 
+  granularity: Joi.string().valid('minute', 'hour', 'day').default('hour'),
+});

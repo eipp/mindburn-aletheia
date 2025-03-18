@@ -241,4 +241,4 @@ export class MainStack extends cdk.Stack {
     // Add dependencies
     apiGatewayStack.addDependency(websocketStack);
   }
-} 
+}

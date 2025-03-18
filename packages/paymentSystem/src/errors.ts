@@ -52,4 +52,4 @@ export class ValidationError extends Error {
     super(message, options);
     this.name = 'ValidationError';
   }
-} 
+}

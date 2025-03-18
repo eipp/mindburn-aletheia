@@ -20,7 +20,7 @@ export class PluginManager extends EventEmitter {
 
     const plugin = await this.sandbox.loadPlugin(pluginPath, manifest);
     this.plugins.set(manifest.id, plugin);
-    
+
     this.emit('pluginInstalled', manifest);
   }
 
@@ -31,21 +31,21 @@ export class PluginManager extends EventEmitter {
     await plugin.terminate();
     await this.sandbox.unloadPlugin(pluginId);
     this.plugins.delete(pluginId);
-    
+
     this.emit('pluginUninstalled', plugin.manifest);
   }
 
   async updatePlugin(pluginPath: string): Promise<void> {
     const manifest = await this.loadManifest(pluginPath);
     const existingPlugin = this.plugins.get(manifest.id);
-    
+
     if (!existingPlugin) {
       throw new Error(`Plugin ${manifest.id} not found for update`);
     }
 
     await this.uninstallPlugin(manifest.id);
     await this.installPlugin(pluginPath);
-    
+
     this.emit('pluginUpdated', manifest);
   }
 
@@ -68,13 +68,17 @@ export class PluginManager extends EventEmitter {
 
   private validateManifest(manifest: PluginManifest): void {
     if (compareVersions(this.hostVersion, manifest.minHostVersion) < 0) {
-      throw new Error(`Host version ${this.hostVersion} is lower than required ${manifest.minHostVersion}`);
+      throw new Error(
+        `Host version ${this.hostVersion} is lower than required ${manifest.minHostVersion}`
+      );
     }
 
     if (compareVersions(this.hostVersion, manifest.maxHostVersion) > 0) {
-      throw new Error(`Host version ${this.hostVersion} is higher than supported ${manifest.maxHostVersion}`);
+      throw new Error(
+        `Host version ${this.hostVersion} is higher than supported ${manifest.maxHostVersion}`
+      );
     }
 
     // Additional validation can be added here
   }
-} 
+}

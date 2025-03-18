@@ -45,21 +45,27 @@ afterAll(async () => {
 
 async function initializeTestResources() {
   // Create test DynamoDB tables
-  await dynamoClient.send(new CreateTableCommand({
-    TableName: 'TestTasks',
-    // ... table configuration
-  }));
+  await dynamoClient.send(
+    new CreateTableCommand({
+      TableName: 'TestTasks',
+      // ... table configuration
+    })
+  );
 
   // Create test SNS topics
-  await snsClient.send(new CreateTopicCommand({
-    Name: 'TestTopic',
-  }));
+  await snsClient.send(
+    new CreateTopicCommand({
+      Name: 'TestTopic',
+    })
+  );
 
   // Create test SQS queues
-  await sqsClient.send(new CreateQueueCommand({
-    QueueName: 'TestQueue',
-  }));
+  await sqsClient.send(
+    new CreateQueueCommand({
+      QueueName: 'TestQueue',
+    })
+  );
 }
 
 // Export clients for tests
-export { dynamoClient, snsClient, sqsClient }; 
+export { dynamoClient, snsClient, sqsClient };

@@ -20,24 +20,28 @@ export class AnalyticsStack extends cdk.Stack {
     const dataStream = new kinesis.Stream(this, 'VerificationDataStream', {
       streamName: 'verification-analytics-stream',
       shardCount: 2,
-      retentionPeriod: cdk.Duration.hours(24)
+      retentionPeriod: cdk.Duration.hours(24),
     });
 
     // Data lake storage
     const dataLakeBucket = new s3.Bucket(this, 'AnalyticsDataLake', {
       bucketName: 'mindburn-analytics-data-lake',
       encryption: s3.BucketEncryption.S3_MANAGED,
-      lifecycleRules: [{
-        transitions: [{
-          storageClass: s3.StorageClass.INTELLIGENT_TIERING,
-          transitionAfter: cdk.Duration.days(90)
-        }]
-      }]
+      lifecycleRules: [
+        {
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INTELLIGENT_TIERING,
+              transitionAfter: cdk.Duration.days(90),
+            },
+          ],
+        },
+      ],
     });
 
     // Kinesis Firehose for data ingestion
     const firehoseRole = new iam.Role(this, 'FirehoseRole', {
-      assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com')
+      assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com'),
     });
 
     dataLakeBucket.grantWrite(firehoseRole);
@@ -48,18 +52,18 @@ export class AnalyticsStack extends cdk.Stack {
       deliveryStreamType: 'KinesisStreamAsSource',
       kinesisStreamSourceConfiguration: {
         kinesisStreamArn: dataStream.streamArn,
-        roleArn: firehoseRole.roleArn
+        roleArn: firehoseRole.roleArn,
       },
       s3DestinationConfiguration: {
         bucketArn: dataLakeBucket.bucketArn,
         roleArn: firehoseRole.roleArn,
         bufferingHints: {
           intervalInSeconds: 60,
-          sizeInMBs: 128
+          sizeInMBs: 128,
         },
         prefix: 'raw-data/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/',
-        errorOutputPrefix: 'errors/!{firehose:error-output-type}/'
-      }
+        errorOutputPrefix: 'errors/!{firehose:error-output-type}/',
+      },
     });
 
     // Glue Data Catalog for analytics
@@ -67,8 +71,8 @@ export class AnalyticsStack extends cdk.Stack {
       catalogId: this.account,
       databaseInput: {
         name: 'mindburn_analytics',
-        description: 'Database for verification analytics data'
-      }
+        description: 'Database for verification analytics data',
+      },
     });
 
     // Tables for different analytics views
@@ -81,7 +85,7 @@ export class AnalyticsStack extends cdk.Stack {
         tableType: 'EXTERNAL_TABLE',
         parameters: {
           classification: 'parquet',
-          'parquet.compression': 'SNAPPY'
+          'parquet.compression': 'SNAPPY',
         },
         storageDescriptor: {
           columns: [
@@ -93,26 +97,26 @@ export class AnalyticsStack extends cdk.Stack {
             { name: 'response_time_ms', type: 'bigint' },
             { name: 'is_accurate', type: 'boolean' },
             { name: 'cost', type: 'double' },
-            { name: 'timestamp', type: 'timestamp' }
+            { name: 'timestamp', type: 'timestamp' },
           ],
           location: `s3://${dataLakeBucket.bucketName}/processed/verification_metrics/`,
           inputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat',
           outputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat',
           serdeInfo: {
-            serializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
-          }
+            serializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe',
+          },
         },
         partitionKeys: [
           { name: 'year', type: 'string' },
           { name: 'month', type: 'string' },
-          { name: 'day', type: 'string' }
-        ]
-      }
+          { name: 'day', type: 'string' },
+        ],
+      },
     });
 
     // ML Model training pipeline
     const notebookRole = new iam.Role(this, 'SageMakerNotebookRole', {
-      assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com')
+      assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com'),
     });
 
     dataLakeBucket.grantRead(notebookRole);
@@ -120,7 +124,7 @@ export class AnalyticsStack extends cdk.Stack {
     const notebook = new sagemaker.CfnNotebookInstance(this, 'AnalyticsNotebook', {
       instanceType: 'ml.t3.medium',
       roleArn: notebookRole.roleArn,
-      notebookInstanceName: 'mindburn-analytics-notebook'
+      notebookInstanceName: 'mindburn-analytics-notebook',
     });
 
     // ETL Lambda function
@@ -132,8 +136,8 @@ export class AnalyticsStack extends cdk.Stack {
       memorySize: 1792,
       environment: {
         DATA_STREAM_NAME: dataStream.streamName,
-        DATA_LAKE_BUCKET: dataLakeBucket.bucketName
-      }
+        DATA_LAKE_BUCKET: dataLakeBucket.bucketName,
+      },
     });
 
     dataStream.grantWrite(etlFunction);
@@ -141,7 +145,7 @@ export class AnalyticsStack extends cdk.Stack {
 
     // QuickSight setup
     const quicksightPrincipal = new iam.Role(this, 'QuickSightRole', {
-      assumedBy: new iam.ServicePrincipal('quicksight.amazonaws.com')
+      assumedBy: new iam.ServicePrincipal('quicksight.amazonaws.com'),
     });
 
     dataLakeBucket.grantRead(quicksightPrincipal);
@@ -149,7 +153,7 @@ export class AnalyticsStack extends cdk.Stack {
     const dashboards = new QuickSightDashboards(this, 'Dashboards', {
       dataSourceArn: `arn:aws:quicksight:${this.region}:${this.account}:datasource/mindburn-analytics`,
       dataSetArn: `arn:aws:quicksight:${this.region}:${this.account}:dataset/mindburn-verification-metrics`,
-      principalArn: quicksightPrincipal.roleArn
+      principalArn: quicksightPrincipal.roleArn,
     });
 
     // Anomaly detection Lambda
@@ -161,8 +165,8 @@ export class AnalyticsStack extends cdk.Stack {
       memorySize: 1792,
       environment: {
         MODEL_BUCKET: dataLakeBucket.bucketName,
-        MODEL_KEY: 'models/anomaly_detector/model.joblib'
-      }
+        MODEL_KEY: 'models/anomaly_detector/model.joblib',
+      },
     });
 
     dataLakeBucket.grantRead(anomalyDetectionFunction);
@@ -172,9 +176,9 @@ export class AnalyticsStack extends cdk.Stack {
       namespace: 'Mindburn/Analytics',
       metricName: 'AnomalyCount',
       dimensionsMap: {
-        Service: 'VerificationSystem'
+        Service: 'VerificationSystem',
       },
-      period: cdk.Duration.minutes(5)
+      period: cdk.Duration.minutes(5),
     });
 
     new cloudwatch.Alarm(this, 'AnomalyAlarm', {
@@ -183,13 +187,13 @@ export class AnalyticsStack extends cdk.Stack {
       evaluationPeriods: 2,
       datapointsToAlarm: 2,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      actionsEnabled: true
+      actionsEnabled: true,
     });
 
     // EventBridge rule for periodic anomaly detection
     new events.Rule(this, 'AnomalyDetectionSchedule', {
       schedule: events.Schedule.rate(cdk.Duration.minutes(5)),
-      targets: [new events_targets.LambdaFunction(anomalyDetectionFunction)]
+      targets: [new events_targets.LambdaFunction(anomalyDetectionFunction)],
     });
   }
-} 
+}

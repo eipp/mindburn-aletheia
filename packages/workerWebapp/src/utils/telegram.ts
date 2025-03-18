@@ -87,14 +87,15 @@ export const initTelegramApp = () => {
   // Set up viewport meta for mobile optimization
   const viewportMeta = document.createElement('meta');
   viewportMeta.name = 'viewport';
-  viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+  viewportMeta.content =
+    'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
   document.head.appendChild(viewportMeta);
 
   // Handle theme changes
   const handleThemeChange = () => {
     const isDarkMode = telegramWebApp.colorScheme === 'dark';
     document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-    
+
     // Apply theme colors from Telegram
     const {
       bg_color,
@@ -103,7 +104,7 @@ export const initTelegramApp = () => {
       link_color,
       button_color,
       button_text_color,
-      secondary_bg_color
+      secondary_bg_color,
     } = telegramWebApp.themeParams;
 
     const root = document.documentElement;
@@ -116,9 +117,11 @@ export const initTelegramApp = () => {
     root.style.setProperty('--tg-theme-secondary-bg-color', secondary_bg_color);
 
     // Update Material-UI theme
-    document.dispatchEvent(new CustomEvent('telegram-theme-changed', {
-      detail: { isDarkMode, colors: telegramWebApp.themeParams }
-    }));
+    document.dispatchEvent(
+      new CustomEvent('telegram-theme-changed', {
+        detail: { isDarkMode, colors: telegramWebApp.themeParams },
+      })
+    );
   };
 
   // Initial theme setup
@@ -190,7 +193,7 @@ export const hapticFeedback = {
   },
   selection: () => {
     telegramWebApp?.HapticFeedback.selectionChanged();
-  }
+  },
 };
 
 export const getUserData = () => {
@@ -236,4 +239,4 @@ export const openInvoice = (url: string) => {
   }
 
   telegramWebApp.openInvoice(url);
-}; 
+};

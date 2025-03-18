@@ -5,13 +5,13 @@ export enum PaymentStatus {
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  PARTIAL = 'PARTIAL'
+  PARTIAL = 'PARTIAL',
 }
 
 export enum TransactionStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export interface PaymentTransaction {
@@ -93,4 +93,4 @@ export interface PaymentFilter {
   minAmount?: number;
   maxAmount?: number;
   referenceId?: string;
-} 
+}

@@ -1,5 +1,10 @@
 import { Address } from '@ton/ton';
-import { TonService, createTonService, TonServiceLogger, PaymentContractInterface } from '@mindburn/shared';
+import {
+  TonService,
+  createTonService,
+  TonServiceLogger,
+  PaymentContractInterface,
+} from '@mindburn/shared';
 import { PaymentContract } from '@/contracts/payment';
 import { getTonNetworkConfig } from '@/config/ton';
 import logger from '../utils/logger';
@@ -17,7 +22,7 @@ export class TonService {
     this.client = ton.client.create({
       endpoint: import.meta.env.VITE_TON_ENDPOINT,
       apiKey: import.meta.env.VITE_TON_API_KEY,
-      network: import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet' || 'mainnet'
+      network: (import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet',
     });
   }
 
@@ -26,11 +31,8 @@ export class TonService {
       if (!ton.validation.address(address)) {
         throw new Error('Invalid payment contract address');
       }
-      
-      this.paymentContract = new PaymentContract(
-        Address.parse(address),
-        this.client
-      );
+
+      this.paymentContract = new PaymentContract(Address.parse(address), this.client);
       return true;
     } catch (error) {
       console.error('Error initializing payment contract:', error);
@@ -82,14 +84,14 @@ export class TonService {
   validateAddress(address: string): boolean {
     return ton.validation.address(address);
   }
-  
+
   /**
    * Format a TON amount for display
    */
   formatAmount(amount: number | string): string {
     return ton.format.amount(amount);
   }
-  
+
   /**
    * Get the balance of a TON address
    */
@@ -101,27 +103,27 @@ export class TonService {
       return BigInt(0);
     }
   }
-  
+
   /**
    * Get the explorer URL for a transaction
    */
   getTransactionUrl(txHash: string): string {
     return ton.explorer.getTransactionUrl(
-      txHash, 
-      import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet' || 'mainnet'
+      txHash,
+      (import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet'
     );
   }
-  
+
   /**
    * Get the explorer URL for an address
    */
   getAddressUrl(address: string): string {
     return ton.explorer.getAddressUrl(
-      address, 
-      import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet' || 'mainnet'
+      address,
+      (import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet'
     );
   }
-  
+
   /**
    * Validate a withdrawal
    */
@@ -129,7 +131,7 @@ export class TonService {
     const result = ton.validation.withdrawal(amount, balance);
     return result.isValid;
   }
-  
+
   /**
    * Calculate the fee for a transaction
    */
@@ -156,18 +158,15 @@ export class TonService {
       if (!ton.validation.address(address)) {
         throw new Error('Invalid TON address');
       }
-      
-      const history = await this.client.getTransactions(
-        Address.parse(address),
-        limit
-      );
-      return history.map((tx) => ({
+
+      const history = await this.client.getTransactions(Address.parse(address), limit);
+      return history.map(tx => ({
         txId: tx.txId,
         timestamp: tx.timestamp,
         amount: tx.amount.toString(),
         fee: tx.totalFee.toString(),
         status: tx.status,
-        explorerUrl: this.getTransactionUrl(tx.txId)
+        explorerUrl: this.getTransactionUrl(tx.txId),
       }));
     } catch (error) {
       console.error('Error getting transaction history:', error);
@@ -181,7 +180,7 @@ const loggerAdapter: TonServiceLogger = {
   info: (message, meta) => logger.info(message, meta),
   error: (message, meta) => logger.error(message, meta),
   warn: (message, meta) => logger.warn(message, meta),
-  debug: (message, meta) => logger.debug(message, meta)
+  debug: (message, meta) => logger.debug(message, meta),
 };
 
 // Create a TonService instance with worker-webapp specific configuration
@@ -193,20 +192,22 @@ const tonService = createTonService(
 
 // Initialize the payment contract if an address is available
 if (import.meta.env.VITE_PAYMENT_CONTRACT_ADDRESS) {
-  tonService.initPaymentContract(
-    import.meta.env.VITE_PAYMENT_CONTRACT_ADDRESS,
-    PaymentContract as unknown as new (address: Address, client: any) => PaymentContractInterface
-  ).then((success) => {
-    if (success) {
-      logger.info('Payment contract initialized successfully');
-    } else {
-      logger.error('Failed to initialize payment contract');
-    }
-  });
+  tonService
+    .initPaymentContract(
+      import.meta.env.VITE_PAYMENT_CONTRACT_ADDRESS,
+      PaymentContract as unknown as new (address: Address, client: any) => PaymentContractInterface
+    )
+    .then(success => {
+      if (success) {
+        logger.info('Payment contract initialized successfully');
+      } else {
+        logger.error('Failed to initialize payment contract');
+      }
+    });
 }
 
 // Export the TonService instance
 export { tonService };
 
 // Re-export the TonService class for extension if needed
-export { TonService }; 
+export { TonService };

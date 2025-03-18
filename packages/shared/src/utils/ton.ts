@@ -18,14 +18,14 @@ export enum TransactionStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export enum TransactionType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
   REWARD = 'REWARD',
-  FEE = 'FEE'
+  FEE = 'FEE',
 }
 
 export interface Transaction {
@@ -86,7 +86,9 @@ export const ton = {
       }
 
       if (totalAmount.gt(balance)) {
-        errors.push(`Insufficient balance. Total required: ${ton.format.amount(totalAmount)} TON (including fee)`);
+        errors.push(
+          `Insufficient balance. Total required: ${ton.format.amount(totalAmount)} TON (including fee)`
+        );
       }
 
       if (data.minWithdrawal && amount.lt(data.minWithdrawal)) {
@@ -95,14 +97,18 @@ export const ton = {
 
       return {
         isValid: errors.length === 0,
-        errors
+        errors,
       };
     },
 
     /**
      * Validates a withdrawal
      */
-    withdrawal: (amount: number | string, balance: number | string, minWithdrawal: number = 1): ValidationResult => {
+    withdrawal: (
+      amount: number | string,
+      balance: number | string,
+      minWithdrawal: number = 1
+    ): ValidationResult => {
       const amountBN = new BigNumber(amount);
       const balanceBN = new BigNumber(balance);
       const errors: string[] = [];
@@ -124,9 +130,9 @@ export const ton = {
 
       return {
         isValid: errors.length === 0,
-        errors
+        errors,
       };
-    }
+    },
   },
 
   format: {
@@ -146,7 +152,7 @@ export const ton = {
         pending: 'Pending',
         completed: 'Completed',
         failed: 'Failed',
-        cancelled: 'Cancelled'
+        cancelled: 'Cancelled',
       };
       return statusMap[status.toLowerCase()] || status;
     },
@@ -159,10 +165,10 @@ export const ton = {
         deposit: 'Deposit',
         withdrawal: 'Withdrawal',
         reward: 'Reward',
-        fee: 'Fee'
+        fee: 'Fee',
       };
       return typeMap[type.toLowerCase()] || type;
-    }
+    },
   },
 
   parse: {
@@ -176,7 +182,7 @@ export const ton = {
       } catch {
         return null;
       }
-    }
+    },
   },
 
   calculation: {
@@ -187,7 +193,7 @@ export const ton = {
       // Standard TON fee calculation
       const amountBN = new BigNumber(amount);
       return amountBN.multipliedBy(0.001).plus(0.01); // 0.1% + 0.01 TON base fee
-    }
+    },
   },
 
   explorer: {
@@ -195,9 +201,7 @@ export const ton = {
      * Gets the explorer URL for a transaction
      */
     getTransactionUrl: (txHash: string, network: 'mainnet' | 'testnet' = 'mainnet'): string => {
-      const baseUrl = network === 'mainnet'
-        ? 'https://tonscan.org'
-        : 'https://testnet.tonscan.org';
+      const baseUrl = network === 'mainnet' ? 'https://tonscan.org' : 'https://testnet.tonscan.org';
       return `${baseUrl}/tx/${txHash}`;
     },
 
@@ -205,11 +209,9 @@ export const ton = {
      * Gets the explorer URL for an address
      */
     getAddressUrl: (address: string, network: 'mainnet' | 'testnet' = 'mainnet'): string => {
-      const baseUrl = network === 'mainnet'
-        ? 'https://tonscan.org'
-        : 'https://testnet.tonscan.org';
+      const baseUrl = network === 'mainnet' ? 'https://tonscan.org' : 'https://testnet.tonscan.org';
       return `${baseUrl}/address/${address}`;
-    }
+    },
   },
 
   client: {
@@ -218,15 +220,16 @@ export const ton = {
      */
     create: (config?: Partial<TonNetworkConfig>): TonClient => {
       const defaultConfig: TonNetworkConfig = {
-        endpoint: config?.network === 'testnet' ? DEFAULT_TESTNET_ENDPOINT : DEFAULT_MAINNET_ENDPOINT,
-        network: 'mainnet'
+        endpoint:
+          config?.network === 'testnet' ? DEFAULT_TESTNET_ENDPOINT : DEFAULT_MAINNET_ENDPOINT,
+        network: 'mainnet',
       };
 
       const mergedConfig = { ...defaultConfig, ...config };
 
       return new TonClient({
         endpoint: mergedConfig.endpoint,
-        apiKey: mergedConfig.apiKey
+        apiKey: mergedConfig.apiKey,
       });
     },
 
@@ -245,8 +248,8 @@ export const ton = {
         console.error('Error getting balance:', error);
         return BigInt(0);
       }
-    }
-  }
+    },
+  },
 };
 
 // Legacy exports for backward compatibility
@@ -255,7 +258,7 @@ export const validateTonAddress = ton.validation.address;
 export const formatTonAmount = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
@@ -274,7 +277,10 @@ export const calculateFee = (amount: number): number => {
   return 0.01;
 };
 
-export const getTransactionExplorerUrl = (txHash: string, network: 'mainnet' | 'testnet' = 'mainnet'): string => {
+export const getTransactionExplorerUrl = (
+  txHash: string,
+  network: 'mainnet' | 'testnet' = 'mainnet'
+): string => {
   return ton.explorer.getTransactionUrl(txHash, network);
 };
 
@@ -288,6 +294,6 @@ export const validateTransactionData = (data: {
     amount: data.amount,
     address: data.address,
     balance: data.balance,
-    minWithdrawal: data.minWithdrawal
+    minWithdrawal: data.minWithdrawal,
   });
-}; 
+};

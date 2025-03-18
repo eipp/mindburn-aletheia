@@ -10,39 +10,39 @@ const TRAINING_TASKS = [
     id: 'training_1',
     type: 'text',
     description: 'Identify the sentiment of this text: "I love this product!"',
-    answer: 'positive'
+    answer: 'positive',
   },
   {
     id: 'training_2',
     type: 'image',
     description: 'Is this image appropriate for all ages?',
-    answer: 'yes'
+    answer: 'yes',
   },
   {
     id: 'training_3',
     type: 'text',
     description: 'Classify this content: "Buy cheap watches here!"',
-    answer: 'spam'
-  }
+    answer: 'spam',
+  },
 ];
 
 export const registrationScene = new Scenes.WizardScene<BotContext>(
   'registration',
   // Step 1: Welcome and Terms
-  async (ctx) => {
+  async ctx => {
     try {
       await ctx.reply(
         ctx.i18n.t('registration.welcome', {
-          username: ctx.from.first_name
+          username: ctx.from.first_name,
         }),
         {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
               [{ text: '📜 View Terms', callback_data: 'view_terms' }],
-              [{ text: '✅ Accept & Continue', callback_data: 'accept_terms' }]
-            ]
-          }
+              [{ text: '✅ Accept & Continue', callback_data: 'accept_terms' }],
+            ],
+          },
         }
       );
       return ctx.wizard.next();
@@ -53,47 +53,39 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
     }
   },
   // Step 2: Task Preferences
-  async (ctx) => {
+  async ctx => {
     try {
       if (!ctx.callbackQuery?.data) {
         return;
       }
 
       if (ctx.callbackQuery.data === 'view_terms') {
-        await ctx.reply(
-          ctx.i18n.t('registration.terms'),
-          {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '✅ Accept & Continue', callback_data: 'accept_terms' }]
-              ]
-            }
-          }
-        );
+        await ctx.reply(ctx.i18n.t('registration.terms'), {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: '✅ Accept & Continue', callback_data: 'accept_terms' }]],
+          },
+        });
         return;
       }
 
       if (ctx.callbackQuery.data === 'accept_terms') {
-        await ctx.reply(
-          ctx.i18n.t('registration.task_preferences'),
-          {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: '📝 Text', callback_data: 'pref_text' },
-                  { text: '🖼 Images', callback_data: 'pref_image' }
-                ],
-                [
-                  { text: '🎵 Audio', callback_data: 'pref_audio' },
-                  { text: '🎬 Video', callback_data: 'pref_video' }
-                ],
-                [{ text: '✅ Continue', callback_data: 'prefs_done' }]
-              ]
-            }
-          }
-        );
+        await ctx.reply(ctx.i18n.t('registration.task_preferences'), {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '📝 Text', callback_data: 'pref_text' },
+                { text: '🖼 Images', callback_data: 'pref_image' },
+              ],
+              [
+                { text: '🎵 Audio', callback_data: 'pref_audio' },
+                { text: '🎬 Video', callback_data: 'pref_video' },
+              ],
+              [{ text: '✅ Continue', callback_data: 'prefs_done' }],
+            ],
+          },
+        });
         ctx.session.data = { preferences: [] };
         return ctx.wizard.next();
       }
@@ -104,7 +96,7 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
     }
   },
   // Step 3: Training
-  async (ctx) => {
+  async ctx => {
     try {
       if (!ctx.callbackQuery?.data) {
         return;
@@ -125,17 +117,12 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
           return;
         }
 
-        await ctx.reply(
-          ctx.i18n.t('registration.training_start'),
-          {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🎓 Start Training', callback_data: 'start_training' }]
-              ]
-            }
-          }
-        );
+        await ctx.reply(ctx.i18n.t('registration.training_start'), {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: '🎓 Start Training', callback_data: 'start_training' }]],
+          },
+        });
         ctx.session.data.trainingStep = 0;
         return ctx.wizard.next();
       }
@@ -146,48 +133,43 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
     }
   },
   // Step 4: Training Tasks
-  async (ctx) => {
+  async ctx => {
     try {
       if (!ctx.callbackQuery?.data) {
         return;
       }
 
-      if (ctx.callbackQuery.data === 'start_training' || ctx.callbackQuery.data.startsWith('answer_')) {
+      if (
+        ctx.callbackQuery.data === 'start_training' ||
+        ctx.callbackQuery.data.startsWith('answer_')
+      ) {
         const step = ctx.session.data.trainingStep;
-        
+
         if (ctx.callbackQuery.data.startsWith('answer_')) {
           const answer = ctx.callbackQuery.data.replace('answer_', '');
           const isCorrect = answer === TRAINING_TASKS[step - 1].answer;
-          
+
           if (!isCorrect) {
-            await ctx.reply(
-              ctx.i18n.t('registration.incorrect_answer'),
-              {
-                parse_mode: 'HTML',
-                reply_markup: {
-                  inline_keyboard: [
-                    [{ text: '🔄 Try Again', callback_data: 'start_training' }]
-                  ]
-                }
-              }
-            );
+            await ctx.reply(ctx.i18n.t('registration.incorrect_answer'), {
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔄 Try Again', callback_data: 'start_training' }]],
+              },
+            });
             return;
           }
         }
 
         if (step >= TRAINING_TASKS.length) {
           // Training complete
-          await ctx.reply(
-            ctx.i18n.t('registration.training_complete'),
-            {
-              parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '🎉 Complete Registration', callback_data: 'complete_registration' }]
-                ]
-              }
-            }
-          );
+          await ctx.reply(ctx.i18n.t('registration.training_complete'), {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🎉 Complete Registration', callback_data: 'complete_registration' }],
+              ],
+            },
+          });
           return ctx.wizard.next();
         }
 
@@ -197,7 +179,7 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
           ctx.i18n.t('registration.training_task', {
             step: step + 1,
             total: TRAINING_TASKS.length,
-            description: task.description
+            description: task.description,
           }),
           {
             parse_mode: 'HTML',
@@ -205,14 +187,14 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
               inline_keyboard: [
                 [
                   { text: '👍 Positive', callback_data: 'answer_positive' },
-                  { text: '👎 Negative', callback_data: 'answer_negative' }
+                  { text: '👎 Negative', callback_data: 'answer_negative' },
                 ],
                 [
                   { text: '🚫 Spam', callback_data: 'answer_spam' },
-                  { text: '✅ Safe', callback_data: 'answer_yes' }
-                ]
-              ]
-            }
+                  { text: '✅ Safe', callback_data: 'answer_yes' },
+                ],
+              ],
+            },
           }
         );
         ctx.session.data.trainingStep++;
@@ -224,7 +206,7 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
     }
   },
   // Step 5: Complete Registration
-  async (ctx) => {
+  async ctx => {
     try {
       if (!ctx.callbackQuery?.data || ctx.callbackQuery.data !== 'complete_registration') {
         return;
@@ -237,32 +219,31 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
 
       // Update worker profile with preferences
       const dynamodb = new DynamoDB.DocumentClient();
-      await dynamodb.update({
-        TableName: process.env.WORKERS_TABLE!,
-        Key: { userId },
-        UpdateExpression: 'SET taskPreferences = :prefs, trainingCompleted = :completed',
-        ExpressionAttributeValues: {
-          ':prefs': ctx.session.data.preferences,
-          ':completed': true
-        }
-      }).promise();
+      await dynamodb
+        .update({
+          TableName: process.env.WORKERS_TABLE!,
+          Key: { userId },
+          UpdateExpression: 'SET taskPreferences = :prefs, trainingCompleted = :completed',
+          ExpressionAttributeValues: {
+            ':prefs': ctx.session.data.preferences,
+            ':completed': true,
+          },
+        })
+        .promise();
 
-      await ctx.reply(
-        ctx.i18n.t('registration.complete'),
-        {
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '📋 View Available Tasks', callback_data: 'view_tasks' }],
-              [{ text: '💼 Connect Wallet', callback_data: 'connect_wallet' }]
-            ]
-          }
-        }
-      );
+      await ctx.reply(ctx.i18n.t('registration.complete'), {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 View Available Tasks', callback_data: 'view_tasks' }],
+            [{ text: '💼 Connect Wallet', callback_data: 'connect_wallet' }],
+          ],
+        },
+      });
 
       logger.info('Registration completed', {
         userId,
-        preferences: ctx.session.data.preferences
+        preferences: ctx.session.data.preferences,
       });
 
       return ctx.scene.leave();
@@ -272,4 +253,4 @@ export const registrationScene = new Scenes.WizardScene<BotContext>(
       return ctx.scene.leave();
     }
   }
-); 
+);

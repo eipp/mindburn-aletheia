@@ -41,33 +41,31 @@ export class GoldenSetVerifier {
     try {
       // Find similar golden set entries
       const goldenSetEntries = await this.findSimilarGoldenSetEntries(taskType, content);
-      
+
       if (goldenSetEntries.length === 0) {
         throw new Error('No matching golden set entries found');
       }
 
       // Get worker verification for comparison
       const workerVerification = await this.getWorkerVerification(taskId);
-      
+
       if (!workerVerification) {
         throw new Error('No worker verification found');
       }
 
       // Compare with golden set
-      const result = this.compareWithGoldenSet(
-        workerVerification,
-        goldenSetEntries,
-        content
-      );
+      const result = this.compareWithGoldenSet(workerVerification, goldenSetEntries, content);
 
       return {
         ...result,
         processingTime: Date.now() - startTime,
-        contributors: [{
-          type: 'GOLDEN_SET',
-          matchedEntries: goldenSetEntries.length,
-          similarity: result.confidence
-        }]
+        contributors: [
+          {
+            type: 'GOLDEN_SET',
+            matchedEntries: goldenSetEntries.length,
+            similarity: result.confidence,
+          },
+        ],
       };
     } catch (error) {
       console.error('Golden set verification error:', error);
@@ -80,34 +78,38 @@ export class GoldenSetVerifier {
     content: any
   ): Promise<GoldenSetEntry[]> {
     // Get golden set entries for task type
-    const result = await this.dynamodb.query({
-      TableName: this.goldenSetTable,
-      IndexName: 'TaskTypeIndex',
-      KeyConditionExpression: 'taskType = :taskType',
-      ExpressionAttributeValues: {
-        ':taskType': taskType
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.goldenSetTable,
+        IndexName: 'TaskTypeIndex',
+        KeyConditionExpression: 'taskType = :taskType',
+        ExpressionAttributeValues: {
+          ':taskType': taskType,
+        },
+      })
+      .promise();
 
     const entries = result.Items as GoldenSetEntry[];
 
     // Filter by content similarity
-    return entries.filter(entry => 
-      this.calculateContentSimilarity(content, entry.content) >= this.similarityThreshold
+    return entries.filter(
+      entry => this.calculateContentSimilarity(content, entry.content) >= this.similarityThreshold
     );
   }
 
   private async getWorkerVerification(taskId: string): Promise<WorkerVerification | null> {
-    const result = await this.dynamodb.query({
-      TableName: this.resultsTable,
-      KeyConditionExpression: 'taskId = :taskId',
-      Limit: 1,
-      ExpressionAttributeValues: {
-        ':taskId': taskId
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.resultsTable,
+        KeyConditionExpression: 'taskId = :taskId',
+        Limit: 1,
+        ExpressionAttributeValues: {
+          ':taskId': taskId,
+        },
+      })
+      .promise();
 
-    return result.Items?.[0] as WorkerVerification || null;
+    return (result.Items?.[0] as WorkerVerification) || null;
   }
 
   private compareWithGoldenSet(
@@ -126,19 +128,19 @@ export class GoldenSetVerifier {
       featureMatch: this.calculateFeatureMatch(
         workerVerification.explanation,
         entry.expectedResult.keyFeatures
-      )
+      ),
     }));
 
     // Calculate weighted decision
     const totalWeight = comparisonResults.reduce((sum, r) => sum + r.similarity, 0);
-    const correctDecisions = comparisonResults.filter(r =>
-      r.entry.expectedResult.decision === workerVerification.decision
+    const correctDecisions = comparisonResults.filter(
+      r => r.entry.expectedResult.decision === workerVerification.decision
     );
     const correctWeight = correctDecisions.reduce((sum, r) => sum + r.similarity, 0);
 
     const decisionAccuracy = correctWeight / totalWeight;
-    const averageFeatureMatch = comparisonResults.reduce((sum, r) => sum + r.featureMatch, 0) / 
-                               comparisonResults.length;
+    const averageFeatureMatch =
+      comparisonResults.reduce((sum, r) => sum + r.featureMatch, 0) / comparisonResults.length;
 
     // Calculate confidence and decision
     const confidence = (decisionAccuracy + averageFeatureMatch) / 2;
@@ -154,7 +156,7 @@ export class GoldenSetVerifier {
     return {
       decision,
       confidence,
-      explanation
+      explanation,
     };
   }
 
@@ -163,21 +165,18 @@ export class GoldenSetVerifier {
     // This is a simplified example
     const str1 = JSON.stringify(content1);
     const str2 = JSON.stringify(content2);
-    
+
     let similarity = 0;
     const len = Math.min(str1.length, str2.length);
-    
+
     for (let i = 0; i < len; i++) {
       if (str1[i] === str2[i]) similarity++;
     }
-    
+
     return similarity / Math.max(str1.length, str2.length);
   }
 
-  private calculateFeatureMatch(
-    explanation: string,
-    expectedFeatures: string[]
-  ): number {
+  private calculateFeatureMatch(explanation: string, expectedFeatures: string[]): number {
     const normalizedExplanation = explanation.toLowerCase();
     const matchedFeatures = expectedFeatures.filter(feature =>
       normalizedExplanation.includes(feature.toLowerCase())
@@ -197,8 +196,8 @@ export class GoldenSetVerifier {
   ): string {
     const matchedCount = comparisonResults.length;
     const highSimilarityCount = comparisonResults.filter(r => r.similarity > 0.9).length;
-    const averageFeatureMatch = comparisonResults.reduce((sum, r) => sum + r.featureMatch, 0) / 
-                               matchedCount;
+    const averageFeatureMatch =
+      comparisonResults.reduce((sum, r) => sum + r.featureMatch, 0) / matchedCount;
 
     // Get most similar golden set entries
     const topMatches = comparisonResults
@@ -207,16 +206,21 @@ export class GoldenSetVerifier {
       .map(r => ({
         similarity: r.similarity,
         featureMatch: r.featureMatch,
-        expectedDecision: r.entry.expectedResult.decision
+        expectedDecision: r.entry.expectedResult.decision,
       }));
 
-    return `Golden set verification completed with ${confidence.toFixed(2)} confidence. ` +
-           `Matched ${matchedCount} golden set entries (${highSimilarityCount} high similarity). ` +
-           `Average feature match rate: ${(averageFeatureMatch * 100).toFixed(1)}%. ` +
-           `Top matches: ${topMatches.map(m =>
-             `[Similarity: ${(m.similarity * 100).toFixed(1)}%, ` +
-             `Feature match: ${(m.featureMatch * 100).toFixed(1)}%, ` +
-             `Expected: ${m.expectedDecision}]`
-           ).join(' ')}`;
+    return (
+      `Golden set verification completed with ${confidence.toFixed(2)} confidence. ` +
+      `Matched ${matchedCount} golden set entries (${highSimilarityCount} high similarity). ` +
+      `Average feature match rate: ${(averageFeatureMatch * 100).toFixed(1)}%. ` +
+      `Top matches: ${topMatches
+        .map(
+          m =>
+            `[Similarity: ${(m.similarity * 100).toFixed(1)}%, ` +
+            `Feature match: ${(m.featureMatch * 100).toFixed(1)}%, ` +
+            `Expected: ${m.expectedDecision}]`
+        )
+        .join(' ')}`
+    );
   }
-} 
+}

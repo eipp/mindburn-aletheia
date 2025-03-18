@@ -4,7 +4,7 @@ import {
   WorkerStatus,
   TaskAssignment,
   TaskType,
-  NotificationService
+  NotificationService,
 } from '../types';
 
 interface ActivityMetrics {
@@ -30,16 +30,13 @@ export class WorkerActivityService {
     taskTimeout: 2 * 60 * 60 * 1000, // 2 hours
     maxConcurrentTasks: 3,
     minDailyTasks: 5,
-    maxDailyTasks: 50
+    maxDailyTasks: 50,
   };
 
   private readonly workerActivities = new Map<string, ActivityMetrics>();
   private readonly activeAssignments = new Map<string, Set<string>>();
 
-  constructor(
-    logger: Logger,
-    notificationService: NotificationService
-  ) {
+  constructor(logger: Logger, notificationService: NotificationService) {
     this.logger = logger.child({ service: 'WorkerActivity' });
     this.notificationService = notificationService;
   }
@@ -60,48 +57,40 @@ export class WorkerActivityService {
             from: oldStatus,
             to: newStatus,
             timestamp: new Date().toISOString(),
-            reason
-          }
-        }
+            reason,
+          },
+        },
       };
 
       this.logger.info('Worker status updated', {
         workerId: worker.workerId,
         oldStatus,
         newStatus,
-        reason
+        reason,
       });
 
       // Notify worker of status change if significant
       if (this.shouldNotifyStatusChange(oldStatus, newStatus)) {
-        await this.notificationService.notifyWorker(
-          worker.workerId,
-          'STATUS_CHANGE',
-          {
-            oldStatus,
-            newStatus,
-            reason
-          }
-        );
+        await this.notificationService.notifyWorker(worker.workerId, 'STATUS_CHANGE', {
+          oldStatus,
+          newStatus,
+          reason,
+        });
       }
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Failed to update worker status', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
   }
 
-  async trackTaskAssignment(
-    worker: WorkerProfile,
-    assignment: TaskAssignment
-  ): Promise<void> {
+  async trackTaskAssignment(worker: WorkerProfile, assignment: TaskAssignment): Promise<void> {
     const workerId = worker.workerId;
-    
+
     // Update active assignments
     if (!this.activeAssignments.has(workerId)) {
       this.activeAssignments.set(workerId, new Set());
@@ -112,14 +101,14 @@ export class WorkerActivityService {
     const currentActivity = this.workerActivities.get(workerId) || {
       activeTime: 0,
       taskCount: 0,
-      lastActive: new Date().toISOString()
+      lastActive: new Date().toISOString(),
     };
 
     this.workerActivities.set(workerId, {
       ...currentActivity,
       taskCount: currentActivity.taskCount + 1,
       lastActive: new Date().toISOString(),
-      currentTask: assignment.taskId
+      currentTask: assignment.taskId,
     });
 
     // Check for overload
@@ -128,12 +117,9 @@ export class WorkerActivityService {
     }
   }
 
-  async trackTaskCompletion(
-    worker: WorkerProfile,
-    assignment: TaskAssignment
-  ): Promise<void> {
+  async trackTaskCompletion(worker: WorkerProfile, assignment: TaskAssignment): Promise<void> {
     const workerId = worker.workerId;
-    
+
     // Remove from active assignments
     this.activeAssignments.get(workerId)?.delete(assignment.taskId);
 
@@ -145,7 +131,7 @@ export class WorkerActivityService {
         ...currentActivity,
         activeTime: currentActivity.activeTime + timeSpent,
         lastActive: new Date().toISOString(),
-        currentTask: undefined
+        currentTask: undefined,
       });
     }
 
@@ -170,7 +156,7 @@ export class WorkerActivityService {
         workerId: worker.workerId,
         type: 'INACTIVITY',
         details: `Inactive for ${Math.floor(inactiveDuration / (24 * 60 * 60 * 1000))} days`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -181,7 +167,7 @@ export class WorkerActivityService {
         workerId: worker.workerId,
         type: 'LOW_ACCURACY',
         details: `Only ${dailyTasks} tasks completed today`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -203,7 +189,8 @@ export class WorkerActivityService {
 
     this.workerActivities.forEach((activity, workerId) => {
       const lastActiveTime = new Date(activity.lastActive).getTime();
-      if (now - lastActiveTime < 24 * 60 * 60 * 1000) { // Active in last 24h
+      if (now - lastActiveTime < 24 * 60 * 60 * 1000) {
+        // Active in last 24h
         activeWorkers.push(workerId);
       }
     });
@@ -217,20 +204,12 @@ export class WorkerActivityService {
   }
 
   private async handleWorkerOverload(worker: WorkerProfile): Promise<void> {
-    await this.updateWorkerStatus(
-      worker,
-      WorkerStatus.BUSY,
-      'Maximum concurrent tasks reached'
-    );
+    await this.updateWorkerStatus(worker, WorkerStatus.BUSY, 'Maximum concurrent tasks reached');
 
-    await this.notificationService.notifyWorker(
-      worker.workerId,
-      'WORKLOAD_WARNING',
-      {
-        activeTaskCount: this.activeAssignments.get(worker.workerId)?.size,
-        maxTasks: this.activityThresholds.maxConcurrentTasks
-      }
-    );
+    await this.notificationService.notifyWorker(worker.workerId, 'WORKLOAD_WARNING', {
+      activeTaskCount: this.activeAssignments.get(worker.workerId)?.size,
+      maxTasks: this.activityThresholds.maxConcurrentTasks,
+    });
   }
 
   private async handlePerformanceAlert(
@@ -240,37 +219,26 @@ export class WorkerActivityService {
     this.logger.warn('Worker performance alert', {
       workerId: worker.workerId,
       alertType: alert.type,
-      details: alert.details
+      details: alert.details,
     });
 
     // Notify worker
-    await this.notificationService.notifyWorker(
-      worker.workerId,
-      'PERFORMANCE_ALERT',
-      {
-        type: alert.type,
-        details: alert.details
-      }
-    );
+    await this.notificationService.notifyWorker(worker.workerId, 'PERFORMANCE_ALERT', {
+      type: alert.type,
+      details: alert.details,
+    });
 
     // Update status for severe cases
     if (alert.type === 'INACTIVITY') {
-      await this.updateWorkerStatus(
-        worker,
-        WorkerStatus.SUSPENDED,
-        'Extended inactivity'
-      );
+      await this.updateWorkerStatus(worker, WorkerStatus.SUSPENDED, 'Extended inactivity');
     }
   }
 
-  private shouldNotifyStatusChange(
-    oldStatus: WorkerStatus,
-    newStatus: WorkerStatus
-  ): boolean {
+  private shouldNotifyStatusChange(oldStatus: WorkerStatus, newStatus: WorkerStatus): boolean {
     // Notify on significant status changes
     return (
-      oldStatus === WorkerStatus.AVAILABLE && newStatus === WorkerStatus.SUSPENDED ||
-      oldStatus === WorkerStatus.SUSPENDED && newStatus === WorkerStatus.AVAILABLE ||
+      (oldStatus === WorkerStatus.AVAILABLE && newStatus === WorkerStatus.SUSPENDED) ||
+      (oldStatus === WorkerStatus.SUSPENDED && newStatus === WorkerStatus.AVAILABLE) ||
       newStatus === WorkerStatus.BUSY
     );
   }
@@ -295,9 +263,9 @@ export class WorkerActivityService {
       weeklyStats: {
         taskCount: 0,
         activeTime: 0,
-        completionRate: 0
+        completionRate: 0,
       },
-      alerts: []
+      alerts: [],
     };
   }
-} 
+}

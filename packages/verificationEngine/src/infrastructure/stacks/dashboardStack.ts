@@ -7,7 +7,7 @@ export class VerificationDashboardStack extends cdk.Stack {
     super(scope, id, props);
 
     const dashboard = new cloudwatch.Dashboard(this, 'VerificationDashboard', {
-      dashboardName: 'MindBurn-Verification-Performance'
+      dashboardName: 'MindBurn-Verification-Performance',
     });
 
     // AI Model Performance Metrics
@@ -16,9 +16,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('Accuracy', 'Average'),
         this.createMetric('Confidence', 'Average'),
-        this.createMetric('ProcessingTime', 'Average')
+        this.createMetric('ProcessingTime', 'Average'),
       ],
-      period: cdk.Duration.minutes(5)
+      period: cdk.Duration.minutes(5),
     });
 
     // Human Verification Metrics
@@ -27,9 +27,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('HumanVerificationRate', 'Sum'),
         this.createMetric('HumanCorrectionRate', 'Average'),
-        this.createMetric('AverageVerificationTime', 'Average')
+        this.createMetric('AverageVerificationTime', 'Average'),
       ],
-      period: cdk.Duration.minutes(15)
+      period: cdk.Duration.minutes(15),
     });
 
     // Model Drift Detection
@@ -38,9 +38,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('AccuracyDrift', 'Average'),
         this.createMetric('ConfidenceDrift', 'Average'),
-        this.createMetric('HumanCorrectionDrift', 'Average')
+        this.createMetric('HumanCorrectionDrift', 'Average'),
       ],
-      period: cdk.Duration.hours(1)
+      period: cdk.Duration.hours(1),
     });
 
     // Domain-specific Performance
@@ -49,9 +49,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('MedicalAccuracy', 'Average'),
         this.createMetric('LegalAccuracy', 'Average'),
-        this.createMetric('FinancialAccuracy', 'Average')
+        this.createMetric('FinancialAccuracy', 'Average'),
       ],
-      period: cdk.Duration.hours(1)
+      period: cdk.Duration.hours(1),
     });
 
     // Verification Queue Metrics
@@ -60,9 +60,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('QueueLength', 'Sum'),
         this.createMetric('AverageWaitTime', 'Average'),
-        this.createMetric('EscalationRate', 'Sum')
+        this.createMetric('EscalationRate', 'Sum'),
       ],
-      period: cdk.Duration.minutes(5)
+      period: cdk.Duration.minutes(5),
     });
 
     // Error Rates
@@ -71,9 +71,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('AIFailureRate', 'Sum'),
         this.createMetric('ValidationErrors', 'Sum'),
-        this.createMetric('APIErrors', 'Sum')
+        this.createMetric('APIErrors', 'Sum'),
       ],
-      period: cdk.Duration.minutes(5)
+      period: cdk.Duration.minutes(5),
     });
 
     // Bias Monitoring
@@ -82,9 +82,9 @@ export class VerificationDashboardStack extends cdk.Stack {
       left: [
         this.createMetric('ContentBias', 'Average'),
         this.createMetric('DomainBias', 'Average'),
-        this.createMetric('SourceBias', 'Average')
+        this.createMetric('SourceBias', 'Average'),
       ],
-      period: cdk.Duration.hours(1)
+      period: cdk.Duration.hours(1),
     });
 
     // Add all widgets to dashboard
@@ -102,17 +102,14 @@ export class VerificationDashboardStack extends cdk.Stack {
     this.createAlarms();
   }
 
-  private createMetric(
-    metricName: string,
-    statistic: string
-  ): cloudwatch.Metric {
+  private createMetric(metricName: string, statistic: string): cloudwatch.Metric {
     return new cloudwatch.Metric({
       namespace: 'MindBurn/Verification',
       metricName,
       statistic,
       dimensionsMap: {
-        Service: 'VerificationEngine'
-      }
+        Service: 'VerificationEngine',
+      },
     });
   }
 
@@ -123,9 +120,8 @@ export class VerificationDashboardStack extends cdk.Stack {
       threshold: 0.9,
       evaluationPeriods: 3,
       datapointsToAlarm: 2,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
-      treatMissingData: cloudwatch.TreatMissingData.BREACHING
+      comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.BREACHING,
     });
 
     // High queue length alarm
@@ -133,8 +129,7 @@ export class VerificationDashboardStack extends cdk.Stack {
       metric: this.createMetric('QueueLength', 'Sum'),
       threshold: 100,
       evaluationPeriods: 2,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
     });
 
     // Model drift alarm
@@ -143,8 +138,7 @@ export class VerificationDashboardStack extends cdk.Stack {
       threshold: 0.1,
       evaluationPeriods: 24,
       datapointsToAlarm: 18,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
     });
 
     // High error rate alarm
@@ -152,8 +146,7 @@ export class VerificationDashboardStack extends cdk.Stack {
       metric: this.createMetric('AIFailureRate', 'Sum'),
       threshold: 5,
       evaluationPeriods: 2,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
     });
 
     // Bias detection alarm
@@ -162,8 +155,7 @@ export class VerificationDashboardStack extends cdk.Stack {
       threshold: 0.3,
       evaluationPeriods: 6,
       datapointsToAlarm: 4,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
     });
   }
-} 
+}

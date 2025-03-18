@@ -41,8 +41,8 @@ export class AIVerifier {
           type: 'AI',
           model: v.model,
           confidence: v.confidence,
-          metadata: v.metadata
-        }))
+          metadata: v.metadata,
+        })),
       };
     } catch (error) {
       console.error('AI verification error:', error);
@@ -74,8 +74,8 @@ export class AIVerifier {
         metadata: {
           tokens: response.usage?.totalTokens || 0,
           temperature: config.temperature,
-          modelVersion: response.modelVersion || 'unknown'
-        }
+          modelVersion: response.modelVersion || 'unknown',
+        },
       };
     } catch (error) {
       console.error(`Error with ${config.model}:`, error);
@@ -147,13 +147,13 @@ Focus on:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
+        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
         prompt,
         max_tokens: config.maxTokens,
-        temperature: config.temperature
-      })
+        temperature: config.temperature,
+      }),
     });
 
     if (!response.ok) {
@@ -169,15 +169,15 @@ Focus on:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': config.apiKey
+        'x-goog-api-key': config.apiKey,
       },
       body: JSON.stringify({
         contents: [{ text: prompt }],
         generationConfig: {
           maxOutputTokens: config.maxTokens,
-          temperature: config.temperature
-        }
-      })
+          temperature: config.temperature,
+        },
+      }),
     });
 
     if (!response.ok) {
@@ -193,15 +193,15 @@ Focus on:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
+        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
         prompt,
         parameters: {
           max_tokens: config.maxTokens,
-          temperature: config.temperature
-        }
-      })
+          temperature: config.temperature,
+        },
+      }),
     });
 
     if (!response.ok) {
@@ -222,13 +222,13 @@ Focus on:
       const text = response.text || response.completion || response.output;
       const lines = text.split('\n');
 
-      const decision = lines.find(l => l.includes('Decision:'))?.includes('APPROVED') ? 
-        'APPROVED' : 'REJECTED';
-      
+      const decision = lines.find(l => l.includes('Decision:'))?.includes('APPROVED')
+        ? 'APPROVED'
+        : 'REJECTED';
+
       const confidenceLine = lines.find(l => l.includes('Confidence:'));
-      const confidence = confidenceLine ? 
-        parseFloat(confidenceLine.match(/[\d.]+/)[0]) : 0.5;
-      
+      const confidence = confidenceLine ? parseFloat(confidenceLine.match(/[\d.]+/)[0]) : 0.5;
+
       const explanation = lines
         .filter(l => !l.includes('Decision:') && !l.includes('Confidence:'))
         .join('\n')
@@ -237,7 +237,7 @@ Focus on:
       return {
         decision,
         confidence,
-        explanation
+        explanation,
       };
     } catch (error) {
       console.error('Error parsing AI response:', error);
@@ -253,7 +253,7 @@ Focus on:
     // Weight results by model confidence and processing time
     const weightedResults = verifications.map(v => ({
       ...v,
-      weight: this.calculateWeight(v)
+      weight: this.calculateWeight(v),
     }));
 
     // Calculate weighted decision
@@ -273,7 +273,7 @@ Focus on:
     return {
       decision,
       confidence,
-      explanation
+      explanation,
     };
   }
 
@@ -283,12 +283,10 @@ Focus on:
     return verification.confidence * timeWeight;
   }
 
-  private combineExplanations(
-    verifications: (AIVerification & { weight: number })[]
-  ): string {
+  private combineExplanations(verifications: (AIVerification & { weight: number })[]): string {
     // Sort by weight and combine top explanations
     const sortedVerifications = verifications.sort((a, b) => b.weight - a.weight);
-    
+
     const modelDecisions = sortedVerifications
       .map(v => `${v.model}: ${v.decision} (${(v.confidence * 100).toFixed(1)}% confidence)`)
       .join(', ');
@@ -300,4 +298,4 @@ Focus on:
 
     return `AI Model Consensus:\n${modelDecisions}\n\nKey Observations:\n${keyObservations}`;
   }
-} 
+}

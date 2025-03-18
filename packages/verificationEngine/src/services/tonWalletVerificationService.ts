@@ -46,22 +46,21 @@ export class TonWalletVerificationService {
         metadata: {
           contractState: contractInfo.state,
           hasMinBalance,
-          minRequired: this.minRequiredBalance
-        }
+          minRequired: this.minRequiredBalance,
+        },
       };
 
       this.logger.info('Wallet verification completed', {
         address,
         verified: verification.verified,
-        balance: verification.balance
+        balance: verification.balance,
       });
 
       return verification;
-
     } catch (error) {
       this.logger.error('Wallet verification failed', {
         error,
-        address
+        address,
       });
       throw error;
     }
@@ -73,35 +72,34 @@ export class TonWalletVerificationService {
   ): Promise<void> {
     try {
       const walletAddress = Address.parse(address);
-      
+
       // Subscribe to transactions
       const subscription = this.tonClient.createSubscription({
         address: walletAddress,
-        event: 'message'
+        event: 'message',
       });
 
-      subscription.on('message', async (message) => {
+      subscription.on('message', async message => {
         try {
           await callback({
             type: 'transaction',
             timestamp: new Date().toISOString(),
-            data: message
+            data: message,
           });
         } catch (error) {
           this.logger.error('Error processing wallet activity', {
             error,
             address,
-            message
+            message,
           });
         }
       });
 
       this.logger.info('Started monitoring wallet activity', { address });
-
     } catch (error) {
       this.logger.error('Failed to start wallet monitoring', {
         error,
-        address
+        address,
       });
       throw error;
     }
@@ -127,7 +125,7 @@ export class TonWalletVerificationService {
         this.logger.warn('Insufficient balance for transaction', {
           fromAddress,
           balance: balanceInTon,
-          amount
+          amount,
         });
         return false;
       }
@@ -137,7 +135,7 @@ export class TonWalletVerificationService {
       if (recipientState.state !== 'active') {
         this.logger.warn('Recipient wallet not active', {
           toAddress,
-          state: recipientState.state
+          state: recipientState.state,
         });
         return false;
       }
@@ -145,17 +143,16 @@ export class TonWalletVerificationService {
       this.logger.info('Transaction validation successful', {
         fromAddress,
         toAddress,
-        amount
+        amount,
       });
 
       return true;
-
     } catch (error) {
       this.logger.error('Transaction validation failed', {
         error,
         fromAddress,
         toAddress,
-        amount
+        amount,
       });
       throw error;
     }
@@ -169,4 +166,4 @@ export class TonWalletVerificationService {
       return false;
     }
   }
-} 
+}

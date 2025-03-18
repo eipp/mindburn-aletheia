@@ -1,7 +1,13 @@
 import { ModelRegistry } from '../model-registry';
 import { ModelRegistryWithErrorHandling } from '../services/model-registry-with-error-handling';
-import { validateConfig as validateErrorConfig, getEnvironmentConfig as getErrorConfig } from '../config/error-handling-config';
-import { validateConfig as validateRegistryConfig, getEnvironmentConfig as getRegistryConfig } from '../config/registry-config';
+import {
+  validateConfig as validateErrorConfig,
+  getEnvironmentConfig as getErrorConfig,
+} from '../config/error-handling-config';
+import {
+  validateConfig as validateRegistryConfig,
+  getEnvironmentConfig as getRegistryConfig,
+} from '../config/registry-config';
 
 export interface CreateModelRegistryOptions {
   useErrorHandling?: boolean;
@@ -9,7 +15,9 @@ export interface CreateModelRegistryOptions {
   registryConfigOverrides?: Record<string, any>;
 }
 
-export async function createModelRegistry(options: CreateModelRegistryOptions = {}): Promise<ModelRegistry | ModelRegistryWithErrorHandling> {
+export async function createModelRegistry(
+  options: CreateModelRegistryOptions = {}
+): Promise<ModelRegistry | ModelRegistryWithErrorHandling> {
   const {
     useErrorHandling = true,
     errorConfigOverrides = {},
@@ -37,4 +45,4 @@ export async function createModelRegistry(options: CreateModelRegistryOptions = 
 
   // Create model registry with error handling
   return new ModelRegistryWithErrorHandling(errorConfig, modelRegistry);
-} 
+}

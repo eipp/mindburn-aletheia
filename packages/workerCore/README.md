@@ -1,6 +1,6 @@
 # Worker Core
 
-Core functionality for Mindburn Aletheia worker interfaces, providing a unified API for both the web application and Telegram bot.
+Core functionality for worker-related operations in the Mindburn Aletheia platform.
 
 ## Features
 
@@ -15,7 +15,7 @@ Core functionality for Mindburn Aletheia worker interfaces, providing a unified 
 ## Installation
 
 ```bash
-pnpm add @mindburn/worker-core
+pnpm add @mindburn/workerCore
 ```
 
 ## Usage
@@ -25,33 +25,30 @@ pnpm add @mindburn/worker-core
 The `WorkerService` class provides the core functionality:
 
 ```typescript
-import { WorkerService } from '@mindburn/worker-core';
+import { WorkerService } from '@mindburn/workerCore';
 
-const service = new WorkerService();
+// Initialize the service
+const service = new WorkerService({
+  apiBaseUrl: 'https://api.example.com'
+});
 
 // Get worker profile
-const profile = await service.getProfile('worker-id');
+const profile = await service.getProfile('workerId');
 
 // Get available tasks
-const tasks = await service.getAvailableTasks('worker-id');
+const tasks = await service.getAvailableTasks('workerId');
 
 // Accept a task
-const assignment = await service.acceptTask('worker-id', 'task-id');
+const assignment = await service.acceptTask('workerId', 'taskId');
 
-// Submit task results
-const submission = {
-  taskId: 'task-id',
-  workerId: 'worker-id',
-  timestamp: new Date(),
-  responses: {
-    answer: 'Task response'
-  },
-  evidence: [],
-  duration: 300,
-  confidence: 0.95
-};
-
-const result = await service.submitTask(submission);
+// Submit verification result
+await service.submitVerification({
+  workerId: 'workerId',
+  taskId: 'taskId',
+  result: 'approved',
+  confidence: 0.95,
+  timeSpent: 45000  // ms
+});
 ```
 
 ### Types
@@ -66,8 +63,8 @@ import {
   WorkSession,
   TaskSubmission,
   WorkerStats,
-  ValidationResult
-} from '@mindburn/worker-core';
+  ValidationResult,
+} from '@mindburn/workerCore';
 ```
 
 ### React Integration
@@ -75,7 +72,7 @@ import {
 For web applications, use the provided React context:
 
 ```typescript
-import { WorkerProvider, useWorker } from '@mindburn/worker-core/react';
+import { WorkerProvider, useWorker } from '@mindburn/workerCore/react';
 
 function App() {
   return (
@@ -88,7 +85,7 @@ function App() {
 function WorkerDashboard() {
   const {
     profile,
-    availableTasks,
+    tasks,
     acceptTask,
     submitTask,
     error
@@ -103,10 +100,13 @@ function WorkerDashboard() {
 For Telegram bots, use the provided bot service:
 
 ```typescript
-import { BotService } from '@mindburn/worker-core/bot';
+import { BotService } from '@mindburn/workerCore/bot';
 
-const bot = new BotService(process.env.BOT_TOKEN);
-bot.start();
+// Initialize bot service
+const botService = new BotService();
+
+// Handle worker commands
+botService.handleProfileCommand(ctx);
 ```
 
 ## Configuration
@@ -147,4 +147,8 @@ try {
 
 ## License
 
-MIT 
+MIT
+
+## API
+
+See the [API documentation](./docs/API.md) for detailed information.

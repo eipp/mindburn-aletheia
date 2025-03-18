@@ -7,7 +7,7 @@ import {
   VerificationStatus,
   ConfidenceLevel,
   QualityMetrics,
-  WorkerMetrics
+  WorkerMetrics,
 } from '../types';
 import { ConsensusError } from '../errors';
 
@@ -15,7 +15,7 @@ export class ConsensusService {
   private readonly logger: Logger;
   private readonly confidenceThresholds = {
     high: 0.8,
-    medium: 0.6
+    medium: 0.6,
   };
 
   constructor(logger: Logger) {
@@ -39,27 +39,23 @@ export class ConsensusService {
         case ConsensusStrategy.MAJORITY:
           ({ consensus, confidenceLevel } = this.calculateMajorityConsensus(submissions));
           break;
-        
+
         case ConsensusStrategy.WEIGHTED:
           ({ consensus, confidenceLevel } = this.calculateWeightedConsensus(
             submissions,
             workerMetrics
           ));
           break;
-        
+
         case ConsensusStrategy.UNANIMOUS:
           ({ consensus, confidenceLevel } = this.calculateUnanimousConsensus(submissions));
           break;
-        
+
         default:
           throw new ConsensusError(`Unknown consensus strategy: ${task.consensusStrategy}`);
       }
 
-      const qualityMetrics = this.calculateQualityMetrics(
-        submissions,
-        consensus,
-        workerMetrics
-      );
+      const qualityMetrics = this.calculateQualityMetrics(submissions, consensus, workerMetrics);
 
       return {
         taskId: task.taskId,
@@ -72,13 +68,13 @@ export class ConsensusService {
           suspiciousActivities: [],
           riskLevel: 'LOW',
           workerBehaviorAnalysis: [],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
         processedAt: new Date().toISOString(),
         metadata: {
           submissionCount: submissions.length,
-          strategy: task.consensusStrategy
-        }
+          strategy: task.consensusStrategy,
+        },
       };
     } catch (error) {
       this.logger.error('Consensus calculation failed', { error, taskId: task.taskId });
@@ -86,9 +82,10 @@ export class ConsensusService {
     }
   }
 
-  private calculateMajorityConsensus(
-    submissions: WorkerSubmission[]
-  ): { consensus: any; confidenceLevel: ConfidenceLevel } {
+  private calculateMajorityConsensus(submissions: WorkerSubmission[]): {
+    consensus: any;
+    confidenceLevel: ConfidenceLevel;
+  } {
     const resultMap = new Map<string, number>();
     let maxCount = 0;
     let majorityResult: any;
@@ -110,7 +107,7 @@ export class ConsensusService {
 
     return {
       consensus: majorityResult,
-      confidenceLevel
+      confidenceLevel,
     };
   }
 
@@ -128,11 +125,8 @@ export class ConsensusService {
 
       const weight = this.calculateWorkerWeight(metrics);
       const resultStr = JSON.stringify(submission.result);
-      
-      weightedResults.set(
-        resultStr,
-        (weightedResults.get(resultStr) || 0) + weight
-      );
+
+      weightedResults.set(resultStr, (weightedResults.get(resultStr) || 0) + weight);
       totalWeight += weight;
     }
 
@@ -152,21 +146,20 @@ export class ConsensusService {
 
     return {
       consensus: consensusResult,
-      confidenceLevel
+      confidenceLevel,
     };
   }
 
-  private calculateUnanimousConsensus(
-    submissions: WorkerSubmission[]
-  ): { consensus: any; confidenceLevel: ConfidenceLevel } {
+  private calculateUnanimousConsensus(submissions: WorkerSubmission[]): {
+    consensus: any;
+    confidenceLevel: ConfidenceLevel;
+  } {
     const firstResult = JSON.stringify(submissions[0].result);
-    const isUnanimous = submissions.every(
-      s => JSON.stringify(s.result) === firstResult
-    );
+    const isUnanimous = submissions.every(s => JSON.stringify(s.result) === firstResult);
 
     return {
       consensus: isUnanimous ? submissions[0].result : null,
-      confidenceLevel: isUnanimous ? ConfidenceLevel.HIGH : ConfidenceLevel.LOW
+      confidenceLevel: isUnanimous ? ConfidenceLevel.HIGH : ConfidenceLevel.LOW,
     };
   }
 
@@ -176,27 +169,23 @@ export class ConsensusService {
     workerMetrics: Map<string, WorkerMetrics>
   ): QualityMetrics[] {
     const consensusStr = JSON.stringify(consensus);
-    
+
     return submissions.map(submission => {
       const metrics = workerMetrics.get(submission.workerId);
       const accuracy = JSON.stringify(submission.result) === consensusStr ? 1 : 0;
-      
+
       return {
         workerId: submission.workerId,
         submissionId: submission.submissionId,
         accuracy,
         timeSpent: submission.completedAt - submission.startedAt,
-        consistencyScore: metrics?.consistency || 0
+        consistencyScore: metrics?.consistency || 0,
       };
     });
   }
 
   private calculateWorkerWeight(metrics: WorkerMetrics): number {
-    return (
-      metrics.accuracy * 0.4 +
-      metrics.consistency * 0.3 +
-      metrics.reputationScore * 0.3
-    );
+    return metrics.accuracy * 0.4 + metrics.consistency * 0.3 + metrics.reputationScore * 0.3;
   }
 
   private determineConfidenceLevel(confidence: number): ConfidenceLevel {
@@ -238,12 +227,12 @@ export class ConsensusService {
         suspiciousActivities: [],
         riskLevel: 'LOW',
         workerBehaviorAnalysis: [],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       processedAt: new Date().toISOString(),
       metadata: {
-        insufficientSubmissions: true
-      }
+        insufficientSubmissions: true,
+      },
     };
   }
-} 
+}

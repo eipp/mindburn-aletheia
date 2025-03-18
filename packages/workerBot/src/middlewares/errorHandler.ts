@@ -10,16 +10,16 @@ export const errorHandler = async (error: Error, ctx: BotContext): Promise<void>
     logger.error('Bot error:', {
       error: {
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       },
       update: ctx.update,
       userId: ctx.from?.id,
-      command: ctx.message?.text
+      command: ctx.message?.text,
     });
 
     // Determine error type and send appropriate message
     let errorMessage: string;
-    
+
     if (error.message.includes('Forbidden')) {
       errorMessage = 'Bot lacks necessary permissions. Please ensure the bot has admin rights.';
     } else if (error.message.includes('Too Many Requests')) {
@@ -37,9 +37,9 @@ export const errorHandler = async (error: Error, ctx: BotContext): Promise<void>
         reply_markup: {
           inline_keyboard: [
             [{ text: '🔄 Try Again', callback_data: 'retry' }],
-            [{ text: '❓ Help', callback_data: 'help' }]
-          ]
-        }
+            [{ text: '❓ Help', callback_data: 'help' }],
+          ],
+        },
       });
     }
 
@@ -47,9 +47,9 @@ export const errorHandler = async (error: Error, ctx: BotContext): Promise<void>
     await ctx.telegram.callApi('sendMessage', {
       chat_id: process.env.ADMIN_CHAT_ID,
       text: `🚨 Bot Error:\n\nUser: ${ctx.from?.id}\nCommand: ${ctx.message?.text}\nError: ${error.message}`,
-      parse_mode: 'HTML'
+      parse_mode: 'HTML',
     });
   } catch (handlerError) {
     logger.error('Error handler failed:', handlerError);
   }
-}; 
+};

@@ -9,4 +9,4 @@ declare module 'telegraf-session-dynamodb' {
   export class DynamoDBSessionStore<T = any> implements SessionStore<T> {
     constructor(options: DynamoDBSessionStoreOptions);
   }
-} 
+}

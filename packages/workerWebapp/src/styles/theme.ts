@@ -36,4 +36,4 @@ export const theme = createTheme({
     headerHeight: rem(60),
     maxContentWidth: rem(800),
   },
-}); 
+});

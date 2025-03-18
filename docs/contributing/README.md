@@ -23,17 +23,20 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 
 1. Fork the repository
 2. Create a feature branch:
+
 ```bash
 git checkout -b feature/description
 ```
 
 3. Make your changes:
+
    - Follow code style guidelines
    - Add/update tests
    - Update documentation
    - Keep commits atomic and well-described
 
 4. Commit messages:
+
 ```
 type(scope): description
 
@@ -41,7 +44,9 @@ type(scope): description
 
 [optional footer]
 ```
+
 Types:
+
 - feat: New feature
 - fix: Bug fix
 - docs: Documentation
@@ -51,6 +56,7 @@ Types:
 - chore: Maintenance
 
 5. Push to your fork:
+
 ```bash
 git push origin feature/description
 ```
@@ -106,12 +112,14 @@ git push origin feature/description
 ### Review Process
 
 1. Code Review
+
    - At least one approval required
    - Address all comments
    - Pass all checks
    - Follow up with fixes
 
 2. Testing
+
    - All tests must pass
    - No regressions
    - Performance impact acceptable
@@ -139,6 +147,7 @@ See [Development Guide](../development/README.md) for setup instructions.
 ## Recognition
 
 Contributors will be:
+
 - Listed in CONTRIBUTORS.md
 - Mentioned in release notes
 - Featured on our website
@@ -152,4 +161,4 @@ Contributors will be:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License. 
+By contributing, you agree that your contributions will be licensed under the MIT License.

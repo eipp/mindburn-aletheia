@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export interface MetricConfig {
@@ -168,26 +168,24 @@ const envMap: Record<string, string> = {
   'anomalyDetection.trainingPeriod': 'ANOMALY_TRAINING_PERIOD',
   'reporting.enabled': 'REPORTING_ENABLED',
   'reporting.frequency': 'REPORTING_FREQUENCY',
-  'reporting.format': 'REPORTING_FORMAT'
+  'reporting.format': 'REPORTING_FORMAT',
 };
 
 export const validateConfig = createConfigValidator<MonitoringConfig>({
   schema: MonitoringSchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['reporting.recipients']),
     createPerformanceValidator({
       dataRetentionDays: 90,
       'baselineConfig.minDataPoints': 5000,
       'driftDetection.windowSize': 5000,
-      'anomalyDetection.trainingPeriod': 30 * 24 * 60 * 60 // 30 days
-    })
-  ]
+      'anomalyDetection.trainingPeriod': 30 * 24 * 60 * 60, // 30 days
+    }),
+  ],
 });
 
 export function getConfig(): MonitoringConfig {
   return validateConfig({});
-} 
+}

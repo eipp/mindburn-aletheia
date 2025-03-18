@@ -59,4 +59,4 @@ export class AuctionError extends Error {
     super(message, options);
     this.name = 'AuctionError';
   }
-} 
+}

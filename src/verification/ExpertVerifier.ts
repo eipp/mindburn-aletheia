@@ -26,16 +26,16 @@ export class ExpertVerifier {
     try {
       // Get expert verifications for this task
       const verifications = await this.getExpertVerifications(taskId);
-      
+
       if (verifications.length === 0) {
         throw new Error('No expert verifications available');
       }
 
       // Get qualified experts for task type
       const qualifiedExperts = await this.getQualifiedExperts(taskType);
-      
+
       // Filter verifications by qualified experts
-      const qualifiedVerifications = verifications.filter(v => 
+      const qualifiedVerifications = verifications.filter(v =>
         qualifiedExperts.some(e => e.workerId === v.workerId)
       );
 
@@ -54,8 +54,8 @@ export class ExpertVerifier {
           workerId: v.workerId,
           expertiseLevel: v.expertiseLevel,
           confidence: v.confidence,
-          specializations: v.specializations
-        }))
+          specializations: v.specializations,
+        })),
       };
     } catch (error) {
       console.error('Expert verification error:', error);
@@ -64,32 +64,36 @@ export class ExpertVerifier {
   }
 
   private async getExpertVerifications(taskId: string): Promise<ExpertVerification[]> {
-    const result = await this.dynamodb.query({
-      TableName: this.resultsTable,
-      KeyConditionExpression: 'taskId = :taskId',
-      FilterExpression: 'expertiseLevel IN (:expert, :master)',
-      ExpressionAttributeValues: {
-        ':taskId': taskId,
-        ':expert': ExpertiseLevel.EXPERT,
-        ':master': ExpertiseLevel.MASTER
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.resultsTable,
+        KeyConditionExpression: 'taskId = :taskId',
+        FilterExpression: 'expertiseLevel IN (:expert, :master)',
+        ExpressionAttributeValues: {
+          ':taskId': taskId,
+          ':expert': ExpertiseLevel.EXPERT,
+          ':master': ExpertiseLevel.MASTER,
+        },
+      })
+      .promise();
 
     return result.Items as ExpertVerification[];
   }
 
   private async getQualifiedExperts(taskType: string): Promise<any[]> {
-    const result = await this.dynamodb.query({
-      TableName: this.workersTable,
-      IndexName: 'ExpertiseIndex',
-      KeyConditionExpression: 'expertiseLevel IN (:expert, :master)',
-      FilterExpression: 'contains(specializations, :taskType)',
-      ExpressionAttributeValues: {
-        ':expert': ExpertiseLevel.EXPERT,
-        ':master': ExpertiseLevel.MASTER,
-        ':taskType': taskType
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.workersTable,
+        IndexName: 'ExpertiseIndex',
+        KeyConditionExpression: 'expertiseLevel IN (:expert, :master)',
+        FilterExpression: 'contains(specializations, :taskType)',
+        ExpressionAttributeValues: {
+          ':expert': ExpertiseLevel.EXPERT,
+          ':master': ExpertiseLevel.MASTER,
+          ':taskType': taskType,
+        },
+      })
+      .promise();
 
     return result.Items || [];
   }
@@ -105,7 +109,7 @@ export class ExpertVerifier {
     // Calculate weights based on expertise level and specialization
     const weightedVotes = verifications.map(v => ({
       ...v,
-      weight: this.calculateExpertWeight(v, taskType)
+      weight: this.calculateExpertWeight(v, taskType),
     }));
 
     // Calculate total weights
@@ -130,14 +134,11 @@ export class ExpertVerifier {
     return {
       decision,
       confidence,
-      explanation
+      explanation,
     };
   }
 
-  private calculateExpertWeight(
-    verification: ExpertVerification,
-    taskType: string
-  ): number {
+  private calculateExpertWeight(verification: ExpertVerification, taskType: string): number {
     const baseWeight = this.expertWeights[verification.expertiseLevel];
     const specializationBonus = verification.specializations.includes(taskType) ? 1.5 : 1;
     const confidenceWeight = verification.confidence;
@@ -152,11 +153,11 @@ export class ExpertVerifier {
     taskType: string
   ): string {
     const totalExperts = weightedVotes.length;
-    const specializedExperts = weightedVotes.filter(v => 
+    const specializedExperts = weightedVotes.filter(v =>
       v.specializations.includes(taskType)
     ).length;
-    const masterExperts = weightedVotes.filter(v => 
-      v.expertiseLevel === ExpertiseLevel.MASTER
+    const masterExperts = weightedVotes.filter(
+      v => v.expertiseLevel === ExpertiseLevel.MASTER
     ).length;
 
     // Get explanations from top experts
@@ -166,14 +167,16 @@ export class ExpertVerifier {
       .map(v => ({
         level: v.expertiseLevel,
         specialized: v.specializations.includes(taskType),
-        explanation: v.explanation
+        explanation: v.explanation,
       }));
 
-    return `Expert consensus ${decision} with ${confidence.toFixed(2)} confidence. ` +
-           `Based on ${totalExperts} expert reviews ` +
-           `(${specializedExperts} specialized in ${taskType}, ${masterExperts} master level). ` +
-           `Key expert insights: ${topExpertExplanations.map(e => 
-             `[${e.level}${e.specialized ? '/Specialized' : ''}: ${e.explanation}]`
-           ).join(' ')}`;
+    return (
+      `Expert consensus ${decision} with ${confidence.toFixed(2)} confidence. ` +
+      `Based on ${totalExperts} expert reviews ` +
+      `(${specializedExperts} specialized in ${taskType}, ${masterExperts} master level). ` +
+      `Key expert insights: ${topExpertExplanations
+        .map(e => `[${e.level}${e.specialized ? '/Specialized' : ''}: ${e.explanation}]`)
+        .join(' ')}`
+    );
   }
-} 
+}

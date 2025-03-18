@@ -10,14 +10,14 @@ export enum TaskType {
   TEXT_VERIFICATION = 'TEXT_VERIFICATION',
   IMAGE_VERIFICATION = 'IMAGE_VERIFICATION',
   AUDIO_VERIFICATION = 'AUDIO_VERIFICATION',
-  VIDEO_VERIFICATION = 'VIDEO_VERIFICATION'
+  VIDEO_VERIFICATION = 'VIDEO_VERIFICATION',
 }
 
 export enum TaskStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export interface Transaction {
@@ -33,13 +33,13 @@ export interface Transaction {
 
 export enum TransactionType {
   REWARD = 'REWARD',
-  WITHDRAWAL = 'WITHDRAWAL'
+  WITHDRAWAL = 'WITHDRAWAL',
 }
 
 export enum TransactionStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export interface WorkerProfile {
@@ -53,4 +53,4 @@ export interface WorkerProfile {
   level: number;
   createdAt: number;
   updatedAt: number;
-} 
+}

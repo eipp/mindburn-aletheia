@@ -9,10 +9,10 @@ describe('Telegram Bot E2E', () => {
   beforeAll(async () => {
     const token = process.env.TEST_BOT_TOKEN;
     if (!token) throw new Error('TEST_BOT_TOKEN not set');
-    
+
     bot = new TelegramBot(token);
     await bot.start();
-    
+
     // Use a test user account for E2E tests
     testUser = {
       id: parseInt(process.env.TEST_USER_ID || '0'),
@@ -33,7 +33,7 @@ describe('Telegram Bot E2E', () => {
     // Request a task
     const taskResponse = await bot.handleCommand('/task', testUser);
     expect(taskResponse).toMatch(/New verification task/);
-    
+
     // Extract task ID from response
     const taskId = taskResponse.match(/Task ID: ([A-Za-z0-9-]+)/)?.[1];
     expect(taskId).toBeDefined();
@@ -53,13 +53,13 @@ describe('Telegram Bot E2E', () => {
   it('should handle wallet connection', async () => {
     const connectResponse = await bot.handleCommand('/connect_wallet', testUser);
     expect(connectResponse).toMatch(/Please connect your TON wallet/);
-    
+
     // Simulate wallet connection callback
     const callbackResponse = await bot.handleCallback('wallet_connected', {
       ...testUser,
       wallet: '0x1234567890',
     });
-    
+
     expect(callbackResponse).toMatch(/Wallet connected successfully/);
   });
 
@@ -68,13 +68,13 @@ describe('Telegram Bot E2E', () => {
     const taskResponse = await bot.handleCommand('/task', testUser);
     const taskId = taskResponse.match(/Task ID: ([A-Za-z0-9-]+)/)?.[1];
     await bot.handleMessage(`/verify ${taskId} APPROVED`, testUser);
-    
+
     // Wait for processing
     await sleep(2000);
-    
+
     // Check rewards
     const rewardsResponse = await bot.handleCommand('/rewards', testUser);
     expect(rewardsResponse).toMatch(/Pending rewards:/);
     expect(rewardsResponse).toMatch(/\d+\.\d+ TON/);
   }, 30000);
-}); 
+});

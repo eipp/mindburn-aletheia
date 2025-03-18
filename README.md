@@ -70,4 +70,4 @@ The platform consists of five main components:
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines. 
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.

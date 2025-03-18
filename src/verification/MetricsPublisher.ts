@@ -35,7 +35,7 @@ export class MetricsPublisher {
     const timestamp = new Date();
     const dimensions = [
       { Name: 'Strategy', Value: metrics.strategy },
-      { Name: 'Decision', Value: metrics.decision }
+      { Name: 'Decision', Value: metrics.decision },
     ];
 
     const metricData = [
@@ -43,20 +43,20 @@ export class MetricsPublisher {
         MetricName: 'ProcessingTime',
         Value: metrics.processingTime,
         Unit: 'Milliseconds',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'Confidence',
         Value: metrics.confidence,
         Unit: 'None',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'ContributorCount',
         Value: metrics.contributors.length,
         Unit: 'Count',
-        Dimensions: dimensions
-      }
+        Dimensions: dimensions,
+      },
     ];
 
     await this.publishMetrics(metricData, timestamp);
@@ -67,7 +67,7 @@ export class MetricsPublisher {
     const dimensions = [
       { Name: 'WorkerId', Value: metrics.workerId },
       { Name: 'ExpertiseLevel', Value: metrics.expertiseLevel },
-      { Name: 'TaskType', Value: metrics.taskType }
+      { Name: 'TaskType', Value: metrics.taskType },
     ];
 
     const metricData = [
@@ -75,14 +75,14 @@ export class MetricsPublisher {
         MetricName: 'AccuracyScore',
         Value: metrics.accuracyScore,
         Unit: 'None',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'ProcessingTime',
         Value: metrics.processingTime,
         Unit: 'Milliseconds',
-        Dimensions: dimensions
-      }
+        Dimensions: dimensions,
+      },
     ];
 
     await this.publishMetrics(metricData, timestamp);
@@ -90,23 +90,21 @@ export class MetricsPublisher {
 
   async publishFraudMetrics(metrics: FraudMetrics): Promise<void> {
     const timestamp = new Date();
-    const dimensions = [
-      { Name: 'WorkerId', Value: metrics.workerId }
-    ];
+    const dimensions = [{ Name: 'WorkerId', Value: metrics.workerId }];
 
     const metricData = [
       {
         MetricName: 'RiskScore',
         Value: metrics.riskScore,
         Unit: 'None',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'SuspiciousFactorsCount',
         Value: metrics.suspiciousFactors.length,
         Unit: 'Count',
-        Dimensions: dimensions
-      }
+        Dimensions: dimensions,
+      },
     ];
 
     await this.publishMetrics(metricData, timestamp);
@@ -119,29 +117,27 @@ export class MetricsPublisher {
     averageProcessingTime: number
   ): Promise<void> {
     const timestamp = new Date();
-    const dimensions = [
-      { Name: 'Strategy', Value: strategy }
-    ];
+    const dimensions = [{ Name: 'Strategy', Value: strategy }];
 
     const metricData = [
       {
         MetricName: 'SuccessRate',
         Value: successRate,
         Unit: 'Percent',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'AverageConfidence',
         Value: averageConfidence,
         Unit: 'None',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'AverageProcessingTime',
         Value: averageProcessingTime,
         Unit: 'Milliseconds',
-        Dimensions: dimensions
-      }
+        Dimensions: dimensions,
+      },
     ];
 
     await this.publishMetrics(metricData, timestamp);
@@ -153,46 +149,43 @@ export class MetricsPublisher {
     errorRate: number
   ): Promise<void> {
     const timestamp = new Date();
-    const dimensions = [
-      { Name: 'Environment', Value: process.env.ENVIRONMENT || 'development' }
-    ];
+    const dimensions = [{ Name: 'Environment', Value: process.env.ENVIRONMENT || 'development' }];
 
     const metricData = [
       {
         MetricName: 'QueueSize',
         Value: queueSize,
         Unit: 'Count',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'ActiveWorkers',
         Value: activeWorkers,
         Unit: 'Count',
-        Dimensions: dimensions
+        Dimensions: dimensions,
       },
       {
         MetricName: 'ErrorRate',
         Value: errorRate,
         Unit: 'Percent',
-        Dimensions: dimensions
-      }
+        Dimensions: dimensions,
+      },
     ];
 
     await this.publishMetrics(metricData, timestamp);
   }
 
-  private async publishMetrics(
-    metricData: CloudWatch.MetricData,
-    timestamp: Date
-  ): Promise<void> {
+  private async publishMetrics(metricData: CloudWatch.MetricData, timestamp: Date): Promise<void> {
     try {
-      await this.cloudwatch.putMetricData({
-        Namespace: this.namespace,
-        MetricData: metricData.map(metric => ({
-          ...metric,
-          Timestamp: timestamp
-        }))
-      }).promise();
+      await this.cloudwatch
+        .putMetricData({
+          Namespace: this.namespace,
+          MetricData: metricData.map(metric => ({
+            ...metric,
+            Timestamp: timestamp,
+          })),
+        })
+        .promise();
     } catch (error) {
       console.error('Error publishing metrics:', error);
       // Don't throw error for metrics publishing failure
@@ -209,13 +202,13 @@ export class MetricsPublisher {
               ['Verification/Metrics', 'ProcessingTime', 'Strategy', 'HUMAN_CONSENSUS'],
               ['Verification/Metrics', 'ProcessingTime', 'Strategy', 'EXPERT_WEIGHTED'],
               ['Verification/Metrics', 'ProcessingTime', 'Strategy', 'AI_ASSISTED'],
-              ['Verification/Metrics', 'ProcessingTime', 'Strategy', 'GOLDEN_SET']
+              ['Verification/Metrics', 'ProcessingTime', 'Strategy', 'GOLDEN_SET'],
             ],
             view: 'timeSeries',
             stacked: false,
             region: process.env.AWS_REGION,
-            title: 'Processing Time by Strategy'
-          }
+            title: 'Processing Time by Strategy',
+          },
         },
         {
           type: 'metric',
@@ -224,25 +217,23 @@ export class MetricsPublisher {
               ['Verification/Metrics', 'Confidence', 'Strategy', 'HUMAN_CONSENSUS'],
               ['Verification/Metrics', 'Confidence', 'Strategy', 'EXPERT_WEIGHTED'],
               ['Verification/Metrics', 'Confidence', 'Strategy', 'AI_ASSISTED'],
-              ['Verification/Metrics', 'Confidence', 'Strategy', 'GOLDEN_SET']
+              ['Verification/Metrics', 'Confidence', 'Strategy', 'GOLDEN_SET'],
             ],
             view: 'timeSeries',
             stacked: false,
             region: process.env.AWS_REGION,
-            title: 'Confidence by Strategy'
-          }
+            title: 'Confidence by Strategy',
+          },
         },
         {
           type: 'metric',
           properties: {
-            metrics: [
-              ['Verification/Metrics', 'RiskScore', 'WorkerId', '*']
-            ],
+            metrics: [['Verification/Metrics', 'RiskScore', 'WorkerId', '*']],
             view: 'timeSeries',
             stacked: false,
             region: process.env.AWS_REGION,
-            title: 'Risk Scores by Worker'
-          }
+            title: 'Risk Scores by Worker',
+          },
         },
         {
           type: 'metric',
@@ -250,24 +241,26 @@ export class MetricsPublisher {
             metrics: [
               ['Verification/Metrics', 'QueueSize'],
               ['Verification/Metrics', 'ActiveWorkers'],
-              ['Verification/Metrics', 'ErrorRate']
+              ['Verification/Metrics', 'ErrorRate'],
             ],
             view: 'timeSeries',
             stacked: false,
             region: process.env.AWS_REGION,
-            title: 'System Health'
-          }
-        }
-      ]
+            title: 'System Health',
+          },
+        },
+      ],
     };
 
     try {
-      await this.cloudwatch.putDashboard({
-        DashboardName: 'VerificationMetrics',
-        DashboardBody: JSON.stringify(dashboard)
-      }).promise();
+      await this.cloudwatch
+        .putDashboard({
+          DashboardName: 'VerificationMetrics',
+          DashboardBody: JSON.stringify(dashboard),
+        })
+        .promise();
     } catch (error) {
       console.error('Error creating dashboard:', error);
     }
   }
-} 
+}

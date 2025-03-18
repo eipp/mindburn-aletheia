@@ -76,4 +76,4 @@ export interface WorkflowContext {
   selectedWorkers: Worker[];
   currentAttempt: number;
   errors: Error[];
-} 
+}

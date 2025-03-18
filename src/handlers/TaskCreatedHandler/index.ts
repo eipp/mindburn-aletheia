@@ -2,7 +2,11 @@ import { Context } from 'aws-lambda';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { EventBridge } from '@aws-sdk/client-eventbridge';
 import { EventConsumer } from '../../lib/events/consumer';
-import { TaskCreatedEvent, TaskCreatedEventSchema, TaskAssignedEvent } from '../../../infrastructure/src/events/schemas';
+import {
+  TaskCreatedEvent,
+  TaskCreatedEventSchema,
+  TaskAssignedEvent,
+} from '../../../infrastructure/src/events/schemas';
 import { captureAWS } from 'aws-xray-sdk-core';
 
 const dynamoDB = captureAWS(new DynamoDB());
@@ -46,7 +50,7 @@ export class TaskCreatedHandler extends EventConsumer<TaskCreatedEvent> {
 
   private async storeTask(event: TaskCreatedEvent): Promise<void> {
     const now = new Date().toISOString();
-    
+
     await dynamoDB.putItem({
       TableName: this.tasksTableName,
       Item: {
@@ -114,13 +118,15 @@ export class TaskCreatedHandler extends EventConsumer<TaskCreatedEvent> {
     };
 
     await eventBridge.putEvents({
-      Entries: [{
-        EventBusName: this.eventBusName,
-        Source: assignedEvent.source,
-        DetailType: assignedEvent.type,
-        Detail: JSON.stringify(assignedEvent),
-        Time: new Date(),
-      }],
+      Entries: [
+        {
+          EventBusName: this.eventBusName,
+          Source: assignedEvent.source,
+          DetailType: assignedEvent.type,
+          Detail: JSON.stringify(assignedEvent),
+          Time: new Date(),
+        },
+      ],
     });
   }
 }
@@ -129,4 +135,4 @@ export class TaskCreatedHandler extends EventConsumer<TaskCreatedEvent> {
 export const handler = async (event: any, context: Context): Promise<void> => {
   const consumer = new TaskCreatedHandler();
   await consumer.handler(event, context);
-}; 
+};

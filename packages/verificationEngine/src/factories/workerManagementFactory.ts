@@ -30,28 +30,21 @@ export function createWorkerManagementService(
   const dynamoDB = new DynamoDB.DocumentClient({
     apiVersion: '2012-08-10',
     maxRetries: 3,
-    retryDelayOptions: { base: 300 }
+    retryDelayOptions: { base: 300 },
   });
 
   // Initialize TON client
   const tonClient = new TonClient({
-    endpoint: config.tonEndpoint
+    endpoint: config.tonEndpoint,
   });
 
   // Create repositories
-  const workerRepository = new WorkerRepository(
-    dynamoDB,
-    config.dynamoTableName,
-    logger
-  );
+  const workerRepository = new WorkerRepository(dynamoDB, config.dynamoTableName, logger);
 
   const assessmentTaskRepository = new AssessmentTaskRepository(logger);
 
   // Create notification service
-  const notificationService = new NotificationService(
-    logger,
-    config.notificationChannels
-  );
+  const notificationService = new NotificationService(logger, config.notificationChannels);
 
   // Create wallet verification service
   const walletVerificationService = new TonWalletVerificationService(
@@ -65,22 +58,16 @@ export function createWorkerManagementService(
     logger,
     {
       apiKey: config.kycApiKey,
-      apiUrl: config.kycApiUrl
+      apiUrl: config.kycApiUrl,
     },
     config.fraudDetectionEnabled
   );
 
   // Create worker activity service
-  const activityService = new WorkerActivityService(
-    logger,
-    notificationService
-  );
+  const activityService = new WorkerActivityService(logger, notificationService);
 
   // Create worker reputation service
-  const reputationService = new WorkerReputationService(
-    logger,
-    notificationService
-  );
+  const reputationService = new WorkerReputationService(logger, notificationService);
 
   // Create skill assessment service
   const skillAssessmentService = new WorkerSkillAssessmentService(
@@ -90,10 +77,7 @@ export function createWorkerManagementService(
   );
 
   // Create worker onboarding service
-  const onboardingService = new WorkerOnboardingService(
-    logger,
-    notificationService
-  );
+  const onboardingService = new WorkerOnboardingService(logger, notificationService);
 
   // Create and return worker management service
   return new WorkerManagementService(
@@ -123,4 +107,4 @@ const config: WorkerManagementConfig = {
 
 const logger = createLogger('worker-management');
 const workerManagementService = createWorkerManagementService(config, logger);
-*/ 
+*/

@@ -34,18 +34,22 @@ interface ResultConsolidatorOutput {
   error?: string;
 }
 
-export const handler = async (event: ResultConsolidatorInput): Promise<ResultConsolidatorOutput> => {
+export const handler = async (
+  event: ResultConsolidatorInput
+): Promise<ResultConsolidatorOutput> => {
   try {
     logger.info('Consolidating verification results', { taskId: event.taskId });
 
     // Get task from DynamoDB
-    const result = await dynamodb.get({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId }
-    }).promise();
+    const result = await dynamodb
+      .get({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+      })
+      .promise();
 
     const task = result.Item as Task & { verificationResults?: VerificationResult[] };
-      if (!task) {
+    if (!task) {
       throw new Error(`Task not found: ${event.taskId}`);
     }
 
@@ -55,54 +59,63 @@ export const handler = async (event: ResultConsolidatorInput): Promise<ResultCon
 
     // Ensure we have enough verifications
     if (task.verificationResults.length < event.verificationRequirements.verificationThreshold) {
-      throw new Error(`Insufficient verifications: ${task.verificationResults.length} < ${event.verificationRequirements.verificationThreshold}`);
+      throw new Error(
+        `Insufficient verifications: ${task.verificationResults.length} < ${event.verificationRequirements.verificationThreshold}`
+      );
     }
 
     // Consolidate results
     const consolidatedResult = await consolidateResults(task.verificationResults);
 
-      // Update task with consolidated results
+    // Update task with consolidated results
     await updateTaskWithResults(task.taskId, consolidatedResult, task.verificationResults);
 
-      return {
+    return {
       taskId: task.taskId,
       status: TaskStatus.VERIFICATION_COMPLETE,
       consolidatedResult,
-      verificationResults: task.verificationResults
+      verificationResults: task.verificationResults,
     };
-
-    } catch (error) {
+  } catch (error) {
     logger.error('Failed to consolidate results', { error, taskId: event.taskId });
 
     // Update task status to failed
-    await dynamodb.update({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId },
-      UpdateExpression: 'SET #status = :status, statusReason = :reason, updatedAt = :now',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': TaskStatus.FAILED,
-        ':reason': error instanceof Error ? error.message : 'Unknown error during result consolidation',
-        ':now': new Date().toISOString()
-      }
-    }).promise();
+    await dynamodb
+      .update({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+        UpdateExpression: 'SET #status = :status, statusReason = :reason, updatedAt = :now',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': TaskStatus.FAILED,
+          ':reason':
+            error instanceof Error ? error.message : 'Unknown error during result consolidation',
+          ':now': new Date().toISOString(),
+        },
+      })
+      .promise();
 
-      throw error;
+    throw error;
   }
 };
 
-async function consolidateResults(results: VerificationResult[]): Promise<ResultConsolidatorOutput['consolidatedResult']> {
+async function consolidateResults(
+  results: VerificationResult[]
+): Promise<ResultConsolidatorOutput['consolidatedResult']> {
   // Group results by their values
-  const resultGroups = results.reduce((groups, result) => {
-    const key = JSON.stringify(result.result);
-    if (!groups[key]) {
-      groups[key] = [];
-    }
-    groups[key].push(result);
-    return groups;
-  }, {} as Record<string, VerificationResult[]>);
+  const resultGroups = results.reduce(
+    (groups, result) => {
+      const key = JSON.stringify(result.result);
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(result);
+      return groups;
+    },
+    {} as Record<string, VerificationResult[]>
+  );
 
   // Find the most common result
   let mostCommonResult: any;
@@ -128,12 +141,12 @@ async function consolidateResults(results: VerificationResult[]): Promise<Result
     return { ...metadata, ...result.metadata };
   }, {});
 
-    return {
+  return {
     result: mostCommonResult,
     confidence: avgConfidence,
     verifierCount: results.length,
     timeSpentAvg: avgTimeSpent,
-    metadata: combinedMetadata
+    metadata: combinedMetadata,
   };
 }
 
@@ -142,23 +155,25 @@ async function updateTaskWithResults(
   consolidatedResult: ResultConsolidatorOutput['consolidatedResult'],
   verificationResults: VerificationResult[]
 ): Promise<void> {
-  await dynamodb.update({
-    TableName: process.env.TASKS_TABLE!,
-    Key: { taskId },
-    UpdateExpression: `
+  await dynamodb
+    .update({
+      TableName: process.env.TASKS_TABLE!,
+      Key: { taskId },
+      UpdateExpression: `
       SET #status = :status,
           consolidatedResult = :consolidatedResult,
           verificationResults = :verificationResults,
           updatedAt = :now
     `,
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': TaskStatus.VERIFICATION_COMPLETE,
-      ':consolidatedResult': consolidatedResult,
-      ':verificationResults': verificationResults,
-      ':now': new Date().toISOString()
-    }
-  }).promise();
-} 
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': TaskStatus.VERIFICATION_COMPLETE,
+        ':consolidatedResult': consolidatedResult,
+        ':verificationResults': verificationResults,
+        ':now': new Date().toISOString(),
+      },
+    })
+    .promise();
+}

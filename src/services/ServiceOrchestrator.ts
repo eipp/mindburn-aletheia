@@ -35,25 +35,25 @@ export class ServiceOrchestrator {
     this.fraudBreaker = new CircuitBreaker(this.fraudDetector.detectFraud, {
       timeout: 5000,
       errorThresholdPercentage: 50,
-      resetTimeout: 30000
+      resetTimeout: 30000,
     });
 
     this.qualityBreaker = new CircuitBreaker(this.qualityControl.evaluateSubmission, {
       timeout: 5000,
       errorThresholdPercentage: 50,
-      resetTimeout: 30000
+      resetTimeout: 30000,
     });
 
     this.mlBreaker = new CircuitBreaker(this.ml.predictReputationRisk, {
       timeout: 10000,
       errorThresholdPercentage: 40,
-      resetTimeout: 60000
+      resetTimeout: 60000,
     });
 
     this.ipBreaker = new CircuitBreaker(this.ipIntelligence.assessIpRisk, {
       timeout: 3000,
       errorThresholdPercentage: 30,
-      resetTimeout: 30000
+      resetTimeout: 30000,
     });
 
     this.setupEventHandlers();
@@ -62,9 +62,13 @@ export class ServiceOrchestrator {
   private setupEventHandlers(): void {
     [this.fraudBreaker, this.qualityBreaker, this.mlBreaker, this.ipBreaker].forEach(breaker => {
       breaker.on('open', () => this.logger.warn(`Circuit breaker opened for ${breaker.name}`));
-      breaker.on('halfOpen', () => this.logger.info(`Circuit breaker half-open for ${breaker.name}`));
+      breaker.on('halfOpen', () =>
+        this.logger.info(`Circuit breaker half-open for ${breaker.name}`)
+      );
       breaker.on('close', () => this.logger.info(`Circuit breaker closed for ${breaker.name}`));
-      breaker.on('fallback', () => this.metrics.incrementCounter(`circuit_breaker_fallback_${breaker.name}`));
+      breaker.on('fallback', () =>
+        this.metrics.incrementCounter(`circuit_breaker_fallback_${breaker.name}`)
+      );
     });
   }
 
@@ -76,18 +80,18 @@ export class ServiceOrchestrator {
       const [ipRisk, fraudResult, qualityResult] = await Promise.all([
         this.executeWithRetry(() => this.ipBreaker.fire(submission.ipAddress)),
         this.executeWithRetry(() => this.fraudBreaker.fire(submission)),
-        this.executeWithRetry(() => this.qualityBreaker.fire(submission))
+        this.executeWithRetry(() => this.qualityBreaker.fire(submission)),
       ]);
 
       await this.metrics.publishMetrics({
         ipRisk,
         fraudScore: fraudResult.riskScore,
-        qualityScore: qualityResult.qualityScore
+        qualityScore: qualityResult.qualityScore,
       });
 
       await this.dashboard.updateMetrics({
         fraudMetrics: fraudResult,
-        qualityMetrics: qualityResult
+        qualityMetrics: qualityResult,
       });
 
       return { fraudResult, qualityResult };
@@ -103,13 +107,13 @@ export class ServiceOrchestrator {
       delay: 1000,
       factor: 2,
       handleError: (error, context) => {
-        this.logger.warn('Retry attempt failed', { 
-          error, 
+        this.logger.warn('Retry attempt failed', {
+          error,
           attempt: context.attemptNum,
-          maxAttempts: context.maxAttempts 
+          maxAttempts: context.maxAttempts,
         });
         return true;
-      }
+      },
     });
   }
 
@@ -118,7 +122,7 @@ export class ServiceOrchestrator {
       this.fraudBreaker.shutdown(),
       this.qualityBreaker.shutdown(),
       this.mlBreaker.shutdown(),
-      this.ipBreaker.shutdown()
+      this.ipBreaker.shutdown(),
     ]);
   }
-} 
+}

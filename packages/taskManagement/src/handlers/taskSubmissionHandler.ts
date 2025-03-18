@@ -19,10 +19,13 @@ interface TaskSubmission {
   timeSpentSeconds: number;
 }
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandler = async event => {
   try {
     const submission: TaskSubmission = JSON.parse(event.body || '{}');
-    logger.info('Processing task submission', { taskId: submission.taskId, workerId: submission.workerId });
+    logger.info('Processing task submission', {
+      taskId: submission.taskId,
+      workerId: submission.workerId,
+    });
 
     // Validate submission
     if (!submission.taskId || !submission.workerId || !submission.result) {
@@ -32,7 +35,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Get task from DynamoDB
     const task = await dynamo.get({
       TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: submission.taskId }
+      Key: { taskId: submission.taskId },
     });
 
     if (!task.Item) {
@@ -48,33 +51,38 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     await dynamo.update({
       TableName: process.env.TASKS_TABLE!,
       Key: { taskId: submission.taskId },
-      UpdateExpression: 'SET verifications = list_append(if_not_exists(verifications, :empty), :submission), ' +
-                       'submissionCount = if_not_exists(submissionCount, :zero) + :one',
+      UpdateExpression:
+        'SET verifications = list_append(if_not_exists(verifications, :empty), :submission), ' +
+        'submissionCount = if_not_exists(submissionCount, :zero) + :one',
       ExpressionAttributeValues: {
-        ':submission': [{
-          workerId: submission.workerId,
-          result: submission.result,
-          timeSpentSeconds: submission.timeSpentSeconds,
-          submittedAt: new Date().toISOString()
-        }],
+        ':submission': [
+          {
+            workerId: submission.workerId,
+            result: submission.result,
+            timeSpentSeconds: submission.timeSpentSeconds,
+            submittedAt: new Date().toISOString(),
+          },
+        ],
         ':empty': [],
         ':zero': 0,
-        ':one': 1
-      }
+        ':one': 1,
+      },
     });
 
     // Emit submission event
     await eventBridge.putEvents({
-      Entries: [{
-        EventBusName: process.env.EVENT_BUS_NAME,
-        Source: 'task-management',
-        DetailType: 'TaskSubmissionReceived',
-        Detail: JSON.stringify({
-          taskId: submission.taskId,
-          workerId: submission.workerId,
-          submissionTime: new Date().toISOString()
-        })
-      }]
+      Entries: [
+        {
+          EventBusName: process.env.EVENT_BUS_NAME,
+          Source: 'task-management',
+          DetailType: 'TaskSubmissionReceived',
+          Detail: JSON.stringify({
+            taskId: submission.taskId,
+            workerId: submission.workerId,
+            submissionTime: new Date().toISOString(),
+          }),
+        },
+      ],
     });
 
     logger.info('Task submission processed successfully', { taskId: submission.taskId });
@@ -82,9 +90,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Submission accepted' })
+      body: JSON.stringify({ message: 'Submission accepted' }),
     };
-
   } catch (error) {
     logger.error('Error processing task submission', { error });
 
@@ -92,7 +99,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
@@ -100,14 +107,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-}; 
+};

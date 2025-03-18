@@ -50,12 +50,7 @@ export class ApiError extends Error {
   }
 
   static serviceUnavailable(service: string, cause?: Error): ApiError {
-    return new ApiError(
-      `${service} service unavailable`,
-      503,
-      cause,
-      'SERVICE_UNAVAILABLE'
-    );
+    return new ApiError(`${service} service unavailable`, 503, cause, 'SERVICE_UNAVAILABLE');
   }
 
   // Convert to a safe response object (no sensitive info)
@@ -64,7 +59,7 @@ export class ApiError extends Error {
       status: 'error',
       code: this.code,
       message: this.message,
-      details: this.details
+      details: this.details,
     };
   }
-} 
+}

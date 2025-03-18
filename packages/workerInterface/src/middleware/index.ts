@@ -9,7 +9,7 @@ export const loggerMiddleware: Middleware<BotContext> = async (ctx: BotContext, 
   const start = Date.now();
   await next();
   const ms = Date.now() - start;
-  
+
   logger.info('Bot request', {
     updateType: ctx.updateType,
     userId: ctx.from?.id,
@@ -25,10 +25,12 @@ export const authMiddleware: Middleware<BotContext> = async (ctx: BotContext, ne
   }
 
   try {
-    const result = await docClient.send(new GetCommand({
-      TableName: TableNames.USERS,
-      Key: { userId: ctx.from.id.toString() },
-    }));
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TableNames.USERS,
+        Key: { userId: ctx.from.id.toString() },
+      })
+    );
 
     if (!result.Item) {
       logger.info('New user detected', { userId: ctx.from.id });
@@ -59,4 +61,4 @@ export const errorHandler: Middleware<BotContext> = async (ctx: BotContext, next
     logger.error('Unhandled error in bot', { error, userId: ctx.from?.id });
     await ctx.reply('An unexpected error occurred. Our team has been notified.');
   }
-}; 
+};

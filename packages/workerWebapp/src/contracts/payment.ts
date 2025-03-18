@@ -1,11 +1,4 @@
-import {
-  Contract,
-  ContractProvider,
-  Address,
-  Cell,
-  beginCell,
-  toNano,
-} from '@ton/core';
+import { Contract, ContractProvider, Address, Cell, beginCell, toNano } from '@ton/core';
 import { TonClient } from '@ton/ton';
 
 export class PaymentContract implements Contract {
@@ -20,30 +13,22 @@ export class PaymentContract implements Contract {
       .storeUint(0, 64) // total_payments
       .storeDict() // payments
       .endCell();
-    
+
     const workchain = 0;
     const address = contractAddress(workchain, { code, data });
-    
+
     return new PaymentContract(address, client);
   }
 
-  async sendReward(
-    workerAddress: Address,
-    amount: string,
-    taskId: string,
-    signature: string
-  ) {
+  async sendReward(workerAddress: Address, amount: string, taskId: string, signature: string) {
     const provider = this.client.provider();
-    
+
     const messageBody = beginCell()
       .storeUint(1, 32) // op: send_reward
       .storeAddress(workerAddress)
       .storeCoins(toNano(amount))
       .storeRef(
-        beginCell()
-          .storeBuffer(Buffer.from(taskId))
-          .storeBuffer(Buffer.from(signature))
-          .endCell()
+        beginCell().storeBuffer(Buffer.from(taskId)).storeBuffer(Buffer.from(signature)).endCell()
       )
       .endCell();
 
@@ -57,7 +42,7 @@ export class PaymentContract implements Contract {
 
   async getPaymentInfo(taskId: string) {
     const provider = this.client.provider();
-    
+
     const { stack } = await provider.get('get_payment_info', [
       { type: 'slice', cell: beginCell().storeBuffer(Buffer.from(taskId)).endCell() },
     ]);
@@ -76,7 +61,7 @@ export class PaymentContract implements Contract {
 
   async getStats() {
     const provider = this.client.provider();
-    
+
     const { stack } = await provider.get('get_stats', []);
 
     return {
@@ -100,4 +85,4 @@ export const PaymentErrors = {
   InvalidSignature: 102,
   InvalidAmount: 103,
   UnauthorizedAccess: 104,
-}; 
+};

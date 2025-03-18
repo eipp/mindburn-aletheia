@@ -30,32 +30,23 @@ export class IpIntelligence {
       return JSON.parse(cached);
     }
 
-    const [
-      maxmindData,
-      proxyCheckData,
-      ipQualityData,
-      historicalData
-    ] = await Promise.all([
+    const [maxmindData, proxyCheckData, ipQualityData, historicalData] = await Promise.all([
       this.getMaxmindData(ipAddress),
       this.getProxyCheckData(ipAddress),
       this.getIpQualityData(ipAddress),
-      this.getHistoricalData(ipAddress)
+      this.getHistoricalData(ipAddress),
     ]);
 
     const riskScore = this.calculateRiskScore({
       maxmindData,
       proxyCheckData,
       ipQualityData,
-      historicalData
+      historicalData,
     });
 
     await Promise.all([
-      this.redis.setex(
-        cacheKey,
-        this.config.cacheTTL,
-        JSON.stringify(riskScore)
-      ),
-      this.updateHistoricalData(ipAddress, riskScore)
+      this.redis.setex(cacheKey, this.config.cacheTTL, JSON.stringify(riskScore)),
+      this.updateHistoricalData(ipAddress, riskScore),
     ]);
 
     return riskScore;
@@ -63,22 +54,19 @@ export class IpIntelligence {
 
   private async getMaxmindData(ipAddress: string): Promise<any> {
     try {
-      const response = await axios.get(
-        `https://minfraud.maxmind.com/minfraud/v2.0/score`,
-        {
-          headers: {
-            'Authorization': `Basic ${Buffer.from(this.config.maxmindApiKey).toString('base64')}`,
-            'Content-Type': 'application/json'
+      const response = await axios.get(`https://minfraud.maxmind.com/minfraud/v2.0/score`, {
+        headers: {
+          Authorization: `Basic ${Buffer.from(this.config.maxmindApiKey).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          ip_address: ipAddress,
+          device: {
+            session_age: 3600,
+            session_id: 'session_id',
           },
-          data: {
-            ip_address: ipAddress,
-            device: {
-              session_age: 3600,
-              session_id: 'session_id'
-            }
-          }
-        }
-      );
+        },
+      });
 
       return response.data;
     } catch (error) {
@@ -89,24 +77,21 @@ export class IpIntelligence {
 
   private async getProxyCheckData(ipAddress: string): Promise<any> {
     try {
-      const response = await axios.get(
-        `https://proxycheck.io/v2/${ipAddress}`,
-        {
-          params: {
-            key: this.config.proxyCheckApiKey,
-            vpn: 1,
-            risk: 1,
-            port: 1,
-            seen: 1,
-            days: 7,
-            asn: 1,
-            node: 1,
-            time: 1,
-            inf: 1,
-            tag: 'fraud_detection'
-          }
-        }
-      );
+      const response = await axios.get(`https://proxycheck.io/v2/${ipAddress}`, {
+        params: {
+          key: this.config.proxyCheckApiKey,
+          vpn: 1,
+          risk: 1,
+          port: 1,
+          seen: 1,
+          days: 7,
+          asn: 1,
+          node: 1,
+          time: 1,
+          inf: 1,
+          tag: 'fraud_detection',
+        },
+      });
 
       return response.data;
     } catch (error) {
@@ -125,8 +110,8 @@ export class IpIntelligence {
             allow_public_access_points: 'true',
             fast: 'true',
             lighter_penalties: 'false',
-            mobile: 'true'
-          }
+            mobile: 'true',
+          },
         }
       );
 
@@ -139,15 +124,17 @@ export class IpIntelligence {
 
   private async getHistoricalData(ipAddress: string): Promise<any> {
     try {
-      const result = await this.dynamodb.query({
-        TableName: 'IpHistory',
-        KeyConditionExpression: 'ipAddress = :ip',
-        ExpressionAttributeValues: {
-          ':ip': ipAddress
-        },
-        Limit: 100,
-        ScanIndexForward: false
-      }).promise();
+      const result = await this.dynamodb
+        .query({
+          TableName: 'IpHistory',
+          KeyConditionExpression: 'ipAddress = :ip',
+          ExpressionAttributeValues: {
+            ':ip': ipAddress,
+          },
+          Limit: 100,
+          ScanIndexForward: false,
+        })
+        .promise();
 
       return result.Items;
     } catch (error) {
@@ -162,12 +149,7 @@ export class IpIntelligence {
     ipQualityData: any;
     historicalData: any[];
   }): number {
-    const {
-      maxmindData,
-      proxyCheckData,
-      ipQualityData,
-      historicalData
-    } = data;
+    const { maxmindData, proxyCheckData, ipQualityData, historicalData } = data;
 
     let riskScore = 0;
     let signalCount = 0;
@@ -241,10 +223,8 @@ export class IpIntelligence {
 
   private evaluateHistoricalRisk(history: any[]): number {
     const recentHistory = history.slice(0, 10);
-    const averageRisk = recentHistory.reduce(
-      (sum, entry) => sum + entry.riskScore,
-      0
-    ) / recentHistory.length;
+    const averageRisk =
+      recentHistory.reduce((sum, entry) => sum + entry.riskScore, 0) / recentHistory.length;
 
     const fraudulentActivities = recentHistory.filter(
       entry => entry.riskScore >= this.config.riskThresholds.fraud
@@ -252,28 +232,24 @@ export class IpIntelligence {
 
     const fraudRate = fraudulentActivities / recentHistory.length;
 
-    return Math.min(
-      (averageRisk + fraudRate) / 2,
-      1
-    );
+    return Math.min((averageRisk + fraudRate) / 2, 1);
   }
 
-  private async updateHistoricalData(
-    ipAddress: string,
-    riskScore: number
-  ): Promise<void> {
+  private async updateHistoricalData(ipAddress: string, riskScore: number): Promise<void> {
     try {
-      await this.dynamodb.put({
-        TableName: 'IpHistory',
-        Item: {
-          ipAddress,
-          timestamp: Date.now(),
-          riskScore,
-          ttl: Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60) // 90 days TTL
-        }
-      }).promise();
+      await this.dynamodb
+        .put({
+          TableName: 'IpHistory',
+          Item: {
+            ipAddress,
+            timestamp: Date.now(),
+            riskScore,
+            ttl: Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60, // 90 days TTL
+          },
+        })
+        .promise();
     } catch (error) {
       console.error('Historical data update error:', error);
     }
   }
-} 
+}

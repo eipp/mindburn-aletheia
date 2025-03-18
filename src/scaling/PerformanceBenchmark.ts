@@ -56,7 +56,7 @@ export class PerformanceBenchmark {
         this.benchmarkLambda(duration),
         this.benchmarkDynamoDB(duration),
         this.benchmarkApiGateway(duration),
-        this.benchmarkCloudFront(duration)
+        this.benchmarkCloudFront(duration),
       ]);
 
       const [lambda, dynamodb, apiGateway, cloudFront] = results;
@@ -68,8 +68,8 @@ export class PerformanceBenchmark {
           lambda,
           dynamodb,
           apiGateway,
-          cloudFront
-        }
+          cloudFront,
+        },
       };
 
       await this.publishBenchmarkResults(benchmarkResult);
@@ -85,7 +85,7 @@ export class PerformanceBenchmark {
       coldStartLatency: 0,
       warmStartLatency: 0,
       memoryUtilization: 0,
-      errorRate: 0
+      errorRate: 0,
     };
 
     // Simulate cold starts
@@ -94,7 +94,7 @@ export class PerformanceBenchmark {
       try {
         // Invoke function with new container
         // Implementation depends on your Lambda setup
-        metrics.coldStartLatency += (Date.now() - start);
+        metrics.coldStartLatency += Date.now() - start;
       } catch (error) {
         metrics.errorRate++;
       }
@@ -106,7 +106,7 @@ export class PerformanceBenchmark {
       const start = Date.now();
       try {
         // Invoke function with warm container
-        metrics.warmStartLatency += (Date.now() - start);
+        metrics.warmStartLatency += Date.now() - start;
       } catch (error) {
         metrics.errorRate++;
       }
@@ -123,7 +123,7 @@ export class PerformanceBenchmark {
       writeLatency: 0,
       readThroughput: 0,
       writeThroughput: 0,
-      consistencyDelay: 0
+      consistencyDelay: 0,
     };
 
     const startTime = Date.now();
@@ -133,11 +133,11 @@ export class PerformanceBenchmark {
       try {
         const writeStart = Date.now();
         // Perform write operation
-        metrics.writeLatency += (Date.now() - writeStart);
+        metrics.writeLatency += Date.now() - writeStart;
 
         const readStart = Date.now();
         // Perform read operation
-        metrics.readLatency += (Date.now() - readStart);
+        metrics.readLatency += Date.now() - readStart;
 
         operations++;
       } catch (error) {
@@ -159,7 +159,7 @@ export class PerformanceBenchmark {
       p90Latency: 0,
       p99Latency: 0,
       requestThroughput: 0,
-      errorRate: 0
+      errorRate: 0,
     };
 
     const latencies: number[] = [];
@@ -195,7 +195,7 @@ export class PerformanceBenchmark {
       ttfb: 0,
       cacheHitRatio: 0,
       originLatency: 0,
-      errorRate: 0
+      errorRate: 0,
     };
 
     const startTime = Date.now();
@@ -210,9 +210,9 @@ export class PerformanceBenchmark {
         const isCacheHit = Math.random() > 0.3; // Simulate 70% cache hit ratio
         if (isCacheHit) {
           cacheHits++;
-          metrics.ttfb += (Date.now() - requestStart);
+          metrics.ttfb += Date.now() - requestStart;
         } else {
-          metrics.originLatency += (Date.now() - requestStart);
+          metrics.originLatency += Date.now() - requestStart;
         }
         requests++;
       } catch (error) {
@@ -222,7 +222,7 @@ export class PerformanceBenchmark {
     }
 
     metrics.ttfb /= cacheHits || 1;
-    metrics.originLatency /= (requests - cacheHits) || 1;
+    metrics.originLatency /= requests - cacheHits || 1;
     metrics.cacheHitRatio = (cacheHits / requests) * 100;
     metrics.errorRate = (errors / requests) * 100;
 
@@ -238,63 +238,65 @@ export class PerformanceBenchmark {
       metrics.push({
         MetricName: 'LambdaColdStartLatency',
         Value: results.metrics.lambda.coldStartLatency,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
       metrics.push({
         MetricName: 'LambdaWarmStartLatency',
         Value: results.metrics.lambda.warmStartLatency,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
 
       // DynamoDB metrics
       metrics.push({
         MetricName: 'DynamoDBReadLatency',
         Value: results.metrics.dynamodb.readLatency,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
       metrics.push({
         MetricName: 'DynamoDBWriteLatency',
         Value: results.metrics.dynamodb.writeLatency,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
 
       // API Gateway metrics
       metrics.push({
         MetricName: 'ApiGatewayP99Latency',
         Value: results.metrics.apiGateway.p99Latency,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
       metrics.push({
         MetricName: 'ApiGatewayThroughput',
         Value: results.metrics.apiGateway.requestThroughput,
-        Unit: 'Count/Second'
+        Unit: 'Count/Second',
       });
 
       // CloudFront metrics
       metrics.push({
         MetricName: 'CloudFrontTTFB',
         Value: results.metrics.cloudFront.ttfb,
-        Unit: 'Milliseconds'
+        Unit: 'Milliseconds',
       });
       metrics.push({
         MetricName: 'CloudFrontCacheHitRatio',
         Value: results.metrics.cloudFront.cacheHitRatio,
-        Unit: 'Percent'
+        Unit: 'Percent',
       });
 
-      await this.cloudWatch.send(new PutMetricDataCommand({
-        Namespace: 'MindBurn/PerformanceBenchmark',
-        MetricData: metrics.map(metric => ({
-          ...metric,
-          Timestamp: timestamp,
-          Dimensions: [
-            {
-              Name: 'Region',
-              Value: results.region
-            }
-          ]
-        }))
-      }));
+      await this.cloudWatch.send(
+        new PutMetricDataCommand({
+          Namespace: 'MindBurn/PerformanceBenchmark',
+          MetricData: metrics.map(metric => ({
+            ...metric,
+            Timestamp: timestamp,
+            Dimensions: [
+              {
+                Name: 'Region',
+                Value: results.region,
+              },
+            ],
+          })),
+        })
+      );
 
       this.logger.info('Benchmark results published', { region: results.region });
     } catch (error) {
@@ -311,32 +313,36 @@ export class PerformanceBenchmark {
     const analysis = {
       recommendations: [],
       bottlenecks: [],
-      optimizationOpportunities: []
+      optimizationOpportunities: [],
     };
 
     // Analyze Lambda performance
-    const avgColdStart = results.reduce((sum, r) => sum + r.metrics.lambda.coldStartLatency, 0) / results.length;
+    const avgColdStart =
+      results.reduce((sum, r) => sum + r.metrics.lambda.coldStartLatency, 0) / results.length;
     if (avgColdStart > 1000) {
       analysis.bottlenecks.push('High Lambda cold start latency');
       analysis.recommendations.push('Consider using provisioned concurrency or Lambda SnapStart');
     }
 
     // Analyze DynamoDB performance
-    const avgReadLatency = results.reduce((sum, r) => sum + r.metrics.dynamodb.readLatency, 0) / results.length;
+    const avgReadLatency =
+      results.reduce((sum, r) => sum + r.metrics.dynamodb.readLatency, 0) / results.length;
     if (avgReadLatency > 10) {
       analysis.bottlenecks.push('High DynamoDB read latency');
       analysis.recommendations.push('Consider implementing DAX or adjusting read capacity');
     }
 
     // Analyze API Gateway performance
-    const avgP99Latency = results.reduce((sum, r) => sum + r.metrics.apiGateway.p99Latency, 0) / results.length;
+    const avgP99Latency =
+      results.reduce((sum, r) => sum + r.metrics.apiGateway.p99Latency, 0) / results.length;
     if (avgP99Latency > 1000) {
       analysis.bottlenecks.push('High API Gateway p99 latency');
       analysis.recommendations.push('Enable API caching and optimize Lambda execution');
     }
 
     // Analyze CloudFront performance
-    const avgCacheHitRatio = results.reduce((sum, r) => sum + r.metrics.cloudFront.cacheHitRatio, 0) / results.length;
+    const avgCacheHitRatio =
+      results.reduce((sum, r) => sum + r.metrics.cloudFront.cacheHitRatio, 0) / results.length;
     if (avgCacheHitRatio < 80) {
       analysis.optimizationOpportunities.push('Low CloudFront cache hit ratio');
       analysis.recommendations.push('Review cache settings and TTL configurations');
@@ -344,4 +350,4 @@ export class PerformanceBenchmark {
 
     return analysis;
   }
-} 
+}

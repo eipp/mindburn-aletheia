@@ -5,8 +5,8 @@ import { IpIntelligence } from '../services/IpIntelligence';
 import { MetricsCollector } from './MetricsCollector';
 import { MetricsPublisher } from './MetricsPublisher';
 import { FraudDetector } from './FraudDetector';
-import { 
-  QualityMetrics, 
+import {
+  QualityMetrics,
   WorkerProfile,
   TaskSubmission,
   QualityControlResult,
@@ -14,7 +14,7 @@ import {
   DeviceFingerprint,
   FraudDetectionResult,
   WorkerMetrics,
-  ExpertiseLevel
+  ExpertiseLevel,
 } from './types';
 
 export class QualityControlSystem {
@@ -22,14 +22,14 @@ export class QualityControlSystem {
     EXCELLENT: 0.9,
     GOOD: 0.8,
     ACCEPTABLE: 0.7,
-    POOR: 0.6
+    POOR: 0.6,
   };
 
   private readonly FRAUD_THRESHOLDS = {
     LOW: 0.3,
     MEDIUM: 0.5,
     HIGH: 0.7,
-    CRITICAL: 0.9
+    CRITICAL: 0.9,
   };
 
   private readonly REPUTATION_WEIGHTS = {
@@ -37,14 +37,14 @@ export class QualityControlSystem {
     CONSISTENCY: 0.2,
     SPEED: 0.1,
     PEER_REVIEW: 0.2,
-    TASK_COMPLEXITY: 0.1
+    TASK_COMPLEXITY: 0.1,
   };
 
   private readonly WARNING_LEVELS = {
     NOTICE: 'NOTICE',
     WARNING: 'WARNING',
     SEVERE: 'SEVERE',
-    CRITICAL: 'CRITICAL'
+    CRITICAL: 'CRITICAL',
   };
 
   constructor(
@@ -74,15 +74,15 @@ export class QualityControlSystem {
       behaviorPatternWeight: 0.4,
       minReputationForExpertise: 0.8,
       expertisePromotionThreshold: 50,
-      expertiseDemotionThreshold: 0.6
+      expertiseDemotionThreshold: 0.6,
     }
   ) {}
 
   async evaluateSubmission(params: {
-    workerId: string,
-    taskId: string,
-    submission: TaskSubmission,
-    isGoldenSet: boolean
+    workerId: string;
+    taskId: string;
+    submission: TaskSubmission;
+    isGoldenSet: boolean;
   }): Promise<QualityControlResult> {
     try {
       const { workerId, taskId, submission, isGoldenSet } = params;
@@ -94,14 +94,14 @@ export class QualityControlSystem {
         consistencyScore,
         timeQualityScore,
         peerReviewScore,
-        workerProfile
+        workerProfile,
       ] = await Promise.all([
         this.detectFraud(submission),
         this.evaluateAccuracy(submission, isGoldenSet),
         this.evaluateConsistency(workerId, submission),
         this.evaluateTimeQuality(submission),
         this.evaluatePeerReviews(taskId),
-        this.getWorkerProfile(workerId)
+        this.getWorkerProfile(workerId),
       ]);
 
       // Handle fraud detection
@@ -115,7 +115,7 @@ export class QualityControlSystem {
         accuracyScore,
         consistencyScore,
         timeQualityScore,
-        peerReviewScore
+        peerReviewScore,
       });
 
       // Determine quality level and actions
@@ -129,7 +129,7 @@ export class QualityControlSystem {
         consistencyScore,
         timeQualityScore,
         peerReviewScore,
-        fraudRiskScore: fraudDetection.riskScore
+        fraudRiskScore: fraudDetection.riskScore,
       });
 
       // Update worker expertise level if needed
@@ -146,8 +146,8 @@ export class QualityControlSystem {
           accuracy: accuracyScore,
           consistency: consistencyScore,
           timeQuality: timeQualityScore,
-          peerReview: peerReviewScore
-        }
+          peerReview: peerReviewScore,
+        },
       });
 
       return {
@@ -158,8 +158,8 @@ export class QualityControlSystem {
           accuracy: accuracyScore,
           consistency: consistencyScore,
           timeQuality: timeQualityScore,
-          peerReview: peerReviewScore
-        }
+          peerReview: peerReviewScore,
+        },
       };
     } catch (error) {
       await this.handleError(error, params);
@@ -172,18 +172,14 @@ export class QualityControlSystem {
     const ipAddress = submission.metadata.ipAddress;
 
     // Parallel fraud checks
-    const [
-      deviceRisk,
-      ipRisk,
-      behaviorRisk
-    ] = await Promise.all([
+    const [deviceRisk, ipRisk, behaviorRisk] = await Promise.all([
       this.evaluateDeviceFingerprint(deviceFingerprint),
       this.evaluateIpReputation(ipAddress),
-      this.evaluateBehaviorPatterns(submission)
+      this.evaluateBehaviorPatterns(submission),
     ]);
 
     // Calculate weighted risk score
-    const riskScore = 
+    const riskScore =
       deviceRisk * this.config.deviceFingerprintWeight +
       ipRisk * this.config.ipReputationWeight +
       behaviorRisk * this.config.behaviorPatternWeight;
@@ -200,8 +196,8 @@ export class QualityControlSystem {
         reputation: ipRisk,
         activity: behaviorRisk,
         network: deviceRisk,
-        quality: submission.confidence
-      }
+        quality: submission.confidence,
+      },
     };
   }
 
@@ -209,10 +205,10 @@ export class QualityControlSystem {
     // Check for suspicious device characteristics
     const suspiciousSignals = [
       !fingerprint.canvas, // Canvas fingerprinting blocked
-      !fingerprint.webgl,  // WebGL fingerprinting blocked
+      !fingerprint.webgl, // WebGL fingerprinting blocked
       fingerprint.fonts.length < 10, // Limited fonts
-      !fingerprint.audio,  // Audio fingerprinting blocked
-      fingerprint.plugins.length === 0 // No plugins
+      !fingerprint.audio, // Audio fingerprinting blocked
+      fingerprint.plugins.length === 0, // No plugins
     ];
 
     const riskScore = suspiciousSignals.filter(Boolean).length / suspiciousSignals.length;
@@ -228,14 +224,14 @@ export class QualityControlSystem {
 
   private async evaluateIpReputation(ipAddress: string): Promise<number> {
     const ipIntel = await this.ipIntelligence.checkIp(ipAddress);
-    
+
     // Normalize risk factors
     const riskFactors = {
       proxy: ipIntel.isProxy ? 0.8 : 0,
       datacenter: ipIntel.isDatacenter ? 0.6 : 0,
       vpn: ipIntel.isVpn ? 0.7 : 0,
       tor: ipIntel.isTor ? 0.9 : 0,
-      malicious: ipIntel.isMalicious ? 1.0 : 0
+      malicious: ipIntel.isMalicious ? 1.0 : 0,
     };
 
     return Math.max(...Object.values(riskFactors));
@@ -243,13 +239,13 @@ export class QualityControlSystem {
 
   private async evaluateBehaviorPatterns(submission: TaskSubmission): Promise<number> {
     const recentActivity = await this.getRecentActivity(submission.workerId);
-    
+
     // Check for suspicious patterns
     const patterns = {
       rapidSubmissions: this.checkRapidSubmissions(recentActivity),
       consistentTiming: this.checkConsistentTiming(recentActivity),
       linearProgression: this.checkLinearProgression(recentActivity),
-      taskTypeVariation: this.checkTaskTypeVariation(recentActivity)
+      taskTypeVariation: this.checkTaskTypeVariation(recentActivity),
     };
 
     return Object.values(patterns).reduce((max, score) => Math.max(max, score), 0);
@@ -258,18 +254,20 @@ export class QualityControlSystem {
   private checkRapidSubmissions(activities: WorkerActivity[]): number {
     if (activities.length < 2) return 0;
 
-    const intervals = activities.slice(1).map((activity, i) => 
-      activity.timestamp - activities[i].timestamp
-    );
+    const intervals = activities
+      .slice(1)
+      .map((activity, i) => activity.timestamp - activities[i].timestamp);
 
     const avgInterval = intervals.reduce((sum, int) => sum + int, 0) / intervals.length;
     const stdDev = Math.sqrt(
       intervals.reduce((sum, int) => sum + Math.pow(int - avgInterval, 2), 0) / intervals.length
     );
 
-    return avgInterval < 1000 ? 0.9 : // Less than 1 second
-           stdDev < 100 ? 0.7 :       // Very consistent timing
-           0;
+    return avgInterval < 1000
+      ? 0.9 // Less than 1 second
+      : stdDev < 100
+        ? 0.7 // Very consistent timing
+        : 0;
   }
 
   private checkConsistentTiming(activities: WorkerActivity[]): number {
@@ -277,13 +275,15 @@ export class QualityControlSystem {
 
     const processingTimes = activities.map(a => a.processingTime);
     const avgTime = processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length;
-    const variance = processingTimes.reduce((sum, time) => 
-      sum + Math.pow(time - avgTime, 2), 0
-    ) / processingTimes.length;
+    const variance =
+      processingTimes.reduce((sum, time) => sum + Math.pow(time - avgTime, 2), 0) /
+      processingTimes.length;
 
-    return variance < 100 ? 0.8 : // Suspiciously consistent
-           variance < 1000 ? 0.4 : // Somewhat consistent
-           0;
+    return variance < 100
+      ? 0.8 // Suspiciously consistent
+      : variance < 1000
+        ? 0.4 // Somewhat consistent
+        : 0;
   }
 
   private checkLinearProgression(activities: WorkerActivity[]): number {
@@ -292,26 +292,33 @@ export class QualityControlSystem {
     const times = activities.map(a => a.processingTime);
     const correlation = this.calculateCorrelation(
       times,
-      Array.from({length: times.length}, (_, i) => i)
+      Array.from({ length: times.length }, (_, i) => i)
     );
 
-    return Math.abs(correlation) > 0.95 ? 0.9 : // Almost perfect linear progression
-           Math.abs(correlation) > 0.8 ? 0.6 :  // Strong linear progression
-           0;
+    return Math.abs(correlation) > 0.95
+      ? 0.9 // Almost perfect linear progression
+      : Math.abs(correlation) > 0.8
+        ? 0.6 // Strong linear progression
+        : 0;
   }
 
   private checkTaskTypeVariation(activities: WorkerActivity[]): number {
-    const typeCounts = activities.reduce((counts, activity) => {
-      counts[activity.taskType] = (counts[activity.taskType] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
+    const typeCounts = activities.reduce(
+      (counts, activity) => {
+        counts[activity.taskType] = (counts[activity.taskType] || 0) + 1;
+        return counts;
+      },
+      {} as Record<string, number>
+    );
 
     const totalTasks = activities.length;
     const maxTypeRatio = Math.max(...Object.values(typeCounts)) / totalTasks;
 
-    return maxTypeRatio > 0.9 ? 0.7 : // Over 90% same task type
-           maxTypeRatio > 0.8 ? 0.4 : // Over 80% same task type
-           0;
+    return maxTypeRatio > 0.9
+      ? 0.7 // Over 90% same task type
+      : maxTypeRatio > 0.8
+        ? 0.4 // Over 80% same task type
+        : 0;
   }
 
   private calculateCorrelation(x: number[], y: number[]): number {
@@ -322,8 +329,9 @@ export class QualityControlSystem {
     const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
     const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
 
-    return (n * sumXY - sumX * sumY) / 
-           Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    return (
+      (n * sumXY - sumX * sumY) / Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY))
+    );
   }
 
   private async updateWorkerExpertise(
@@ -332,9 +340,11 @@ export class QualityControlSystem {
     qualityScore: number
   ): Promise<void> {
     const reputationScore = await this.calculateReputationScore(profile);
-    
-    if (reputationScore >= this.config.minReputationForExpertise && 
-        profile.tasksCompleted >= this.config.expertisePromotionThreshold) {
+
+    if (
+      reputationScore >= this.config.minReputationForExpertise &&
+      profile.tasksCompleted >= this.config.expertisePromotionThreshold
+    ) {
       // Consider promotion
       const newLevel = this.determineExpertiseLevel(profile.expertiseLevel, qualityScore);
       if (newLevel !== profile.expertiseLevel) {
@@ -361,11 +371,11 @@ export class QualityControlSystem {
       ExpertiseLevel.INTERMEDIATE,
       ExpertiseLevel.ADVANCED,
       ExpertiseLevel.EXPERT,
-      ExpertiseLevel.MASTER
+      ExpertiseLevel.MASTER,
     ];
 
     const currentIndex = levels.indexOf(currentLevel);
-    
+
     if (isDemotion) {
       if (qualityScore < this.QUALITY_THRESHOLDS.POOR) {
         return levels[Math.max(0, currentIndex - 2)];
@@ -383,7 +393,7 @@ export class QualityControlSystem {
 
   private async calculateReputationScore(profile: WorkerProfile): Promise<number> {
     const weights = this.REPUTATION_WEIGHTS;
-    
+
     return (
       profile.accuracyScore * weights.ACCURACY +
       profile.consistencyScore * weights.CONSISTENCY +
@@ -413,20 +423,20 @@ export class QualityControlSystem {
   private async applyRestrictions(workerId: string, fraudLevel: string): Promise<void> {
     const restrictions = {
       LOW: {
-        increasedMonitoring: true
+        increasedMonitoring: true,
       },
       MEDIUM: {
         increasedMonitoring: true,
-        restrictedTaskTypes: true
+        restrictedTaskTypes: true,
       },
       HIGH: {
         increasedMonitoring: true,
         restrictedTaskTypes: true,
-        temporarySuspension: 24 // hours
+        temporarySuspension: 24, // hours
       },
       CRITICAL: {
-        permanentBan: true
-      }
+        permanentBan: true,
+      },
     };
 
     const restriction = restrictions[fraudLevel];
@@ -434,20 +444,24 @@ export class QualityControlSystem {
   }
 
   private async emitFraudEvent(workerId: string, detection: FraudDetectionResult): Promise<void> {
-    await this.eventBridge.putEvents({
-      Entries: [{
-        Source: 'aletheia.quality-control',
-        DetailType: 'FraudDetected',
-        Detail: JSON.stringify({
-          workerId,
-          fraudLevel: detection.fraudLevel,
-          riskScore: detection.riskScore,
-          signals: detection.signals,
-          timestamp: Date.now()
-        }),
-        EventBusName: 'aletheia'
-      }]
-    }).promise();
+    await this.eventBridge
+      .putEvents({
+        Entries: [
+          {
+            Source: 'aletheia.quality-control',
+            DetailType: 'FraudDetected',
+            Detail: JSON.stringify({
+              workerId,
+              fraudLevel: detection.fraudLevel,
+              riskScore: detection.riskScore,
+              signals: detection.signals,
+              timestamp: Date.now(),
+            }),
+            EventBusName: 'aletheia',
+          },
+        ],
+      })
+      .promise();
   }
 
   private async recordMetrics(metrics: any): Promise<void> {
@@ -461,7 +475,7 @@ export class QualityControlSystem {
       accuracyScore: metrics.metrics.accuracy,
       consistencyScore: metrics.metrics.consistency,
       timeQualityScore: metrics.metrics.timeQuality,
-      peerReviewScore: metrics.metrics.peerReview
+      peerReviewScore: metrics.metrics.peerReview,
     });
 
     await this.metricsPublisher.publish('QualityControl', metrics);
@@ -469,25 +483,29 @@ export class QualityControlSystem {
 
   private async handleError(error: Error, context: any): Promise<void> {
     console.error('Quality control error:', error, context);
-    
-    await this.cloudwatch.putMetricData({
-      Namespace: 'Aletheia/QualityControl',
-      MetricData: [{
-        MetricName: 'ProcessingError',
-        Value: 1,
-        Unit: 'Count',
-        Dimensions: [
+
+    await this.cloudwatch
+      .putMetricData({
+        Namespace: 'Aletheia/QualityControl',
+        MetricData: [
           {
-            Name: 'ErrorType',
-            Value: error.name
+            MetricName: 'ProcessingError',
+            Value: 1,
+            Unit: 'Count',
+            Dimensions: [
+              {
+                Name: 'ErrorType',
+                Value: error.name,
+              },
+              {
+                Name: 'WorkerId',
+                Value: context.workerId,
+              },
+            ],
           },
-          {
-            Name: 'WorkerId',
-            Value: context.workerId
-          }
-        ]
-      }]
-    }).promise();
+        ],
+      })
+      .promise();
   }
 
   private async createCloudWatchAlarms(): Promise<void> {
@@ -499,7 +517,7 @@ export class QualityControlSystem {
         Period: 300, // 5 minutes
         EvaluationPeriods: 2,
         ComparisonOperator: 'GreaterThanThreshold',
-        TreatMissingData: 'notBreaching'
+        TreatMissingData: 'notBreaching',
       },
       {
         AlarmName: 'LowQualitySubmissions',
@@ -508,7 +526,7 @@ export class QualityControlSystem {
         Period: 300,
         EvaluationPeriods: 3,
         ComparisonOperator: 'LessThanThreshold',
-        TreatMissingData: 'missing'
+        TreatMissingData: 'missing',
       },
       {
         AlarmName: 'HighErrorRate',
@@ -517,24 +535,28 @@ export class QualityControlSystem {
         Period: 300,
         EvaluationPeriods: 2,
         ComparisonOperator: 'GreaterThanThreshold',
-        TreatMissingData: 'notBreaching'
-      }
+        TreatMissingData: 'notBreaching',
+      },
     ];
 
-    await Promise.all(alarms.map(alarm => 
-      this.cloudwatch.putMetricAlarm({
-        ...alarm,
-        Namespace: 'Aletheia/QualityControl',
-        Statistic: 'Sum',
-        ActionsEnabled: true,
-        AlarmActions: [process.env.ALARM_SNS_TOPIC_ARN],
-        Dimensions: [
-          {
-            Name: 'Environment',
-            Value: process.env.ENVIRONMENT || 'production'
-          }
-        ]
-      }).promise()
-    ));
+    await Promise.all(
+      alarms.map(alarm =>
+        this.cloudwatch
+          .putMetricAlarm({
+            ...alarm,
+            Namespace: 'Aletheia/QualityControl',
+            Statistic: 'Sum',
+            ActionsEnabled: true,
+            AlarmActions: [process.env.ALARM_SNS_TOPIC_ARN],
+            Dimensions: [
+              {
+                Name: 'Environment',
+                Value: process.env.ENVIRONMENT || 'production',
+              },
+            ],
+          })
+          .promise()
+      )
+    );
   }
 }

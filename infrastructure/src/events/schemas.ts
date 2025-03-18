@@ -78,9 +78,9 @@ export type PaymentProcessedEvent = z.infer<typeof PaymentProcessedEventSchema>;
 export type UserRegisteredEvent = z.infer<typeof UserRegisteredEventSchema>;
 
 // Event type union
-export type AletheiaEvent = 
-  | TaskCreatedEvent 
-  | TaskAssignedEvent 
-  | VerificationSubmittedEvent 
-  | PaymentProcessedEvent 
-  | UserRegisteredEvent; 
+export type AletheiaEvent =
+  | TaskCreatedEvent
+  | TaskAssignedEvent
+  | VerificationSubmittedEvent
+  | PaymentProcessedEvent
+  | UserRegisteredEvent;

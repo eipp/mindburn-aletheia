@@ -30,13 +30,9 @@ export class MigrationRunner {
 
       await this.dynamodb.createTable({
         TableName: this.migrationsTable,
-        AttributeDefinitions: [
-          { AttributeName: 'id', AttributeType: 'S' }
-        ],
-        KeySchema: [
-          { AttributeName: 'id', KeyType: 'HASH' }
-        ],
-        BillingMode: 'PAY_PER_REQUEST'
+        AttributeDefinitions: [{ AttributeName: 'id', AttributeType: 'S' }],
+        KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+        BillingMode: 'PAY_PER_REQUEST',
       });
 
       logger.info('Migrations table created successfully');
@@ -51,14 +47,14 @@ export class MigrationRunner {
 
   async getExecutedMigrations(): Promise<MigrationMeta[]> {
     const result = await this.dynamodb.scan({
-      TableName: this.migrationsTable
+      TableName: this.migrationsTable,
     });
 
     return (result.Items || []).map(item => ({
       id: item.id.S!,
       name: item.name.S!,
       executedAt: item.executedAt.S!,
-      duration: Number(item.duration.N!)
+      duration: Number(item.duration.N!),
     }));
   }
 
@@ -69,8 +65,8 @@ export class MigrationRunner {
         id: { S: meta.id },
         name: { S: meta.name },
         executedAt: { S: meta.executedAt },
-        duration: { N: meta.duration.toString() }
-      }
+        duration: { N: meta.duration.toString() },
+      },
     });
   }
 
@@ -78,8 +74,8 @@ export class MigrationRunner {
     await this.dynamodb.deleteItem({
       TableName: this.migrationsTable,
       Key: {
-        id: { S: id }
-      }
+        id: { S: id },
+      },
     });
   }
 
@@ -127,7 +123,7 @@ export class MigrationRunner {
           id,
           name: file,
           executedAt: new Date().toISOString(),
-          duration
+          duration,
         });
       } else {
         await this.removeMigration(id);
@@ -135,11 +131,11 @@ export class MigrationRunner {
 
       logger.info(`Migration ${direction} completed`, {
         file,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
     } catch (error) {
       logger.error(`Migration ${direction} failed`, { error, file });
       throw error;
     }
   }
-} 
+}

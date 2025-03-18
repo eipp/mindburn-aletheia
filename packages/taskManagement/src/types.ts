@@ -8,20 +8,20 @@ export enum TaskStatus {
   VERIFICATION_COMPLETE = 'VERIFICATION_COMPLETE',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export enum TaskDistributionStrategy {
   BROADCAST = 'BROADCAST',
   TARGETED = 'TARGETED',
-  AUCTION = 'AUCTION'
+  AUCTION = 'AUCTION',
 }
 
 export enum TaskUrgency {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export interface VerificationRequirements {
@@ -120,7 +120,7 @@ export interface TaskSubmission {
 export enum WorkerAvailabilityStatus {
   AVAILABLE = 'AVAILABLE',
   BUSY = 'BUSY',
-  OFFLINE = 'OFFLINE'
+  OFFLINE = 'OFFLINE',
 }
 
 export interface WorkerProfile {
@@ -133,4 +133,4 @@ export interface WorkerProfile {
   activeTaskCount: number;
   completedTaskCount: number;
   successRate: number;
-} 
+}

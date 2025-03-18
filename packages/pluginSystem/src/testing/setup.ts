@@ -39,40 +39,39 @@ export const createTestPlugin = () => {
 // Add custom matchers
 expect.extend({
   toBeValidPlugin(received) {
-    const isValid = received &&
+    const isValid =
+      received &&
       typeof received.initialize === 'function' &&
       typeof received.terminate === 'function' &&
       received.manifest;
 
     return {
-      message: () =>
-        `expected ${received} to be a valid plugin`,
+      message: () => `expected ${received} to be a valid plugin`,
       pass: isValid,
     };
   },
 
   toHaveValidManifest(received) {
-    const hasRequiredFields = received?.manifest &&
+    const hasRequiredFields =
+      received?.manifest &&
       typeof received.manifest.id === 'string' &&
       typeof received.manifest.name === 'string' &&
       typeof received.manifest.version === 'string' &&
       Array.isArray(received.manifest.permissions);
 
     return {
-      message: () =>
-        `expected ${received} to have a valid manifest`,
+      message: () => `expected ${received} to have a valid manifest`,
       pass: hasRequiredFields,
     };
   },
 
   toBeSecure(received) {
-    const hasNoRestrictedCalls = !received.toString().match(
-      /(eval|Function|require|process\.env|globalThis)/
-    );
+    const hasNoRestrictedCalls = !received
+      .toString()
+      .match(/(eval|Function|require|process\.env|globalThis)/);
 
     return {
-      message: () =>
-        `expected ${received} to be secure`,
+      message: () => `expected ${received} to be secure`,
       pass: hasNoRestrictedCalls,
     };
   },
@@ -81,8 +80,7 @@ expect.extend({
     const hasPermission = received?.manifest?.permissions?.includes(permission);
 
     return {
-      message: () =>
-        `expected ${received} to have permission "${permission}"`,
+      message: () => `expected ${received} to have permission "${permission}"`,
       pass: hasPermission,
     };
   },
@@ -102,4 +100,4 @@ beforeEach(() => {
 afterAll(() => {
   // Clean up test environment
   jest.restoreAllMocks();
-}); 
+});

@@ -71,18 +71,18 @@ const paymentSlice = createSlice({
   name: 'payment',
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       // Process reward
-      .addCase(processReward.pending, (state) => {
+      .addCase(processReward.pending, state => {
         state.processing = true;
         state.error = null;
       })
-      .addCase(processReward.fulfilled, (state) => {
+      .addCase(processReward.fulfilled, state => {
         state.processing = false;
       })
       .addCase(processReward.rejected, (state, action) => {
@@ -90,7 +90,7 @@ const paymentSlice = createSlice({
         state.error = action.error.message || 'Failed to process reward';
       })
       // Transaction history
-      .addCase(fetchTransactionHistory.pending, (state) => {
+      .addCase(fetchTransactionHistory.pending, state => {
         state.transactions.loading = true;
         state.transactions.error = null;
       })
@@ -103,7 +103,7 @@ const paymentSlice = createSlice({
         state.transactions.error = action.error.message || 'Failed to fetch transactions';
       })
       // Pending rewards
-      .addCase(fetchPendingRewards.pending, (state) => {
+      .addCase(fetchPendingRewards.pending, state => {
         state.pendingRewards.loading = true;
         state.pendingRewards.error = null;
       })
@@ -119,4 +119,4 @@ const paymentSlice = createSlice({
 });
 
 export const { clearError } = paymentSlice.actions;
-export default paymentSlice.reducer; 
+export default paymentSlice.reducer;

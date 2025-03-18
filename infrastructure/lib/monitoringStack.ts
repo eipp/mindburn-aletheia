@@ -36,9 +36,7 @@ export class MonitoringStack extends cdk.Stack {
       displayName: `Aletheia-${props.environment}-Alerts`,
     });
 
-    alertTopic.addSubscription(
-      new subscriptions.EmailSubscription(props.alertEmail)
-    );
+    alertTopic.addSubscription(new subscriptions.EmailSubscription(props.alertEmail));
 
     // CloudWatch Dashboard
     const dashboard = new cloudwatch.Dashboard(this, 'MainDashboard', {
@@ -155,4 +153,4 @@ export class MonitoringStack extends cdk.Stack {
       value: `https://console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`,
     });
   }
-} 
+}

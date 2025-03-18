@@ -17,10 +17,12 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       const { taskId, taskType, requiredWorkers } = message;
 
       // Get task details
-      const taskResult = await dynamodb.get({
-        TableName: 'Tasks',
-        Key: { taskId }
-      }).promise();
+      const taskResult = await dynamodb
+        .get({
+          TableName: 'Tasks',
+          Key: { taskId },
+        })
+        .promise();
 
       const task = taskResult.Item;
       if (!task || task.status !== 'PENDING') {
@@ -40,22 +42,26 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       await assignTaskToWorkers(taskId, workers);
 
       // Update task status
-      await dynamodb.update({
-        TableName: 'Tasks',
-        Key: { taskId },
-        UpdateExpression: 'SET #status = :status, assignedWorkers = :workers',
-        ExpressionAttributeNames: {
-          '#status': 'status'
-        },
-        ExpressionAttributeValues: {
-          ':status': 'IN_PROGRESS',
-          ':workers': workers.map(w => w.workerId)
-        }
-      }).promise();
+      await dynamodb
+        .update({
+          TableName: 'Tasks',
+          Key: { taskId },
+          UpdateExpression: 'SET #status = :status, assignedWorkers = :workers',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':status': 'IN_PROGRESS',
+            ':workers': workers.map(w => w.workerId),
+          },
+        })
+        .promise();
 
       // Notify workers
-      await notifyWorkers(taskId, workers.map(w => w.workerId));
-
+      await notifyWorkers(
+        taskId,
+        workers.map(w => w.workerId)
+      );
     } catch (error) {
       console.error('Error processing task assignment:', error);
       throw error;
@@ -63,22 +69,27 @@ export const handler = async (event: SQSEvent): Promise<void> => {
   }
 };
 
-async function findQualifiedWorkers(taskType: string, requiredWorkers: number): Promise<WorkerScore[]> {
+async function findQualifiedWorkers(
+  taskType: string,
+  requiredWorkers: number
+): Promise<WorkerScore[]> {
   // Query workers by task type and rating
-  const result = await dynamodb.query({
-    TableName: 'Workers',
-    IndexName: 'TaskTypeIndex',
-    KeyConditionExpression: 'taskType = :taskType',
-    FilterExpression: '#status = :status AND currentLoad < :maxLoad',
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':taskType': taskType,
-      ':status': 'AVAILABLE',
-      ':maxLoad': 5 // Maximum concurrent tasks per worker
-    }
-  }).promise();
+  const result = await dynamodb
+    .query({
+      TableName: 'Workers',
+      IndexName: 'TaskTypeIndex',
+      KeyConditionExpression: 'taskType = :taskType',
+      FilterExpression: '#status = :status AND currentLoad < :maxLoad',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':taskType': taskType,
+        ':status': 'AVAILABLE',
+        ':maxLoad': 5, // Maximum concurrent tasks per worker
+      },
+    })
+    .promise();
 
   if (!result.Items || result.Items.length === 0) {
     return [];
@@ -87,13 +98,11 @@ async function findQualifiedWorkers(taskType: string, requiredWorkers: number): 
   // Calculate worker scores based on multiple factors
   const workerScores = result.Items.map(worker => ({
     workerId: worker.workerId,
-    score: calculateWorkerScore(worker)
+    score: calculateWorkerScore(worker),
   }));
 
   // Sort by score and return top N workers
-  return workerScores
-    .sort((a, b) => b.score - a.score)
-    .slice(0, requiredWorkers);
+  return workerScores.sort((a, b) => b.score - a.score).slice(0, requiredWorkers);
 }
 
 function calculateWorkerScore(worker: any): number {
@@ -102,14 +111,14 @@ function calculateWorkerScore(worker: any): number {
     rating: 0.4,
     responseTime: 0.2,
     completionRate: 0.2,
-    availability: 0.2
+    availability: 0.2,
   };
 
   return (
     worker.rating * weights.rating +
     (1 - worker.averageResponseTime / 300) * weights.responseTime +
     worker.completionRate * weights.completionRate +
-    (5 - worker.currentLoad) / 5 * weights.availability
+    ((5 - worker.currentLoad) / 5) * weights.availability
   );
 }
 
@@ -121,17 +130,19 @@ async function assignTaskToWorkers(taskId: string, workers: WorkerScore[]): Prom
         workerId: worker.workerId,
         status: 'ASSIGNED',
         assignedAt: new Date().toISOString(),
-        expiresAt: Math.floor(Date.now() / 1000) + 2 * 60 * 60 // 2 hours to accept
-      }
-    }
+        expiresAt: Math.floor(Date.now() / 1000) + 2 * 60 * 60, // 2 hours to accept
+      },
+    },
   }));
 
   // Batch write assignments
-  await dynamodb.batchWrite({
-    RequestItems: {
-      'Results': assignments
-    }
-  }).promise();
+  await dynamodb
+    .batchWrite({
+      RequestItems: {
+        Results: assignments,
+      },
+    })
+    .promise();
 }
 
 async function notifyWorkers(taskId: string, workerIds: string[]): Promise<void> {
@@ -139,27 +150,27 @@ async function notifyWorkers(taskId: string, workerIds: string[]): Promise<void>
     Message: JSON.stringify({
       type: 'TASK_ASSIGNMENT',
       taskId,
-      workerId
+      workerId,
     }),
     TopicArn: process.env.WORKER_NOTIFICATION_TOPIC!,
     MessageAttributes: {
-      'workerId': {
+      workerId: {
         DataType: 'String',
-        StringValue: workerId
-      }
-    }
+        StringValue: workerId,
+      },
+    },
   }));
 
-  await Promise.all(
-    notifications.map(notification => sns.publish(notification).promise())
-  );
+  await Promise.all(notifications.map(notification => sns.publish(notification).promise()));
 }
 
 async function requeueTask(taskId: string): Promise<void> {
   // Requeue with exponential backoff
-  await sqs.sendMessage({
-    QueueUrl: process.env.TASK_ASSIGNMENT_QUEUE_URL!,
-    MessageBody: JSON.stringify({ taskId }),
-    DelaySeconds: 300 // 5 minutes delay before retrying
-  }).promise();
-} 
+  await sqs
+    .sendMessage({
+      QueueUrl: process.env.TASK_ASSIGNMENT_QUEUE_URL!,
+      MessageBody: JSON.stringify({ taskId }),
+      DelaySeconds: 300, // 5 minutes delay before retrying
+    })
+    .promise();
+}

@@ -26,9 +26,9 @@ export class PaymentProcessorStack extends cdk.Stack {
         TON_ENDPOINT: process.env.TON_ENDPOINT || 'https://testnet.toncenter.com/api/v2/jsonRPC',
         TON_API_KEY: process.env.TON_API_KEY!,
         KMS_KEY_ID: process.env.KMS_KEY_ID!,
-        WALLET_ADDRESS: process.env.WALLET_ADDRESS!
+        WALLET_ADDRESS: process.env.WALLET_ADDRESS!,
       },
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // Grant DynamoDB permissions
@@ -41,7 +41,7 @@ export class PaymentProcessorStack extends cdk.Stack {
     // Create EventBridge rule to trigger the function every 5 minutes
     new events.Rule(this, 'ProcessPaymentBatchesRule', {
       schedule: events.Schedule.rate(cdk.Duration.minutes(5)),
-      targets: [new targets.LambdaFunction(processBatchesFunction)]
+      targets: [new targets.LambdaFunction(processBatchesFunction)],
     });
 
     // Add CloudWatch alarms
@@ -50,11 +50,11 @@ export class PaymentProcessorStack extends cdk.Stack {
       threshold: 3,
       evaluationPeriods: 1,
       alarmDescription: 'Alert when payment batch processing has failures',
-      comparisonOperator: cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD
+      comparisonOperator: cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
     });
 
     // Add tags
     cdk.Tags.of(this).add('Service', 'PaymentSystem');
     cdk.Tags.of(this).add('Environment', process.env.ENVIRONMENT || 'development');
   }
-} 
+}

@@ -1,9 +1,5 @@
 import { Logger } from '@mindburn/shared/logger';
-import {
-  TaskType,
-  WorkerLevel,
-  AssessmentTask
-} from '../types';
+import { TaskType, WorkerLevel, AssessmentTask } from '../types';
 
 export class AssessmentTaskRepository {
   private readonly logger: Logger;
@@ -17,11 +13,11 @@ export class AssessmentTaskRepository {
           difficulty: 'BEGINNER',
           data: {
             text: 'This product is amazing! I love it!',
-            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL']
+            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL'],
           },
           expectedResult: 'POSITIVE',
-          timeLimit: 30
-        }
+          timeLimit: 30,
+        },
       ],
       INTERMEDIATE: [
         {
@@ -29,11 +25,11 @@ export class AssessmentTaskRepository {
           difficulty: 'INTERMEDIATE',
           data: {
             text: 'While the interface could use some improvements, the core functionality is solid.',
-            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED']
+            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED'],
           },
           expectedResult: 'MIXED',
-          timeLimit: 45
-        }
+          timeLimit: 45,
+        },
       ],
       ADVANCED: [
         {
@@ -41,12 +37,12 @@ export class AssessmentTaskRepository {
           difficulty: 'ADVANCED',
           data: {
             text: 'The new policy changes have led to increased efficiency in some departments, but have also caused temporary disruptions in workflow.',
-            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED', 'COMPLEX']
+            categories: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED', 'COMPLEX'],
           },
           expectedResult: 'COMPLEX',
-          timeLimit: 60
-        }
-      ]
+          timeLimit: 60,
+        },
+      ],
     },
     IMAGE_CLASSIFICATION: {
       BEGINNER: [
@@ -55,11 +51,11 @@ export class AssessmentTaskRepository {
           difficulty: 'BEGINNER',
           data: {
             imageUrl: 'https://example.com/cat.jpg',
-            categories: ['CAT', 'DOG', 'BIRD']
+            categories: ['CAT', 'DOG', 'BIRD'],
           },
           expectedResult: 'CAT',
-          timeLimit: 30
-        }
+          timeLimit: 30,
+        },
       ],
       INTERMEDIATE: [
         {
@@ -67,11 +63,11 @@ export class AssessmentTaskRepository {
           difficulty: 'INTERMEDIATE',
           data: {
             imageUrl: 'https://example.com/street-scene.jpg',
-            categories: ['URBAN', 'RURAL', 'SUBURBAN', 'INDUSTRIAL']
+            categories: ['URBAN', 'RURAL', 'SUBURBAN', 'INDUSTRIAL'],
           },
           expectedResult: 'URBAN',
-          timeLimit: 45
-        }
+          timeLimit: 45,
+        },
       ],
       ADVANCED: [
         {
@@ -80,17 +76,15 @@ export class AssessmentTaskRepository {
           data: {
             imageUrl: 'https://example.com/medical-scan.jpg',
             categories: ['NORMAL', 'ABNORMAL', 'INCONCLUSIVE'],
-            requiresAnnotation: true
+            requiresAnnotation: true,
           },
           expectedResult: {
             category: 'ABNORMAL',
-            annotations: [
-              { x: 100, y: 100, width: 50, height: 50, label: 'anomaly' }
-            ]
+            annotations: [{ x: 100, y: 100, width: 50, height: 50, label: 'anomaly' }],
           },
-          timeLimit: 120
-        }
-      ]
+          timeLimit: 120,
+        },
+      ],
     },
     SENTIMENT_ANALYSIS: {
       BEGINNER: [
@@ -101,15 +95,15 @@ export class AssessmentTaskRepository {
             text: 'I really enjoyed this movie!',
             options: {
               sentiment: ['POSITIVE', 'NEGATIVE', 'NEUTRAL'],
-              intensity: [1, 2, 3, 4, 5]
-            }
+              intensity: [1, 2, 3, 4, 5],
+            },
           },
           expectedResult: {
             sentiment: 'POSITIVE',
-            intensity: 5
+            intensity: 5,
           },
-          timeLimit: 30
-        }
+          timeLimit: 30,
+        },
       ],
       INTERMEDIATE: [
         {
@@ -120,19 +114,19 @@ export class AssessmentTaskRepository {
             options: {
               sentiment: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED'],
               intensity: [1, 2, 3, 4, 5],
-              aspects: ['SERVICE', 'PRICE']
-            }
+              aspects: ['SERVICE', 'PRICE'],
+            },
           },
           expectedResult: {
             sentiment: 'MIXED',
             intensity: 3,
             aspects: {
               SERVICE: { sentiment: 'NEUTRAL', intensity: 3 },
-              PRICE: { sentiment: 'NEGATIVE', intensity: 2 }
-            }
+              PRICE: { sentiment: 'NEGATIVE', intensity: 2 },
+            },
           },
-          timeLimit: 60
-        }
+          timeLimit: 60,
+        },
       ],
       ADVANCED: [
         {
@@ -144,8 +138,8 @@ export class AssessmentTaskRepository {
               sentiment: ['POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED'],
               intensity: [1, 2, 3, 4, 5],
               aspects: ['FEATURES', 'USABILITY', 'DOCUMENTATION'],
-              contextual: true
-            }
+              contextual: true,
+            },
           },
           expectedResult: {
             sentiment: 'MIXED',
@@ -153,17 +147,17 @@ export class AssessmentTaskRepository {
             aspects: {
               FEATURES: { sentiment: 'POSITIVE', intensity: 5 },
               USABILITY: { sentiment: 'NEGATIVE', intensity: 4 },
-              DOCUMENTATION: { sentiment: 'NEGATIVE', intensity: 3 }
+              DOCUMENTATION: { sentiment: 'NEGATIVE', intensity: 3 },
             },
             context: {
               domain: 'SOFTWARE',
-              userType: 'TECHNICAL'
-            }
+              userType: 'TECHNICAL',
+            },
           },
-          timeLimit: 120
-        }
-      ]
-    }
+          timeLimit: 120,
+        },
+      ],
+    },
   };
 
   constructor(logger: Logger) {
@@ -182,28 +176,29 @@ export class AssessmentTaskRepository {
       if (!availableTasks.length) {
         this.logger.warn('No assessment tasks available', {
           taskType,
-          difficulty
+          difficulty,
         });
         return [];
       }
 
       // Randomly select tasks
-      const selectedTasks = this.shuffleArray(availableTasks)
-        .slice(0, Math.min(count, availableTasks.length));
+      const selectedTasks = this.shuffleArray(availableTasks).slice(
+        0,
+        Math.min(count, availableTasks.length)
+      );
 
       this.logger.info('Assessment tasks retrieved', {
         taskType,
         difficulty,
-        count: selectedTasks.length
+        count: selectedTasks.length,
       });
 
       return selectedTasks;
-
     } catch (error) {
       this.logger.error('Failed to get assessment tasks', {
         error,
         taskType,
-        workerLevel
+        workerLevel,
       });
       throw error;
     }
@@ -227,14 +222,13 @@ export class AssessmentTaskRepository {
 
       this.logger.info('Assessment task added', {
         taskType,
-        difficulty
+        difficulty,
       });
-
     } catch (error) {
       this.logger.error('Failed to add assessment task', {
         error,
         taskType,
-        difficulty
+        difficulty,
       });
       throw error;
     }
@@ -262,4 +256,4 @@ export class AssessmentTaskRepository {
     }
     return shuffled;
   }
-} 
+}

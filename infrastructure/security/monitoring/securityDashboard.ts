@@ -7,7 +7,7 @@ export class SecurityDashboardStack extends cdk.Stack {
     super(scope, id, props);
 
     const dashboard = new cloudwatch.Dashboard(this, 'SecurityDashboard', {
-      dashboardName: 'MindBurn-Security-Dashboard'
+      dashboardName: 'MindBurn-Security-Dashboard',
     });
 
     // WAF Metrics
@@ -21,10 +21,10 @@ export class SecurityDashboardStack extends cdk.Stack {
           period: cdk.Duration.minutes(5),
           dimensionsMap: {
             WebACL: 'MindBurnWAF',
-            Region: this.region
-          }
-        })
-      ]
+            Region: this.region,
+          },
+        }),
+      ],
     });
 
     // API Gateway 4xx/5xx Errors
@@ -35,15 +35,15 @@ export class SecurityDashboardStack extends cdk.Stack {
           namespace: 'AWS/ApiGateway',
           metricName: '4XXError',
           statistic: 'Sum',
-          period: cdk.Duration.minutes(5)
+          period: cdk.Duration.minutes(5),
         }),
         new cloudwatch.Metric({
           namespace: 'AWS/ApiGateway',
           metricName: '5XXError',
           statistic: 'Sum',
-          period: cdk.Duration.minutes(5)
-        })
-      ]
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
     });
 
     // Lambda Security Metrics
@@ -54,15 +54,15 @@ export class SecurityDashboardStack extends cdk.Stack {
           namespace: 'AWS/Lambda',
           metricName: 'ConcurrentExecutions',
           statistic: 'Maximum',
-          period: cdk.Duration.minutes(5)
+          period: cdk.Duration.minutes(5),
         }),
         new cloudwatch.Metric({
           namespace: 'AWS/Lambda',
           metricName: 'Throttles',
           statistic: 'Sum',
-          period: cdk.Duration.minutes(5)
-        })
-      ]
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
     });
 
     // KMS Metrics
@@ -73,9 +73,9 @@ export class SecurityDashboardStack extends cdk.Stack {
           namespace: 'AWS/KMS',
           metricName: 'KeyUsage',
           statistic: 'Sum',
-          period: cdk.Duration.minutes(5)
-        })
-      ]
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
     });
 
     // VPC Flow Logs Widget
@@ -86,10 +86,10 @@ export class SecurityDashboardStack extends cdk.Stack {
         'fields @timestamp, srcAddr, dstAddr, srcPort, dstPort, action',
         'filter action = "REJECT"',
         'sort @timestamp desc',
-        'limit 100'
+        'limit 100',
       ],
       width: 24,
-      height: 6
+      height: 6,
     });
 
     // Add all widgets to dashboard
@@ -110,13 +110,13 @@ export class SecurityDashboardStack extends cdk.Stack {
         period: cdk.Duration.minutes(5),
         dimensionsMap: {
           WebACL: 'MindBurnWAF',
-          Region: this.region
-        }
+          Region: this.region,
+        },
       }),
       threshold: 100,
       evaluationPeriods: 1,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      alarmDescription: 'High number of blocked requests detected'
+      alarmDescription: 'High number of blocked requests detected',
     });
 
     new cloudwatch.Alarm(this, 'AnomalousAPIUsageAlarm', {
@@ -124,12 +124,12 @@ export class SecurityDashboardStack extends cdk.Stack {
         namespace: 'AWS/ApiGateway',
         metricName: 'Count',
         statistic: 'Sum',
-        period: cdk.Duration.minutes(5)
+        period: cdk.Duration.minutes(5),
       }),
       threshold: 1000,
       evaluationPeriods: 2,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      alarmDescription: 'Anomalous API usage detected'
+      alarmDescription: 'Anomalous API usage detected',
     });
   }
-} 
+}

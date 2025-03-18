@@ -21,16 +21,18 @@ interface TaskCompletionBody {
 }
 
 const checkDuplicateSubmission = async (taskId: string, workerId: string): Promise<boolean> => {
-  const { Items = [] } = await dynamoDB.query({
-    TableName: SUBMISSIONS_TABLE,
-    KeyConditionExpression: 'taskId = :taskId',
-    FilterExpression: 'workerId = :workerId',
-    ExpressionAttributeValues: {
-      ':taskId': taskId,
-      ':workerId': workerId
-    }
-  }).promise();
-  
+  const { Items = [] } = await dynamoDB
+    .query({
+      TableName: SUBMISSIONS_TABLE,
+      KeyConditionExpression: 'taskId = :taskId',
+      FilterExpression: 'workerId = :workerId',
+      ExpressionAttributeValues: {
+        ':taskId': taskId,
+        ':workerId': workerId,
+      },
+    })
+    .promise();
+
   return Items.length > 0;
 };
 
@@ -55,41 +57,43 @@ const processSubmissionTransaction = async (
   newStatus: TaskStatus
 ): Promise<void> => {
   const now = Date.now();
-  
+
   const transactionItems = [
     // Store submission
     {
       Put: {
         TableName: SUBMISSIONS_TABLE,
         Item: submission,
-        ConditionExpression: 'attribute_not_exists(taskId) AND attribute_not_exists(workerId)'
-      }
+        ConditionExpression: 'attribute_not_exists(taskId) AND attribute_not_exists(workerId)',
+      },
     },
     // Update task status
     {
       Update: {
         TableName: TASKS_TABLE,
         Key: { taskId: task.taskId },
-        UpdateExpression: 'SET completedVerifications = :completed, status = :status, updatedAt = :now',
+        UpdateExpression:
+          'SET completedVerifications = :completed, status = :status, updatedAt = :now',
         ExpressionAttributeValues: {
           ':completed': completedVerifications,
           ':status': newStatus,
-          ':now': now
-        }
-      }
+          ':now': now,
+        },
+      },
     },
     // Update worker stats
     {
       Update: {
         TableName: WORKERS_TABLE,
         Key: { workerId: submission.workerId },
-        UpdateExpression: 'SET activeTaskCount = activeTaskCount - :dec, completedTaskCount = completedTaskCount + :inc',
+        UpdateExpression:
+          'SET activeTaskCount = activeTaskCount - :dec, completedTaskCount = completedTaskCount + :inc',
         ExpressionAttributeValues: {
           ':dec': 1,
-          ':inc': 1
-        }
-      }
-    }
+          ':inc': 1,
+        },
+      },
+    },
   ];
 
   await dynamoDB.transactWrite({ TransactItems: transactionItems }).promise();
@@ -101,7 +105,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!taskId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Task ID is required' })
+        body: JSON.stringify({ error: 'Task ID is required' }),
       };
     }
 
@@ -111,7 +115,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch (e) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid JSON in request body' })
+        body: JSON.stringify({ error: 'Invalid JSON in request body' }),
       };
     }
 
@@ -120,20 +124,22 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!workerId || timeSpentSeconds === undefined) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Worker ID and timeSpentSeconds are required' })
+        body: JSON.stringify({ error: 'Worker ID and timeSpentSeconds are required' }),
       };
     }
 
     // Get task details
-    const { Item: task } = await dynamoDB.get({
-      TableName: TASKS_TABLE,
-      Key: { taskId }
-    }).promise();
+    const { Item: task } = await dynamoDB
+      .get({
+        TableName: TASKS_TABLE,
+        Key: { taskId },
+      })
+      .promise();
 
     if (!task) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: `Task not found: ${taskId}` })
+        body: JSON.stringify({ error: `Task not found: ${taskId}` }),
       };
     }
 
@@ -143,7 +149,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     } catch (e) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: e.message })
+        body: JSON.stringify({ error: e.message }),
       };
     }
 
@@ -152,7 +158,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (isDuplicate) {
       return {
         statusCode: 409,
-        body: JSON.stringify({ error: 'Duplicate submission not allowed' })
+        body: JSON.stringify({ error: 'Duplicate submission not allowed' }),
       };
     }
 
@@ -161,57 +167,59 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       workerId,
       result,
       submittedAt: Date.now(),
-      timeSpentSeconds
+      timeSpentSeconds,
     };
 
     // Calculate new task status
     const completedVerifications = (task.completedVerifications || 0) + 1;
-    const newStatus = completedVerifications >= task.requirements.verificationThreshold
-      ? TaskStatus.COMPLETED
-      : TaskStatus.IN_PROGRESS;
+    const newStatus =
+      completedVerifications >= task.requirements.verificationThreshold
+        ? TaskStatus.COMPLETED
+        : TaskStatus.IN_PROGRESS;
 
     // Process submission with transaction
     await processSubmissionTransaction(task as Task, submission, completedVerifications, newStatus);
 
     // If task is completed, trigger result consolidation
     if (newStatus === TaskStatus.COMPLETED) {
-      await stepFunctions.startExecution({
-        stateMachineArn: CONSOLIDATION_WORKFLOW_ARN,
-        input: JSON.stringify({
-          taskId,
-          action: 'CONSOLIDATE_RESULTS'
+      await stepFunctions
+        .startExecution({
+          stateMachineArn: CONSOLIDATION_WORKFLOW_ARN,
+          input: JSON.stringify({
+            taskId,
+            action: 'CONSOLIDATE_RESULTS',
+          }),
         })
-      }).promise();
+        .promise();
 
       logger.info('Started result consolidation workflow', {
         taskId,
-        completedVerifications
+        completedVerifications,
       });
     }
 
     logger.info('Task submission processed successfully', {
       taskId,
       workerId,
-      timeSpentSeconds
+      timeSpentSeconds,
     });
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         taskId,
-        status: newStatus
-      })
+        status: newStatus,
+      }),
     };
-
   } catch (error) {
     logger.error('Failed to process task submission', { error });
-    
+
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      })
+        message: error instanceof Error ? error.message : 'Unknown error',
+      }),
     };
   }
-}; 
+};

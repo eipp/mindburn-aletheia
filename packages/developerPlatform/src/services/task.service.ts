@@ -32,13 +32,13 @@ export class TaskService {
       result: null,
       error: null,
       startedAt: null,
-      completedAt: null
+      completedAt: null,
     };
 
     // Save task to DynamoDB
     await ddb.put({
       TableName: TASKS_TABLE,
-      Item: task
+      Item: task,
     });
 
     // Send task to SQS for processing
@@ -49,8 +49,8 @@ export class TaskService {
         developerId,
         type: data.type,
         requirements: data.requirements,
-        priority: data.priority
-      })
+        priority: data.priority,
+      }),
     });
 
     logger.info('Task submitted successfully', { taskId });
@@ -58,14 +58,14 @@ export class TaskService {
     return {
       taskId,
       status: task.status,
-      createdAt: task.createdAt
+      createdAt: task.createdAt,
     };
   }
 
   async getTask(developerId: string, taskId: string) {
     const result = await ddb.get({
       TableName: TASKS_TABLE,
-      Key: { taskId }
+      Key: { taskId },
     });
 
     if (!result.Item) {
@@ -89,22 +89,25 @@ export class TaskService {
       error: task.error,
       createdAt: task.createdAt,
       startedAt: task.startedAt,
-      completedAt: task.completedAt
+      completedAt: task.completedAt,
     };
   }
 
-  async listTasks(developerId: string, params: { 
-    status?: string, 
-    type?: string,
-    startDate?: string,
-    endDate?: string,
-    limit?: number,
-    nextToken?: string 
-  }) {
+  async listTasks(
+    developerId: string,
+    params: {
+      status?: string;
+      type?: string;
+      startDate?: string;
+      endDate?: string;
+      limit?: number;
+      nextToken?: string;
+    }
+  ) {
     const limit = params.limit || 50;
     let filterExpression = 'developerId = :developerId';
     let expressionAttributeValues: any = {
-      ':developerId': developerId
+      ':developerId': developerId,
     };
 
     if (params.status) {
@@ -134,9 +137,9 @@ export class TaskService {
       ExpressionAttributeValues: expressionAttributeValues,
       ExpressionAttributeNames: {
         '#status': 'status',
-        '#type': 'type'
+        '#type': 'type',
       },
-      Limit: limit
+      Limit: limit,
     };
 
     if (params.nextToken) {
@@ -148,17 +151,18 @@ export class TaskService {
     const result = await ddb.query(queryParams);
 
     return {
-      tasks: result.Items?.map(task => ({
-        taskId: task.taskId,
-        status: task.status,
-        type: task.type,
-        priority: task.priority,
-        createdAt: task.createdAt,
-        completedAt: task.completedAt
-      })) || [],
+      tasks:
+        result.Items?.map(task => ({
+          taskId: task.taskId,
+          status: task.status,
+          type: task.type,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          completedAt: task.completedAt,
+        })) || [],
       nextToken: result.LastEvaluatedKey
         ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64')
-        : null
+        : null,
     };
   }
 
@@ -167,7 +171,7 @@ export class TaskService {
     const updateExpression = 'SET #status = :status, updatedAt = :now';
     const expressionAttributeValues: any = {
       ':status': status,
-      ':now': now
+      ':now': now,
     };
 
     if (status === 'processing') {
@@ -189,8 +193,8 @@ export class TaskService {
       UpdateExpression: updateExpression,
       ExpressionAttributeValues: expressionAttributeValues,
       ExpressionAttributeNames: {
-        '#status': 'status'
-      }
+        '#status': 'status',
+      },
     });
 
     logger.info('Task status updated', { taskId, status });
@@ -201,7 +205,7 @@ export class TaskService {
   async cancelTask(developerId: string, taskId: string) {
     const result = await ddb.get({
       TableName: TASKS_TABLE,
-      Key: { taskId }
+      Key: { taskId },
     });
 
     if (!result.Item) {
@@ -226,4 +230,4 @@ export class TaskService {
 
     return true;
   }
-} 
+}

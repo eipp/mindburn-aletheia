@@ -12,7 +12,7 @@ export async function register(event: APIGatewayProxyEvent): Promise<APIGatewayP
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -21,7 +21,7 @@ export async function register(event: APIGatewayProxyEvent): Promise<APIGatewayP
 
     return {
       statusCode: 201,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Registration failed', { error });
@@ -29,23 +29,23 @@ export async function register(event: APIGatewayProxyEvent): Promise<APIGatewayP
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request data',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     if (error instanceof Error && error.message === 'Email already registered') {
       return {
         statusCode: 409,
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -55,7 +55,7 @@ export async function login(event: APIGatewayProxyEvent): Promise<APIGatewayProx
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -64,7 +64,7 @@ export async function login(event: APIGatewayProxyEvent): Promise<APIGatewayProx
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Login failed', { error });
@@ -72,23 +72,23 @@ export async function login(event: APIGatewayProxyEvent): Promise<APIGatewayProx
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request data',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     if (error instanceof Error && error.message === 'Invalid credentials') {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -99,7 +99,7 @@ export async function listApiKeys(event: APIGatewayProxyEvent): Promise<APIGatew
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -107,14 +107,14 @@ export async function listApiKeys(event: APIGatewayProxyEvent): Promise<APIGatew
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to list API keys', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -125,7 +125,7 @@ export async function generateApiKey(event: APIGatewayProxyEvent): Promise<APIGa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -133,14 +133,14 @@ export async function generateApiKey(event: APIGatewayProxyEvent): Promise<APIGa
 
     return {
       statusCode: 201,
-      body: JSON.stringify({ apiKey })
+      body: JSON.stringify({ apiKey }),
     };
   } catch (error) {
     logger.error('Failed to generate API key', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -151,7 +151,7 @@ export async function revokeApiKey(event: APIGatewayProxyEvent): Promise<APIGate
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -159,7 +159,7 @@ export async function revokeApiKey(event: APIGatewayProxyEvent): Promise<APIGate
     if (!apiKeyId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing API key ID' })
+        body: JSON.stringify({ error: 'Missing API key ID' }),
       };
     }
 
@@ -167,7 +167,7 @@ export async function revokeApiKey(event: APIGatewayProxyEvent): Promise<APIGate
 
     return {
       statusCode: 204,
-      body: ''
+      body: '',
     };
   } catch (error) {
     logger.error('Failed to revoke API key', { error });
@@ -175,13 +175,13 @@ export async function revokeApiKey(event: APIGatewayProxyEvent): Promise<APIGate
     if (error instanceof Error && error.message === 'API key not found') {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-} 
+}

@@ -25,11 +25,11 @@ async function loadConfig(): Promise<Config> {
 async function createContext(config: Config) {
   const dynamodb = new DynamoDB.DocumentClient({
     endpoint: config.dynamodbEndpoint,
-    region: config.region
+    region: config.region,
   });
 
   const postgres = new Pool({
-    connectionString: config.postgresConnection
+    connectionString: config.postgresConnection,
   });
 
   const s3 = new S3({ region: config.region });
@@ -42,7 +42,7 @@ async function createContext(config: Config) {
     s3,
     cloudwatch,
     logger,
-    environment: config.environment
+    environment: config.environment,
   };
 }
 
@@ -95,7 +95,7 @@ program
   .command('apply')
   .description('Apply pending migrations')
   .option('-f, --force', 'Force apply without confirmation')
-  .action(async (options) => {
+  .action(async options => {
     try {
       const config = await loadConfig();
       const context = await createContext(config);
@@ -116,10 +116,10 @@ program
         plan.forEach(migration => {
           console.log(`- ${migration.version}: ${migration.description}`);
         });
-        
+
         const readline = require('readline').createInterface({
           input: process.stdin,
-          output: process.stdout
+          output: process.stdout,
         });
 
         const answer = await new Promise(resolve => {
@@ -182,7 +182,7 @@ program
   .description('Rollback last migration')
   .option('-a, --all', 'Rollback all migrations')
   .option('-t, --to <version>', 'Rollback to specific version')
-  .action(async (options) => {
+  .action(async options => {
     try {
       const config = await loadConfig();
       const context = await createContext(config);
@@ -203,4 +203,4 @@ program
     }
   });
 
-program.parse(); 
+program.parse();

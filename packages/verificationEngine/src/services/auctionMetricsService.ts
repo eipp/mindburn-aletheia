@@ -1,11 +1,5 @@
 import { Logger } from '@mindburn/shared/logger';
-import {
-  AuctionBid,
-  AuctionResult,
-  TaskType,
-  WorkerLevel,
-  TaskPriority
-} from '../types';
+import { AuctionBid, AuctionResult, TaskType, WorkerLevel, TaskPriority } from '../types';
 
 interface AuctionMetrics {
   averageBid: number;
@@ -37,7 +31,7 @@ export class AuctionMetricsService {
   private readonly logger: Logger;
   private readonly metrics: Map<string, AuctionMetrics> = new Map();
   private readonly bidHistory: Map<TaskType, BidHistory[]> = new Map();
-  
+
   // Moving window for metrics calculation (7 days)
   private readonly metricsWindow = 7 * 24 * 60 * 60 * 1000;
 
@@ -49,15 +43,15 @@ export class AuctionMetricsService {
     try {
       await this.updateMetrics(result);
       await this.updateBidHistory(result);
-      
+
       this.logger.info('Updated auction metrics', {
         auctionId: result.auctionId,
-        taskId: result.taskId
+        taskId: result.taskId,
       });
     } catch (error) {
       this.logger.error('Failed to track auction result', {
         error,
-        auctionId: result.auctionId
+        auctionId: result.auctionId,
       });
     }
   }
@@ -80,15 +74,12 @@ export class AuctionMetricsService {
     const history = this.bidHistory.get(taskType);
     if (!history) return null;
 
-    const filtered = history.filter(h => 
-      h.workerLevel === workerLevel && 
-      h.priority === priority &&
-      (!timeRange || (
-        h.bids.some(bid => 
-          bid.timestamp >= timeRange.start && 
-          bid.timestamp <= timeRange.end
-        )
-      ))
+    const filtered = history.filter(
+      h =>
+        h.workerLevel === workerLevel &&
+        h.priority === priority &&
+        (!timeRange ||
+          h.bids.some(bid => bid.timestamp >= timeRange.start && bid.timestamp <= timeRange.end))
     );
 
     if (filtered.length === 0) return null;
@@ -99,7 +90,7 @@ export class AuctionMetricsService {
       workerLevel,
       priority,
       bids: filtered.flatMap(h => h.bids),
-      metrics: this.calculateBidMetrics(filtered.flatMap(h => h.bids.map(b => b.amount)))
+      metrics: this.calculateBidMetrics(filtered.flatMap(h => h.bids.map(b => b.amount))),
     };
   }
 
@@ -108,15 +99,10 @@ export class AuctionMetricsService {
     workerLevel: WorkerLevel,
     priority: TaskPriority
   ): Promise<{ min: number; max: number } | null> {
-    const history = await this.getBidHistory(
-      taskType,
-      workerLevel,
-      priority,
-      {
-        start: Date.now() - this.metricsWindow,
-        end: Date.now()
-      }
-    );
+    const history = await this.getBidHistory(taskType, workerLevel, priority, {
+      start: Date.now() - this.metricsWindow,
+      end: Date.now(),
+    });
 
     if (!history || history.bids.length === 0) {
       return null;
@@ -124,7 +110,7 @@ export class AuctionMetricsService {
 
     return {
       min: Math.max(1, Math.floor(history.metrics.average * 0.8)),
-      max: Math.ceil(history.metrics.average * 1.2)
+      max: Math.ceil(history.metrics.average * 1.2),
     };
   }
 
@@ -139,7 +125,7 @@ export class AuctionMetricsService {
       participationRate: this.calculateParticipationRate(result),
       completionRate: this.calculateCompletionRate(result),
       averageDuration: result.endTime - result.startTime,
-      workerLevelDistribution: this.calculateWorkerLevelDistribution(result)
+      workerLevelDistribution: this.calculateWorkerLevelDistribution(result),
     };
 
     this.metrics.set(key, metrics);
@@ -147,10 +133,10 @@ export class AuctionMetricsService {
 
   private async updateBidHistory(result: AuctionResult): Promise<void> {
     const { taskType, workerLevel, priority } = result.metadata;
-    
+
     const bids = result.winners.map(winner => ({
       amount: winner.winningBid,
-      timestamp: result.endTime
+      timestamp: result.endTime,
     }));
 
     const history: BidHistory = {
@@ -158,7 +144,7 @@ export class AuctionMetricsService {
       workerLevel,
       priority,
       bids,
-      metrics: this.calculateBidMetrics(bids.map(b => b.amount))
+      metrics: this.calculateBidMetrics(bids.map(b => b.amount)),
     };
 
     const existingHistory = this.bidHistory.get(taskType) || [];
@@ -196,7 +182,7 @@ export class AuctionMetricsService {
       average: bids.reduce((a, b) => a + b, 0) / bids.length,
       median: sorted[Math.floor(sorted.length / 2)],
       min: sorted[0],
-      max: sorted[sorted.length - 1]
+      max: sorted[sorted.length - 1],
     };
   }
 
@@ -225,14 +211,12 @@ export class AuctionMetricsService {
     return result.winners.length / (result.metadata.requiredWinners || 1);
   }
 
-  private calculateWorkerLevelDistribution(
-    result: AuctionResult
-  ): Record<WorkerLevel, number> {
+  private calculateWorkerLevelDistribution(result: AuctionResult): Record<WorkerLevel, number> {
     const distribution: Record<WorkerLevel, number> = {
       [WorkerLevel.BEGINNER]: 0,
       [WorkerLevel.INTERMEDIATE]: 0,
       [WorkerLevel.ADVANCED]: 0,
-      [WorkerLevel.EXPERT]: 0
+      [WorkerLevel.EXPERT]: 0,
     };
 
     result.winners.forEach(winner => {
@@ -244,4 +228,4 @@ export class AuctionMetricsService {
 
     return distribution;
   }
-} 
+}

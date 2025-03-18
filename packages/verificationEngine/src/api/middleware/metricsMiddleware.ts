@@ -10,7 +10,7 @@ export function createMetricsMiddleware(monitoring: MonitoringManager) {
     const originalEnd = res.end;
 
     // Override end function to capture metrics
-    res.end = function(...args: any[]) {
+    res.end = function (...args: any[]) {
       const duration = Date.now() - startTime;
 
       // Record API latency
@@ -38,4 +38,4 @@ export function createMetricsMiddleware(monitoring: MonitoringManager) {
 const app = express();
 const monitoring = createMonitoringManager({...});
 app.use(createMetricsMiddleware(monitoring));
-*/ 
+*/

@@ -7,4 +7,4 @@ export const useWorker = () => {
     throw new Error('useWorker must be used within a WorkerProvider');
   }
   return context;
-}; 
+};

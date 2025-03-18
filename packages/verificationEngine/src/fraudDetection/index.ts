@@ -6,5 +6,5 @@ export type {
   FraudDetectionResult,
   FraudDetectionConfig,
   FraudLevel,
-  RiskThresholds
-} from './types'; 
+  RiskThresholds,
+} from './types';

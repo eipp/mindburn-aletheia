@@ -83,7 +83,9 @@ export class AddVerificationMetrics extends Migration {
       await client.query('BEGIN');
 
       // Drop in reverse order
-      await client.query('DROP TRIGGER IF EXISTS refresh_worker_metrics_trigger ON verification_metrics');
+      await client.query(
+        'DROP TRIGGER IF EXISTS refresh_worker_metrics_trigger ON verification_metrics'
+      );
       await client.query('DROP FUNCTION IF EXISTS refresh_worker_metrics()');
       await client.query('DROP MATERIALIZED VIEW IF EXISTS worker_performance_metrics');
       await client.query('DROP TABLE IF EXISTS verification_metrics CASCADE');
@@ -160,4 +162,4 @@ export class AddVerificationMetrics extends Migration {
     `;
     return createHash('sha256').update(content).digest('hex');
   }
-} 
+}

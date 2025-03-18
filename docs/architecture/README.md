@@ -1,3 +1,56 @@
+# Project Architecture
+
+## Packages
+
+The project is organized into the following packages:
+
+```
+packages/
+├── core/               # Core shared utilities
+├── shared/             # Shared types and components
+├── developerPlatform/  # Developer Platform API
+├── taskManagement/     # Task distribution logic
+├── verificationEngine/ # Core Logic
+├── workerInterface/    # Telegram Bot + API
+├── workerWebapp/       # Mini App
+├── paymentSystem/      # Payment processing
+├── tonContracts/       # TON Blockchain contracts
+└── tokenEconomy/       # Tokenomics
+```
+
+## Architecture
+
+### Component Diagram
+
+```mermaid
+graph TD
+    DeveloperPlatform --> TaskManagement
+    DeveloperPlatform --> PaymentSystem
+    TaskManagement --> VerificationEngine
+    TaskManagement --> WorkerInterface
+    WorkerInterface --> WorkerWebapp
+    WorkerInterface --> VerificationEngine
+    PaymentSystem --> TONContracts
+    
+    subgraph Core Infrastructure
+        Shared[Shared]
+        Core[Core]
+    end
+    
+    DeveloperPlatform --> Shared
+    TaskManagement --> Shared
+    VerificationEngine --> Shared
+    WorkerInterface --> Shared
+    WorkerWebapp --> Shared
+    PaymentSystem --> Shared
+    TONContracts --> Shared
+    TokenEconomy --> Shared
+```
+
+## Deployment
+
+![Deployment Diagram](../images/deployment.png)
+
 # Architecture Overview
 
 ## System Context
@@ -21,6 +74,7 @@ Mindburn Aletheia operates as a bridge between AI developers and human verifiers
 The user-facing component handling interactions with human verifiers.
 
 - **Telegram Bot**
+
   - Task distribution and notifications
   - User registration and management
   - Wallet connection via TON Connect
@@ -37,6 +91,7 @@ The user-facing component handling interactions with human verifiers.
 The interface for AI developers to interact with the platform.
 
 - **REST API**
+
   - Task submission and management
   - Result retrieval
   - Analytics and reporting
@@ -53,6 +108,7 @@ The interface for AI developers to interact with the platform.
 Handles task distribution and lifecycle management.
 
 - **Components**
+
   - Task Queue (AWS SQS)
   - Task Store (DynamoDB)
   - Assignment Engine
@@ -69,6 +125,7 @@ Handles task distribution and lifecycle management.
 Core business logic for task verification.
 
 - **Components**
+
   - Validation Rules Engine
   - Quality Control System
   - Result Aggregator
@@ -85,6 +142,7 @@ Core business logic for task verification.
 Handles all payment-related operations using TON blockchain.
 
 - **Components**
+
   - TON Connect Integration
   - Smart Contracts
   - Payment Processor
@@ -99,6 +157,7 @@ Handles all payment-related operations using TON blockchain.
 ## Technology Stack
 
 ### Backend Services
+
 - Node.js with TypeScript
 - AWS Lambda for serverless compute
 - DynamoDB for data storage
@@ -106,18 +165,21 @@ Handles all payment-related operations using TON blockchain.
 - CloudWatch for monitoring
 
 ### Frontend Applications
+
 - React with TypeScript
 - Mantine UI framework
 - TON Connect SDK
 - Telegram Mini App SDK
 
 ### Infrastructure
+
 - AWS CDK for IaC
 - Serverless Framework
 - CloudFormation
 - GitHub Actions for CI/CD
 
 ### Security
+
 - AWS KMS for encryption
 - Cognito for authentication
 - WAF for API protection
@@ -128,6 +190,7 @@ Handles all payment-related operations using TON blockchain.
 ![Data Flow Diagram](diagrams/data-flow.png)
 
 1. **Task Submission**
+
    ```mermaid
    sequenceDiagram
    Developer->>API: Submit Task
@@ -148,17 +211,20 @@ Handles all payment-related operations using TON blockchain.
 ## Security Architecture
 
 ### Data Protection
+
 - Field-level encryption for sensitive data
 - Secure key management with AWS KMS
 - Data classification and handling policies
 
 ### Authentication & Authorization
+
 - JWT-based authentication
 - Role-based access control
 - Multi-factor authentication
 - Session management
 
 ### Network Security
+
 - VPC configuration
 - Security groups
 - WAF rules
@@ -167,11 +233,13 @@ Handles all payment-related operations using TON blockchain.
 ## Scalability
 
 ### Horizontal Scaling
+
 - Auto-scaling Lambda functions
 - DynamoDB on-demand capacity
 - SQS for load leveling
 
 ### Performance Optimization
+
 - CloudFront for content delivery
 - DynamoDB GSIs for query optimization
 - Lambda provisioned concurrency
@@ -180,12 +248,14 @@ Handles all payment-related operations using TON blockchain.
 ## Monitoring & Observability
 
 ### Metrics
+
 - API latency and errors
 - Task completion rates
 - Payment success rates
 - System health checks
 
 ### Logging
+
 - Structured logging
 - Audit trails
 - Error tracking
@@ -194,12 +264,14 @@ Handles all payment-related operations using TON blockchain.
 ## Disaster Recovery
 
 ### Backup Strategy
+
 - Continuous DynamoDB backups
 - S3 versioning
 - Cross-region replication
 - Regular testing
 
 ### Recovery Procedures
+
 - RTO/RPO objectives
 - Failover procedures
 - Data restoration
@@ -208,17 +280,19 @@ Handles all payment-related operations using TON blockchain.
 ## Development Guidelines
 
 ### Code Organization
+
 ```
 packages/
-├── worker-interface/     # Telegram Bot + API
-├── worker-webapp/       # Mini App
-├── developer-platform/  # Developer API
-├── task-management/    # Task System
-├── verification-engine/ # Core Logic
-└── payment-system/     # TON Integration
+├── workerInterface/     # Telegram Bot + API
+├── workerWebapp/        # Mini App
+├── developerPlatform/   # Developer API
+├── taskManagement/     # Task System
+├── verificationEngine/   # Core Logic
+└── paymentSystem/       # TON Integration
 ```
 
 ### Best Practices
+
 - TypeScript for type safety
 - Unit test coverage > 80%
 - Code review requirements
@@ -227,11 +301,13 @@ packages/
 ## Deployment Strategy
 
 ### Environments
+
 - Development
 - Staging
 - Production
 
 ### Deployment Process
+
 1. Code review and approval
 2. Automated testing
 3. Staging deployment
@@ -240,12 +316,14 @@ packages/
 ## Version Control
 
 ### Branching Strategy
+
 - main: Production code
 - develop: Integration branch
-- feature/*: Feature branches
-- release/*: Release branches
+- feature/\*: Feature branches
+- release/\*: Release branches
 
 ### Release Process
+
 1. Version bump
 2. Changelog update
 3. Tag creation
@@ -254,13 +332,15 @@ packages/
 ## Future Considerations
 
 ### Planned Improvements
+
 - Enhanced analytics
 - ML-based task routing
 - Advanced fraud detection
 - Performance optimizations
 
 ### Scalability Plans
+
 - Multi-region deployment
 - Enhanced caching
 - Performance optimization
-- Capacity planning 
+- Capacity planning

@@ -7,7 +7,7 @@ import {
   AIModel,
   ExpertiseLevel,
   AIModelConfig,
-  CacheConfig
+  CacheConfig,
 } from './types';
 import { Cache } from './Cache';
 import { AIVerifier } from './verifiers/AIVerifier';
@@ -71,7 +71,7 @@ export class VerificationEngine {
       requiredConfidence: 0.95,
       minVerifications: 2,
       maxVerifications: 5,
-      timeoutSeconds: 3600
+      timeoutSeconds: 3600,
     };
 
     switch (context.taskType) {
@@ -80,7 +80,7 @@ export class VerificationEngine {
           ...baseConfig,
           strategy: this.selectTextStrategy(context),
           aiModels: [AIModel.CLAUDE],
-          expertiseThreshold: ExpertiseLevel.INTERMEDIATE
+          expertiseThreshold: ExpertiseLevel.INTERMEDIATE,
         } as VerificationConfig;
 
       case TaskType.IMAGE_VERIFICATION:
@@ -88,7 +88,7 @@ export class VerificationEngine {
           ...baseConfig,
           strategy: this.selectImageStrategy(context),
           aiModels: [AIModel.GEMINI],
-          expertiseThreshold: ExpertiseLevel.EXPERT
+          expertiseThreshold: ExpertiseLevel.EXPERT,
         } as VerificationConfig;
 
       case TaskType.CODE_VERIFICATION:
@@ -97,7 +97,7 @@ export class VerificationEngine {
           strategy: this.selectCodeStrategy(context),
           aiModels: [AIModel.CLAUDE, AIModel.CUSTOM],
           expertiseThreshold: ExpertiseLevel.MASTER,
-          minVerifications: 3
+          minVerifications: 3,
         } as VerificationConfig;
 
       default:
@@ -180,7 +180,7 @@ export class VerificationEngine {
     // Execute AI and human verifications in parallel
     const [aiResult, humanResult] = await Promise.all([
       this.aiVerifier.verify(taskId, data, config),
-      this.humanVerifier.verify(taskId, data, config)
+      this.humanVerifier.verify(taskId, data, config),
     ]);
 
     // Combine results with weighted scoring
@@ -194,17 +194,19 @@ export class VerificationEngine {
       method: VerificationStrategy.HYBRID,
       contributors: {
         humans: humanResult.contributors.humans,
-        aiModels: aiResult.contributors.aiModels
+        aiModels: aiResult.contributors.aiModels,
       },
       metadata: {
         processingTime: Math.max(
           aiResult.metadata.processingTime,
           humanResult.metadata.processingTime
         ),
-        verificationCount: aiResult.metadata.verificationCount + humanResult.metadata.verificationCount,
-        consensusLevel: (aiResult.metadata.consensusLevel + humanResult.metadata.consensusLevel) / 2,
-        qualityScore: (aiResult.metadata.qualityScore + humanResult.metadata.qualityScore) / 2
-      }
+        verificationCount:
+          aiResult.metadata.verificationCount + humanResult.metadata.verificationCount,
+        consensusLevel:
+          (aiResult.metadata.consensusLevel + humanResult.metadata.consensusLevel) / 2,
+        qualityScore: (aiResult.metadata.qualityScore + humanResult.metadata.qualityScore) / 2,
+      },
     };
   }
 
@@ -217,17 +219,14 @@ export class VerificationEngine {
     return `AI Analysis: ${aiExplanation}\nHuman Analysis: ${humanExplanation}`;
   }
 
-  private enrichResult(
-    result: VerificationResult,
-    startTime: number
-  ): VerificationResult {
+  private enrichResult(result: VerificationResult, startTime: number): VerificationResult {
     const processingTime = Date.now() - startTime;
     return {
       ...result,
       metadata: {
         ...result.metadata,
-        processingTime
-      }
+        processingTime,
+      },
     };
   }
 
@@ -240,4 +239,4 @@ export class VerificationEngine {
       result.metadata.qualityScore
     );
   }
-} 
+}

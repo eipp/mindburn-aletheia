@@ -30,10 +30,12 @@ export const handler = async (event: TimeoutHandlerInput): Promise<TimeoutHandle
     logger.info('Handling task timeout', { taskId: event.taskId });
 
     // Get task from DynamoDB
-    const result = await dynamodb.get({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId }
-    }).promise();
+    const result = await dynamodb
+      .get({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+      })
+      .promise();
 
     const task = result.Item as Task;
     if (!task) {
@@ -46,7 +48,7 @@ export const handler = async (event: TimeoutHandlerInput): Promise<TimeoutHandle
       timeoutAt: new Date().toISOString(),
       reason: getTimeoutReason(timeoutType),
       originalExpiresAt: event.expiresAt,
-      timeoutType
+      timeoutType,
     };
 
     // Update task as timed out
@@ -61,9 +63,8 @@ export const handler = async (event: TimeoutHandlerInput): Promise<TimeoutHandle
     return {
       taskId: task.taskId,
       status: TaskStatus.FAILED,
-      timeoutDetails
+      timeoutDetails,
     };
-
   } catch (error) {
     logger.error('Failed to handle timeout', { error, taskId: event.taskId });
     throw error;
@@ -80,7 +81,9 @@ function determineTimeoutType(task: Task): TimeoutHandlerOutput['timeoutDetails'
   return 'SYSTEM';
 }
 
-function getTimeoutReason(timeoutType: TimeoutHandlerOutput['timeoutDetails']['timeoutType']): string {
+function getTimeoutReason(
+  timeoutType: TimeoutHandlerOutput['timeoutDetails']['timeoutType']
+): string {
   switch (timeoutType) {
     case 'ACCEPTANCE':
       return 'No workers accepted the task within the specified time';
@@ -97,43 +100,49 @@ async function updateTaskAsTimedOut(
   taskId: string,
   timeoutDetails: TimeoutHandlerOutput['timeoutDetails']
 ): Promise<void> {
-  await dynamodb.update({
-    TableName: process.env.TASKS_TABLE!,
-    Key: { taskId },
-    UpdateExpression: `
+  await dynamodb
+    .update({
+      TableName: process.env.TASKS_TABLE!,
+      Key: { taskId },
+      UpdateExpression: `
       SET #status = :status,
           timeoutDetails = :details,
           statusReason = :reason,
           updatedAt = :now
     `,
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': TaskStatus.FAILED,
-      ':details': timeoutDetails,
-      ':reason': timeoutDetails.reason,
-      ':now': new Date().toISOString()
-    }
-  }).promise();
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': TaskStatus.FAILED,
+        ':details': timeoutDetails,
+        ':reason': timeoutDetails.reason,
+        ':now': new Date().toISOString(),
+      },
+    })
+    .promise();
 }
 
 async function emitTimeoutEvent(
   taskId: string,
   timeoutDetails: TimeoutHandlerOutput['timeoutDetails']
 ): Promise<void> {
-  await eventBridge.putEvents({
-    Entries: [{
-      Source: 'aletheia.task-management',
-      DetailType: 'TaskTimeout',
-      Detail: JSON.stringify({
-        taskId,
-        timeoutDetails,
-        timestamp: new Date().toISOString()
-      }),
-      EventBusName: process.env.EVENT_BUS_NAME
-    }]
-  }).promise();
+  await eventBridge
+    .putEvents({
+      Entries: [
+        {
+          Source: 'aletheia.task-management',
+          DetailType: 'TaskTimeout',
+          Detail: JSON.stringify({
+            taskId,
+            timeoutDetails,
+            timestamp: new Date().toISOString(),
+          }),
+          EventBusName: process.env.EVENT_BUS_NAME,
+        },
+      ],
+    })
+    .promise();
 }
 
 async function handleTimeoutCleanup(
@@ -159,4 +168,4 @@ async function handleTimeoutCleanup(
       // Handle any system-level cleanup
       break;
   }
-} 
+}

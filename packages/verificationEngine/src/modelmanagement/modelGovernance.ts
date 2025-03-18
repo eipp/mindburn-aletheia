@@ -1,4 +1,4 @@
-import { 
+import {
   ModelRegistry,
   LoggerService,
   EventBus,
@@ -10,7 +10,7 @@ import {
   ValidationResult,
   ModelMetadata,
   AuditReport,
-  ModelStatus
+  ModelStatus,
 } from '@mindburn/shared';
 import { z } from 'zod';
 
@@ -19,12 +19,14 @@ const PolicySchema = z.object({
   name: z.string(),
   description: z.string(),
   type: z.enum(['performance', 'security', 'compliance', 'ethics']),
-  rules: z.array(z.object({
-    id: z.string(),
-    condition: z.string(), // JSON Logic expression
-    action: z.enum(['block', 'warn', 'audit']),
-    message: z.string(),
-  })),
+  rules: z.array(
+    z.object({
+      id: z.string(),
+      condition: z.string(), // JSON Logic expression
+      action: z.enum(['block', 'warn', 'audit']),
+      message: z.string(),
+    })
+  ),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -51,23 +53,20 @@ export class ModelGovernance {
       await this.eventBus.emit('policy.added', {
         policyId: policy.id,
         type: policy.type,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Policy added successfully', { policyId: policy.id });
     } catch (error) {
       this.logger.error('Failed to add policy', {
         policyId: policy.id,
-        error
+        error,
       });
       throw error;
     }
   }
 
-  async evaluateModelCompliance(
-    modelId: string,
-    version: string
-  ): Promise<ComplianceResult> {
+  async evaluateModelCompliance(modelId: string, version: string): Promise<ComplianceResult> {
     try {
       this.logger.info('Evaluating model compliance', { modelId, version });
 
@@ -85,8 +84,12 @@ export class ModelGovernance {
         warnings.push(...evaluation.warnings);
       }
 
-      const complianceStatus = violations.length > 0 ? 'non_compliant' : 
-        warnings.length > 0 ? 'pending_review' : 'compliant';
+      const complianceStatus =
+        violations.length > 0
+          ? 'non_compliant'
+          : warnings.length > 0
+            ? 'pending_review'
+            : 'compliant';
 
       const result: ComplianceResult = {
         modelId,
@@ -103,13 +106,13 @@ export class ModelGovernance {
         status: complianceStatus,
         violationCount: violations.length,
         warningCount: warnings.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model compliance evaluated', {
         modelId,
         version,
-        status: complianceStatus
+        status: complianceStatus,
       });
 
       return result;
@@ -117,7 +120,7 @@ export class ModelGovernance {
       this.logger.error('Failed to evaluate model compliance', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
@@ -132,7 +135,7 @@ export class ModelGovernance {
       this.logger.info('Enforcing promotion policy', {
         modelId,
         version,
-        targetStatus
+        targetStatus,
       });
 
       const compliance = await this.evaluateModelCompliance(modelId, version);
@@ -140,13 +143,13 @@ export class ModelGovernance {
       if (compliance.status === 'non_compliant') {
         const error = new Error(
           `Cannot promote model ${modelId}@${version} to ${targetStatus} due to policy violations:\n` +
-          compliance.violations.map(v => `- ${v.message}`).join('\n')
+            compliance.violations.map(v => `- ${v.message}`).join('\n')
         );
         this.logger.error('Promotion blocked by policy violations', {
           modelId,
           version,
           targetStatus,
-          violations: compliance.violations
+          violations: compliance.violations,
         });
         throw error;
       }
@@ -154,13 +157,13 @@ export class ModelGovernance {
       if (compliance.status === 'pending_review' && targetStatus === 'production') {
         const error = new Error(
           `Model ${modelId}@${version} requires review before promotion to production:\n` +
-          compliance.warnings.map(w => `- ${w.message}`).join('\n')
+            compliance.warnings.map(w => `- ${w.message}`).join('\n')
         );
         this.logger.error('Promotion blocked pending review', {
           modelId,
           version,
           targetStatus,
-          warnings: compliance.warnings
+          warnings: compliance.warnings,
         });
         throw error;
       }
@@ -169,30 +172,26 @@ export class ModelGovernance {
         modelId,
         version,
         targetStatus,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Promotion policy check passed', {
         modelId,
         version,
-        targetStatus
+        targetStatus,
       });
     } catch (error) {
       this.logger.error('Failed to enforce promotion policy', {
         modelId,
         version,
         targetStatus,
-        error
+        error,
       });
       throw error;
     }
   }
 
-  async scheduleAudit(
-    modelId: string,
-    version: string,
-    auditor: string
-  ): Promise<void> {
+  async scheduleAudit(modelId: string, version: string, auditor: string): Promise<void> {
     try {
       this.logger.info('Scheduling audit', { modelId, version, auditor });
 
@@ -203,9 +202,8 @@ export class ModelGovernance {
 
       // Check if audit is required based on policies
       const requiresAudit = Array.from(this.policies.values()).some(policy =>
-        policy.rules.some(rule => 
-          rule.action === 'audit' && 
-          this.evaluateCondition(rule.condition, model)
+        policy.rules.some(
+          rule => rule.action === 'audit' && this.evaluateCondition(rule.condition, model)
         )
       );
 
@@ -226,7 +224,7 @@ export class ModelGovernance {
           modelId,
           version,
           auditor,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         this.logger.info('Audit scheduled', { modelId, version, auditor });
@@ -238,7 +236,7 @@ export class ModelGovernance {
         modelId,
         version,
         auditor,
-        error
+        error,
       });
       throw error;
     }
@@ -248,7 +246,7 @@ export class ModelGovernance {
     try {
       this.logger.info('Validating model metadata', {
         modelId: metadata.modelId,
-        version: metadata.version
+        version: metadata.version,
       });
 
       const errors: string[] = [];
@@ -299,13 +297,13 @@ export class ModelGovernance {
         isValid: result.isValid,
         errorCount: errors.length,
         warningCount: warnings.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model metadata validated', {
         modelId: metadata.modelId,
         version: metadata.version,
-        isValid: result.isValid
+        isValid: result.isValid,
       });
 
       return result;
@@ -313,7 +311,7 @@ export class ModelGovernance {
       this.logger.error('Failed to validate model metadata', {
         modelId: metadata.modelId,
         version: metadata.version,
-        error
+        error,
       });
       throw error;
     }
@@ -351,7 +349,7 @@ export class ModelGovernance {
     } catch (error) {
       this.logger.error('Failed to evaluate policy', {
         policyId: policy.id,
-        error
+        error,
       });
       throw error;
     }
@@ -367,4 +365,4 @@ export class ModelGovernance {
       return false;
     }
   }
-} 
+}

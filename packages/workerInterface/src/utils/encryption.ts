@@ -25,10 +25,12 @@ export class FieldEncryption {
   async encrypt(data: string): Promise<EncryptedData> {
     try {
       // Generate a data key
-      const { Plaintext, CiphertextBlob } = await kms.generateDataKey({
-        KeyId: this.kmsKeyId,
-        KeySpec: 'AES_256',
-      }).promise();
+      const { Plaintext, CiphertextBlob } = await kms
+        .generateDataKey({
+          KeyId: this.kmsKeyId,
+          KeySpec: 'AES_256',
+        })
+        .promise();
 
       if (!Plaintext || !CiphertextBlob) {
         throw new Error('Failed to generate data key');
@@ -40,7 +42,7 @@ export class FieldEncryption {
       // Encrypt the data
       const crypto = require('crypto');
       const cipher = crypto.createCipheriv('aes-256-gcm', Plaintext, iv);
-      
+
       let encryptedData = cipher.update(data, 'utf8', 'base64');
       encryptedData += cipher.final('base64');
       const authTag = cipher.getAuthTag();
@@ -64,9 +66,11 @@ export class FieldEncryption {
   async decrypt(encryptedData: EncryptedData): Promise<string> {
     try {
       // Decrypt the data key
-      const { Plaintext } = await kms.decrypt({
-        CiphertextBlob: Buffer.from(encryptedData.encryptedKey, 'base64'),
-      }).promise();
+      const { Plaintext } = await kms
+        .decrypt({
+          CiphertextBlob: Buffer.from(encryptedData.encryptedKey, 'base64'),
+        })
+        .promise();
 
       if (!Plaintext) {
         throw new Error('Failed to decrypt data key');
@@ -84,9 +88,9 @@ export class FieldEncryption {
         Plaintext,
         Buffer.from(encryptedData.iv, 'base64')
       );
-      
+
       decipher.setAuthTag(authTag);
-      
+
       let decrypted = decipher.update(data, undefined, 'utf8');
       decrypted += decipher.final('utf8');
 
@@ -98,7 +102,7 @@ export class FieldEncryption {
 
   async encryptObject<T extends object>(obj: T): Promise<T> {
     const encryptedObj = { ...obj };
-    
+
     for (const [key, value] of Object.entries(obj)) {
       if (this.shouldEncrypt(key) && typeof value === 'string') {
         const encrypted = await this.encrypt(value);
@@ -111,7 +115,7 @@ export class FieldEncryption {
 
   async decryptObject<T extends object>(obj: T): Promise<T> {
     const decryptedObj = { ...obj };
-    
+
     for (const [key, value] of Object.entries(obj)) {
       if (this.shouldEncrypt(key) && this.isEncryptedData(value)) {
         const decrypted = await this.decrypt(value as EncryptedData);
@@ -143,4 +147,4 @@ export class FieldEncryption {
       'iv' in value
     );
   }
-} 
+}

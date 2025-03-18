@@ -32,10 +32,12 @@ export const handler = async (event: NoWorkersHandlerInput): Promise<NoWorkersHa
     logger.info('Handling no eligible workers scenario', { taskId: event.taskId });
 
     // Get task from DynamoDB
-    const result = await dynamodb.get({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId }
-    }).promise();
+    const result = await dynamodb
+      .get({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+      })
+      .promise();
 
     const task = result.Item as Task;
     if (!task) {
@@ -49,7 +51,7 @@ export const handler = async (event: NoWorkersHandlerInput): Promise<NoWorkersHa
       reason: 'No eligible workers found for the task requirements',
       requirements: event.verificationRequirements,
       suggestions,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Update task status
@@ -61,16 +63,17 @@ export const handler = async (event: NoWorkersHandlerInput): Promise<NoWorkersHa
     return {
       taskId: task.taskId,
       status: TaskStatus.FAILED,
-      details
+      details,
     };
-
   } catch (error) {
     logger.error('Failed to handle no workers scenario', { error, taskId: event.taskId });
     throw error;
   }
 };
 
-async function analyzeRequirements(requirements: NoWorkersHandlerInput['verificationRequirements']): Promise<string[]> {
+async function analyzeRequirements(
+  requirements: NoWorkersHandlerInput['verificationRequirements']
+): Promise<string[]> {
   const suggestions: string[] = [];
 
   // Check skill requirements
@@ -95,39 +98,51 @@ async function analyzeRequirements(requirements: NoWorkersHandlerInput['verifica
   return suggestions;
 }
 
-async function updateTaskStatus(taskId: string, details: NoWorkersHandlerOutput['details']): Promise<void> {
-  await dynamodb.update({
-    TableName: process.env.TASKS_TABLE!,
-    Key: { taskId },
-    UpdateExpression: `
+async function updateTaskStatus(
+  taskId: string,
+  details: NoWorkersHandlerOutput['details']
+): Promise<void> {
+  await dynamodb
+    .update({
+      TableName: process.env.TASKS_TABLE!,
+      Key: { taskId },
+      UpdateExpression: `
       SET #status = :status,
           noWorkersDetails = :details,
           statusReason = :reason,
           updatedAt = :now
     `,
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': TaskStatus.FAILED,
-      ':details': details,
-      ':reason': details.reason,
-      ':now': new Date().toISOString()
-    }
-  }).promise();
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': TaskStatus.FAILED,
+        ':details': details,
+        ':reason': details.reason,
+        ':now': new Date().toISOString(),
+      },
+    })
+    .promise();
 }
 
-async function emitNoWorkersEvent(taskId: string, details: NoWorkersHandlerOutput['details']): Promise<void> {
-  await eventBridge.putEvents({
-    Entries: [{
-      Source: 'aletheia.task-management',
-      DetailType: 'NoEligibleWorkers',
-      Detail: JSON.stringify({
-        taskId,
-        details,
-        timestamp: new Date().toISOString()
-      }),
-      EventBusName: process.env.EVENT_BUS_NAME
-    }]
-  }).promise();
-} 
+async function emitNoWorkersEvent(
+  taskId: string,
+  details: NoWorkersHandlerOutput['details']
+): Promise<void> {
+  await eventBridge
+    .putEvents({
+      Entries: [
+        {
+          Source: 'aletheia.task-management',
+          DetailType: 'NoEligibleWorkers',
+          Detail: JSON.stringify({
+            taskId,
+            details,
+            timestamp: new Date().toISOString(),
+          }),
+          EventBusName: process.env.EVENT_BUS_NAME,
+        },
+      ],
+    })
+    .promise();
+}

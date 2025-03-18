@@ -5,7 +5,7 @@ import {
   WorkerLevel,
   QualityMetrics,
   VerificationResult,
-  WorkerSubmission
+  WorkerSubmission,
 } from '../types';
 
 interface SkillAssessment {
@@ -29,7 +29,7 @@ export class WorkerReputationService {
     BEGINNER: 0,
     INTERMEDIATE: 100,
     ADVANCED: 250,
-    EXPERT: 500
+    EXPERT: 500,
   };
 
   private readonly skillLevelThresholds = {
@@ -37,7 +37,7 @@ export class WorkerReputationService {
     PROFICIENT: 25,
     SKILLED: 50,
     EXPERT: 75,
-    MASTER: 90
+    MASTER: 90,
   };
 
   private readonly taskComplexityWeights: Record<TaskType, number> = {
@@ -50,7 +50,7 @@ export class WorkerReputationService {
     TRANSLATION_VERIFICATION: 1.5,
     AUDIO_TRANSCRIPTION: 1.3,
     VIDEO_ANNOTATION: 1.4,
-    DOCUMENT_VERIFICATION: 1.2
+    DOCUMENT_VERIFICATION: 1.2,
   };
 
   constructor(logger: Logger) {
@@ -65,27 +65,17 @@ export class WorkerReputationService {
   ): Promise<WorkerProfile> {
     try {
       // Get worker metrics from verification result
-      const metrics = verificationResult.workerMetrics.find(
-        m => m.workerId === worker.workerId
-      );
+      const metrics = verificationResult.workerMetrics.find(m => m.workerId === worker.workerId);
 
       if (!metrics) {
         throw new Error(`No metrics found for worker ${worker.workerId}`);
       }
 
       // Update skill assessment
-      const updatedSkills = this.updateSkillAssessment(
-        worker,
-        taskType,
-        metrics
-      );
+      const updatedSkills = this.updateSkillAssessment(worker, taskType, metrics);
 
       // Calculate reputation factors
-      const factors = this.calculateReputationFactors(
-        worker,
-        metrics,
-        taskType
-      );
+      const factors = this.calculateReputationFactors(worker, metrics, taskType);
 
       // Calculate new reputation score
       const newReputationScore = this.calculateReputationScore(factors);
@@ -99,8 +89,8 @@ export class WorkerReputationService {
         [taskType]: {
           accuracy: metrics.accuracy,
           speed: this.calculateSpeedScore(metrics.timeSpent, taskType),
-          consistency: metrics.consistencyScore
-        }
+          consistency: metrics.consistencyScore,
+        },
       };
 
       // Create updated worker profile
@@ -119,25 +109,24 @@ export class WorkerReputationService {
               taskId: verificationResult.taskId,
               type: taskType,
               accuracy: metrics.accuracy,
-              timestamp: new Date().toISOString()
-            }
-          ].slice(-100) // Keep last 100 tasks
-        }
+              timestamp: new Date().toISOString(),
+            },
+          ].slice(-100), // Keep last 100 tasks
+        },
       };
 
       this.logger.info('Worker reputation updated', {
         workerId: worker.workerId,
         oldScore: worker.reputationScore,
         newScore: newReputationScore,
-        taskType
+        taskType,
       });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Failed to update worker reputation', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -152,20 +141,17 @@ export class WorkerReputationService {
     const currentAssessment = currentSkills[taskType] || 0;
 
     // Calculate new skill level
-    const performanceScore = 
-      (metrics.accuracy * 0.6) +
-      (metrics.consistencyScore * 0.3) +
-      (this.calculateSpeedScore(metrics.timeSpent, taskType) * 0.1);
+    const performanceScore =
+      metrics.accuracy * 0.6 +
+      metrics.consistencyScore * 0.3 +
+      this.calculateSpeedScore(metrics.timeSpent, taskType) * 0.1;
 
     // Apply progressive learning rate
     const learningRate = this.calculateLearningRate(currentAssessment);
     const skillDelta = (performanceScore - currentAssessment) * learningRate;
 
     // Update skill level with bounds checking
-    currentSkills[taskType] = Math.max(
-      0,
-      Math.min(100, currentAssessment + skillDelta)
-    );
+    currentSkills[taskType] = Math.max(0, Math.min(100, currentAssessment + skillDelta));
 
     return currentSkills;
   }
@@ -185,17 +171,17 @@ export class WorkerReputationService {
       accuracy: metrics.accuracy,
       consistency: metrics.consistencyScore,
       speed: this.calculateSpeedScore(metrics.timeSpent, taskType),
-      complexity: this.taskComplexityWeights[taskType] || 1.0
+      complexity: this.taskComplexityWeights[taskType] || 1.0,
     };
   }
 
   private calculateReputationScore(factors: ReputationFactors): number {
-    const weightedScore = 
-      (factors.taskCompletion * 0.1) +
-      (factors.accuracy * 0.3) +
-      (factors.consistency * 0.2) +
-      (factors.speed * 0.2) +
-      (factors.complexity * 0.2);
+    const weightedScore =
+      factors.taskCompletion * 0.1 +
+      factors.accuracy * 0.3 +
+      factors.consistency * 0.2 +
+      factors.speed * 0.2 +
+      factors.complexity * 0.2;
 
     // Normalize to 0-100 range
     return Math.min(100, Math.max(0, weightedScore * 100));
@@ -244,7 +230,7 @@ export class WorkerReputationService {
 
     // Allow workers to attempt tasks slightly above their skill level
     const skillBuffer = 10; // Allow tasks up to 10 points above current skill
-    
+
     return skillGap <= skillBuffer;
   }
 
@@ -260,12 +246,12 @@ export class WorkerReputationService {
     }>;
   } {
     const taskHistory = worker.metadata?.taskHistory || [];
-    
+
     return {
       totalTasks: taskHistory.length,
       averageAccuracy: this.calculateAverageAccuracy(taskHistory),
       skillDistribution: worker.skillLevels,
-      recentPerformance: taskHistory.slice(-10) // Last 10 tasks
+      recentPerformance: taskHistory.slice(-10), // Last 10 tasks
     };
   }
 
@@ -277,4 +263,4 @@ export class WorkerReputationService {
     if (taskHistory.length === 0) return 0;
     return taskHistory.reduce((sum, task) => sum + task.accuracy, 0) / taskHistory.length;
   }
-} 
+}

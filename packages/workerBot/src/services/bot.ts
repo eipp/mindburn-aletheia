@@ -4,8 +4,8 @@ import {
   WorkerProfile,
   WorkerTask,
   TaskSubmission,
-  TaskAssignment
-} from "@mindburn/workerCore";
+  TaskAssignment,
+} from '@mindburn/workerCore';
 
 interface BotContext extends Context {
   session: {
@@ -24,9 +24,11 @@ export class BotService {
     this.workerService = new WorkerService();
 
     // Initialize session middleware
-    this.bot.use(session({
-      initial: () => ({})
-    }));
+    this.bot.use(
+      session({
+        initial: () => ({}),
+      })
+    );
 
     this.setupHandlers();
   }
@@ -63,10 +65,10 @@ export class BotService {
 
       await ctx.reply(
         `Welcome to Mindburn Aletheia Worker Bot!\n\n` +
-        `Your worker ID: ${profile.id}\n` +
-        `Tasks completed: ${profile.tasksCompleted}\n` +
-        `Reputation: ${profile.reputation}\n\n` +
-        `Use /tasks to see available tasks`
+          `Your worker ID: ${profile.id}\n` +
+          `Tasks completed: ${profile.tasksCompleted}\n` +
+          `Reputation: ${profile.reputation}\n\n` +
+          `Use /tasks to see available tasks`
       );
     } catch (error) {
       await this.handleError(error, ctx);
@@ -83,13 +85,13 @@ export class BotService {
       const profile = await this.workerService.getProfile(ctx.session.workerId);
       await ctx.reply(
         `Profile Information:\n\n` +
-        `Name: ${profile.name}\n` +
-        `Status: ${profile.status}\n` +
-        `Tasks Completed: ${profile.tasksCompleted}\n` +
-        `Success Rate: ${profile.successRate}%\n` +
-        `Reputation: ${profile.reputation}\n` +
-        `Skills: ${profile.skills.join(', ')}\n` +
-        `Languages: ${profile.languages.join(', ')}`
+          `Name: ${profile.name}\n` +
+          `Status: ${profile.status}\n` +
+          `Tasks Completed: ${profile.tasksCompleted}\n` +
+          `Success Rate: ${profile.successRate}%\n` +
+          `Reputation: ${profile.reputation}\n` +
+          `Skills: ${profile.skills.join(', ')}\n` +
+          `Languages: ${profile.languages.join(', ')}`
       );
     } catch (error) {
       await this.handleError(error, ctx);
@@ -106,11 +108,11 @@ export class BotService {
       const preferences = await this.workerService.getPreferences(ctx.session.workerId);
       await ctx.reply(
         `Your Preferences:\n\n` +
-        `Task Types: ${preferences.taskTypes.join(', ')}\n` +
-        `Minimum Reward: ${preferences.minReward} TON\n` +
-        `Maximum Duration: ${preferences.maxDuration} minutes\n` +
-        `Languages: ${preferences.languages.join(', ')}\n` +
-        `Auto Accept: ${preferences.autoAccept ? 'Yes' : 'No'}`
+          `Task Types: ${preferences.taskTypes.join(', ')}\n` +
+          `Minimum Reward: ${preferences.minReward} TON\n` +
+          `Maximum Duration: ${preferences.maxDuration} minutes\n` +
+          `Languages: ${preferences.languages.join(', ')}\n` +
+          `Auto Accept: ${preferences.autoAccept ? 'Yes' : 'No'}`
       );
     } catch (error) {
       await this.handleError(error, ctx);
@@ -130,17 +132,19 @@ export class BotService {
         return;
       }
 
-      const taskList = tasks.map((task, index) => 
-        `${index + 1}. ${task.title}\n` +
-        `   Type: ${task.type}\n` +
-        `   Reward: ${task.reward} TON\n` +
-        `   Duration: ${task.estimatedDuration} min\n` +
-        `   ID: ${task.id}`
-      ).join('\n\n');
+      const taskList = tasks
+        .map(
+          (task, index) =>
+            `${index + 1}. ${task.title}\n` +
+            `   Type: ${task.type}\n` +
+            `   Reward: ${task.reward} TON\n` +
+            `   Duration: ${task.estimatedDuration} min\n` +
+            `   ID: ${task.id}`
+        )
+        .join('\n\n');
 
       await ctx.reply(
-        `Available Tasks:\n\n${taskList}\n\n` +
-        `Use /accept <task_id> to accept a task`
+        `Available Tasks:\n\n${taskList}\n\n` + `Use /accept <task_id> to accept a task`
       );
     } catch (error) {
       await this.handleError(error, ctx);
@@ -164,8 +168,7 @@ export class BotService {
       ctx.session.currentTask = taskId;
 
       await ctx.reply(
-        `Task ${taskId} accepted!\n\n` +
-        `Use /submit when you're ready to submit your work`
+        `Task ${taskId} accepted!\n\n` + `Use /submit when you're ready to submit your work`
       );
     } catch (error) {
       await this.handleError(error, ctx);
@@ -208,11 +211,11 @@ export class BotService {
         workerId: ctx.session.workerId,
         timestamp: new Date(),
         responses: {
-          text: ctx.message?.text.split('/submit ')[1] || ''
+          text: ctx.message?.text.split('/submit ')[1] || '',
         },
         evidence: [],
         duration: 0,
-        confidence: 1
+        confidence: 1,
       };
 
       await this.workerService.submitTask(submission);
@@ -226,7 +229,9 @@ export class BotService {
 
   private async handleError(error: unknown, ctx: BotContext) {
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    await ctx.reply(`Error: ${message}\n\nPlease try again or contact support if the issue persists.`);
+    await ctx.reply(
+      `Error: ${message}\n\nPlease try again or contact support if the issue persists.`
+    );
   }
 
   private async getOrCreateProfile(telegramId: number): Promise<WorkerProfile> {
@@ -238,4 +243,4 @@ export class BotService {
   public start() {
     this.bot.start();
   }
-} 
+}

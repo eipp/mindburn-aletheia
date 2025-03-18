@@ -5,7 +5,7 @@ import {
   WorkerLevel,
   NotificationService,
   SkillAssessmentResult,
-  AssessmentTask
+  AssessmentTask,
 } from '../types';
 import { AssessmentTaskRepository } from './assessmentTaskRepository';
 
@@ -18,7 +18,7 @@ export class WorkerSkillAssessmentService {
     BEGINNER: 0,
     INTERMEDIATE: 60,
     ADVANCED: 80,
-    EXPERT: 90
+    EXPERT: 90,
   };
 
   private readonly taskTypeWeights = {
@@ -31,7 +31,7 @@ export class WorkerSkillAssessmentService {
     TRANSLATION_VERIFICATION: 1.5,
     AUDIO_TRANSCRIPTION: 1.4,
     VIDEO_ANNOTATION: 1.6,
-    DOCUMENT_VERIFICATION: 1.3
+    DOCUMENT_VERIFICATION: 1.3,
   };
 
   constructor(
@@ -44,10 +44,7 @@ export class WorkerSkillAssessmentService {
     this.taskRepository = taskRepository;
   }
 
-  async assessSkill(
-    worker: WorkerProfile,
-    taskType: TaskType
-  ): Promise<SkillAssessmentResult> {
+  async assessSkill(worker: WorkerProfile, taskType: TaskType): Promise<SkillAssessmentResult> {
     try {
       // Get assessment tasks for the skill level
       const tasks = await this.taskRepository.getTasksForAssessment(
@@ -88,33 +85,33 @@ export class WorkerSkillAssessmentService {
         details: {
           accuracy: totalAccuracy / tasks.length,
           speed: totalSpeed / tasks.length,
-          consistency: totalConsistency / tasks.length
+          consistency: totalConsistency / tasks.length,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       this.logger.info('Skill assessment completed', {
         workerId: worker.workerId,
         taskType,
-        score: assessmentResult.score
+        score: assessmentResult.score,
       });
 
       return assessmentResult;
-
     } catch (error) {
       this.logger.error('Skill assessment failed', {
         error,
         workerId: worker.workerId,
-        taskType
+        taskType,
       });
       throw error;
     }
   }
 
-  async assessAllSkills(
-    worker: WorkerProfile
-  ): Promise<Record<TaskType, SkillAssessmentResult>> {
-    const results: Record<TaskType, SkillAssessmentResult> = {} as Record<TaskType, SkillAssessmentResult>;
+  async assessAllSkills(worker: WorkerProfile): Promise<Record<TaskType, SkillAssessmentResult>> {
+    const results: Record<TaskType, SkillAssessmentResult> = {} as Record<
+      TaskType,
+      SkillAssessmentResult
+    >;
 
     for (const taskType of Object.values(TaskType)) {
       results[taskType] = await this.assessSkill(worker, taskType);
@@ -123,9 +120,7 @@ export class WorkerSkillAssessmentService {
     return results;
   }
 
-  determineWorkerLevel(
-    assessmentResults: Record<TaskType, SkillAssessmentResult>
-  ): WorkerLevel {
+  determineWorkerLevel(assessmentResults: Record<TaskType, SkillAssessmentResult>): WorkerLevel {
     const scores = Object.values(assessmentResults).map(r => r.score);
     const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
 
@@ -169,34 +164,29 @@ export class WorkerSkillAssessmentService {
           ...worker.metadata,
           lastSkillAssessment: {
             timestamp: new Date().toISOString(),
-            results: assessmentResults
-          }
-        }
+            results: assessmentResults,
+          },
+        },
       };
 
       this.logger.info('Worker skills updated', {
         workerId: worker.workerId,
         newLevel,
-        qualifiedSkills
+        qualifiedSkills,
       });
 
       // Notify worker of skill updates
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'STATUS_CHANGE',
-        {
-          type: 'SKILL_UPDATE',
-          newLevel,
-          qualifiedSkills
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'STATUS_CHANGE', {
+        type: 'SKILL_UPDATE',
+        newLevel,
+        qualifiedSkills,
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Failed to update worker skills', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -216,7 +206,7 @@ export class WorkerSkillAssessmentService {
       // TODO: Implement actual task processing logic
       // This is a placeholder implementation
       const submission = await this.simulateWorkerSubmission(task);
-      
+
       const endTime = Date.now();
       const timeSpent = (endTime - startTime) / 1000; // Convert to seconds
 
@@ -228,14 +218,13 @@ export class WorkerSkillAssessmentService {
       return {
         accuracy,
         speed,
-        consistency
+        consistency,
       };
-
     } catch (error) {
       this.logger.error('Failed to process assessment task', {
         error,
         workerId: worker.workerId,
-        taskType: task.taskType
+        taskType: task.taskType,
       });
       throw error;
     }
@@ -247,16 +236,9 @@ export class WorkerSkillAssessmentService {
     consistency: number,
     taskType: TaskType
   ): number {
-    const baseScore = (
-      accuracy * 0.6 +
-      speed * 0.2 +
-      consistency * 0.2
-    );
+    const baseScore = accuracy * 0.6 + speed * 0.2 + consistency * 0.2;
 
-    return Math.min(
-      100,
-      baseScore * (this.taskTypeWeights[taskType] || 1.0)
-    );
+    return Math.min(100, baseScore * (this.taskTypeWeights[taskType] || 1.0));
   }
 
   private async simulateWorkerSubmission(task: AssessmentTask): Promise<any> {
@@ -287,4 +269,4 @@ export class WorkerSkillAssessmentService {
     // TODO: Implement consistency calculation based on historical performance
     return 80; // Placeholder
   }
-} 
+}

@@ -5,7 +5,7 @@ import {
   TaskAssignment,
   TaskEvent,
   TaskPriority,
-  TaskTransitionError
+  TaskTransitionError,
 } from '../types';
 import { ValidationError } from '../errors';
 
@@ -20,47 +20,47 @@ export class TaskLifecycleService {
   private readonly statusConfigs: Record<TaskStatus, TaskStatusConfig> = {
     CREATED: {
       allowedTransitions: ['PENDING_DISTRIBUTION', 'CANCELLED'],
-      requiresValidation: false
+      requiresValidation: false,
     },
     PENDING_DISTRIBUTION: {
       allowedTransitions: ['DISTRIBUTED', 'CANCELLED'],
       requiresValidation: true,
-      timeoutInMs: 5 * 60 * 1000 // 5 minutes
+      timeoutInMs: 5 * 60 * 1000, // 5 minutes
     },
     DISTRIBUTED: {
       allowedTransitions: ['IN_PROGRESS', 'EXPIRED', 'CANCELLED'],
-      requiresValidation: false
+      requiresValidation: false,
     },
     IN_PROGRESS: {
       allowedTransitions: ['PENDING_REVIEW', 'EXPIRED', 'CANCELLED'],
       requiresValidation: true,
-      timeoutInMs: 30 * 60 * 1000 // 30 minutes
+      timeoutInMs: 30 * 60 * 1000, // 30 minutes
     },
     PENDING_REVIEW: {
       allowedTransitions: ['COMPLETED', 'NEEDS_REVISION', 'CANCELLED'],
       requiresValidation: true,
-      timeoutInMs: 15 * 60 * 1000 // 15 minutes
+      timeoutInMs: 15 * 60 * 1000, // 15 minutes
     },
     NEEDS_REVISION: {
       allowedTransitions: ['IN_PROGRESS', 'CANCELLED'],
-      requiresValidation: true
+      requiresValidation: true,
     },
     COMPLETED: {
       allowedTransitions: ['ARCHIVED'],
-      requiresValidation: false
+      requiresValidation: false,
     },
     EXPIRED: {
       allowedTransitions: ['ARCHIVED'],
-      requiresValidation: false
+      requiresValidation: false,
     },
     CANCELLED: {
       allowedTransitions: ['ARCHIVED'],
-      requiresValidation: false
+      requiresValidation: false,
     },
     ARCHIVED: {
       allowedTransitions: [],
-      requiresValidation: false
-    }
+      requiresValidation: false,
+    },
   };
 
   constructor(logger: Logger) {
@@ -80,7 +80,7 @@ export class TaskLifecycleService {
         fromStatus: task.status,
         toStatus: newStatus,
         timestamp: new Date().toISOString(),
-        metadata
+        metadata,
       };
 
       // Update task status
@@ -88,7 +88,7 @@ export class TaskLifecycleService {
         ...task,
         status: newStatus,
         lastUpdated: new Date().toISOString(),
-        statusHistory: [...(task.statusHistory || []), event]
+        statusHistory: [...(task.statusHistory || []), event],
       };
 
       // Log the transition
@@ -96,17 +96,16 @@ export class TaskLifecycleService {
         taskId: task.taskId,
         fromStatus: task.status,
         toStatus: newStatus,
-        metadata
+        metadata,
       });
 
       return updatedTask;
-
     } catch (error) {
       this.logger.error('Task status transition failed', {
         error,
         taskId: task.taskId,
         fromStatus: task.status,
-        toStatus: newStatus
+        toStatus: newStatus,
       });
       throw error;
     }
@@ -122,16 +121,11 @@ export class TaskLifecycleService {
 
     return this.transitionTask(task, 'EXPIRED', {
       reason: 'Task exceeded maximum allowed time',
-      expiredAssignments: assignments
-        .filter(a => this.isAssignmentExpired(a))
-        .map(a => a.workerId)
+      expiredAssignments: assignments.filter(a => this.isAssignmentExpired(a)).map(a => a.workerId),
     });
   }
 
-  private validateTransition(
-    currentStatus: TaskStatus,
-    newStatus: TaskStatus
-  ): void {
+  private validateTransition(currentStatus: TaskStatus, newStatus: TaskStatus): void {
     const config = this.statusConfigs[currentStatus];
     if (!config) {
       throw new ValidationError(`Invalid current status: ${currentStatus}`);
@@ -144,10 +138,7 @@ export class TaskLifecycleService {
     }
   }
 
-  private isTaskExpired(
-    task: VerificationTask,
-    assignments: TaskAssignment[]
-  ): boolean {
+  private isTaskExpired(task: VerificationTask, assignments: TaskAssignment[]): boolean {
     // Check if task has exceeded its maximum allowed time
     const config = this.statusConfigs[task.status];
     if (config?.timeoutInMs) {
@@ -158,9 +149,7 @@ export class TaskLifecycleService {
     }
 
     // Check if all assignments have expired
-    const activeAssignments = assignments.filter(
-      a => !this.isAssignmentExpired(a)
-    );
+    const activeAssignments = assignments.filter(a => !this.isAssignmentExpired(a));
     return activeAssignments.length === 0;
   }
 
@@ -173,7 +162,7 @@ export class TaskLifecycleService {
     const priorityMultipliers = {
       [TaskPriority.HIGH]: 0.5, // 12 hours
       [TaskPriority.MEDIUM]: 1, // 24 hours
-      [TaskPriority.LOW]: 2 // 48 hours
+      [TaskPriority.LOW]: 2, // 48 hours
     };
 
     return baseTimeout * (priorityMultipliers[priority] || 1);
@@ -204,4 +193,4 @@ export class TaskLifecycleService {
     const timeInStatus = this.getTimeInStatus(task);
     return Math.max(0, config.timeoutInMs - timeInStatus);
   }
-} 
+}

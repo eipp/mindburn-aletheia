@@ -6,12 +6,7 @@ import { PaymentBatchModel, PaymentBatch } from '../models/payment-batch';
 import { Logger } from '@mindburn/shared/logger';
 import { retry } from '@mindburn/shared/utils';
 import { TonError } from '../errors';
-import { 
-  TransactionStatus, 
-  WalletConfig,
-  TransactionReceipt,
-  GasEstimate
-} from '../types';
+import { TransactionStatus, WalletConfig, TransactionReceipt, GasEstimate } from '../types';
 
 const logger = createLogger('TONIntegrationService');
 
@@ -52,11 +47,11 @@ export class TONIntegrationService {
   async initialize(): Promise<void> {
     try {
       const keyPair = await mnemonicToPrivateKey(this.config.mnemonic.split(' '));
-      this.wallet = WalletContractV4.create({ 
+      this.wallet = WalletContractV4.create({
         publicKey: keyPair.publicKey,
-        workchain: 0 
+        workchain: 0,
       });
-      
+
       // Verify wallet is deployed and has sufficient balance
       await this.verifyWalletStatus();
     } catch (error) {
@@ -81,30 +76,33 @@ export class TONIntegrationService {
 
       // Send transaction with retry
       const seqno = await retry(
-        () => this.wallet!.sendTransfer({
-          secretKey: await mnemonicToPrivateKey(this.config.mnemonic.split(' ')),
-          messages: [{
-            amount,
-            destination: recipient,
-            payload
-          }],
-          seqno: await this.wallet!.getSeqno(),
-          sendMode: 3,
-        }),
+        () =>
+          this.wallet!.sendTransfer({
+            secretKey: await mnemonicToPrivateKey(this.config.mnemonic.split(' ')),
+            messages: [
+              {
+                amount,
+                destination: recipient,
+                payload,
+              },
+            ],
+            seqno: await this.wallet!.getSeqno(),
+            sendMode: 3,
+          }),
         {
           maxRetries: this.maxRetries,
           backoff: 'exponential',
-          logger: this.logger
+          logger: this.logger,
         }
       );
 
       // Wait for transaction confirmation
       const receipt = await this.waitForConfirmation(seqno);
-      
+
       this.logger.info('Payment sent successfully', {
         recipient: recipient.toString(),
         amount: fromNano(amount),
-        txHash: receipt.transactionHash
+        txHash: receipt.transactionHash,
       });
 
       return receipt;
@@ -112,7 +110,7 @@ export class TONIntegrationService {
       this.logger.error('Payment failed', {
         recipient: recipient.toString(),
         amount: fromNano(amount),
-        error
+        error,
       });
       throw new TonError('Payment failed', { cause: error });
     }
@@ -140,15 +138,17 @@ export class TONIntegrationService {
       // Send transaction
       const seqno = await this.wallet!.getSeqno();
       const destinationAddress = Address.parse(payment.destinationAddress);
-      
+
       await this.wallet!.sendTransfer({
         secretKey: await this.getWalletKey(),
         seqno: seqno,
-        messages: [{
-          amount: toNano(payment.amount.toString()),
-          destination: destinationAddress,
-          payload: payment.message ? payment.message : undefined
-        }]
+        messages: [
+          {
+            amount: toNano(payment.amount.toString()),
+            destination: destinationAddress,
+            payload: payment.message ? payment.message : undefined,
+          },
+        ],
       });
 
       // Wait for transaction to be included in a block
@@ -162,7 +162,7 @@ export class TONIntegrationService {
         status: 'confirmed',
         transactionHash: transaction.hash,
         blockId: transaction.block,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to send TON payment', { error, payment });
@@ -180,7 +180,7 @@ export class TONIntegrationService {
 
       // Check wallet balance
       const balance = await this.getBalance();
-      if (balance < (totalAmount + estimatedFee)) {
+      if (balance < totalAmount + estimatedFee) {
         throw new Error('Insufficient wallet balance for batch');
       }
 
@@ -192,7 +192,7 @@ export class TONIntegrationService {
         totalFee: estimatedFee,
         paymentCount: batch.payments.length,
         status: 'pending',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to create payment batch', { error, batch });
@@ -219,11 +219,12 @@ export class TONIntegrationService {
       const results = {
         successful: 0,
         failed: 0,
-        transactions: [] as any[]
+        transactions: [] as any[],
       };
 
       // Process payments in chunks
-      for (let i = 0; i < batch.payments.length; i += 4) { // Max 4 messages per transaction
+      for (let i = 0; i < batch.payments.length; i += 4) {
+        // Max 4 messages per transaction
         const chunk = batch.payments.slice(i, i + 4);
         const seqno = await this.wallet!.getSeqno();
 
@@ -234,39 +235,47 @@ export class TONIntegrationService {
             messages: chunk.map(payment => ({
               amount: toNano(payment.amount.toString()),
               destination: Address.parse(payment.destinationAddress),
-              payload: payment.referenceId
-            }))
+              payload: payment.referenceId,
+            })),
           });
 
           const transaction = await this.waitForTransaction(seqno);
 
           results.successful += chunk.length;
-          results.transactions.push(...chunk.map(payment => ({
-            referenceId: payment.referenceId,
-            destinationAddress: payment.destinationAddress,
-            amount: payment.amount,
-            status: 'confirmed',
-            transactionHash: transaction.hash
-          })));
+          results.transactions.push(
+            ...chunk.map(payment => ({
+              referenceId: payment.referenceId,
+              destinationAddress: payment.destinationAddress,
+              amount: payment.amount,
+              status: 'confirmed',
+              transactionHash: transaction.hash,
+            }))
+          );
         } catch (error) {
           logger.error('Failed to process batch chunk', { error, chunk });
           results.failed += chunk.length;
-          results.transactions.push(...chunk.map(payment => ({
-            referenceId: payment.referenceId,
-            destinationAddress: payment.destinationAddress,
-            amount: payment.amount,
-            status: 'failed'
-          })));
+          results.transactions.push(
+            ...chunk.map(payment => ({
+              referenceId: payment.referenceId,
+              destinationAddress: payment.destinationAddress,
+              amount: payment.amount,
+              status: 'failed',
+            }))
+          );
         }
       }
 
-      await this.updateBatchStatus(params.batchId, results.failed === 0 ? 'completed' : 'partial_failure', results);
+      await this.updateBatchStatus(
+        params.batchId,
+        results.failed === 0 ? 'completed' : 'partial_failure',
+        results
+      );
 
       return {
         batchId: params.batchId,
         status: results.failed === 0 ? 'completed' : 'partial_failure',
         results,
-        processedAt: new Date().toISOString()
+        processedAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to process payment batch', { error, batchId: params.batchId });
@@ -277,14 +286,14 @@ export class TONIntegrationService {
   async checkTransactionStatus(transactionHash: string) {
     try {
       const transaction = await this.client.getTransaction(transactionHash);
-      
+
       return {
         transactionHash,
         status: transaction.status,
         confirmations: transaction.confirmations,
         blockId: transaction.block,
         timestamp: transaction.time,
-        fee: fromNano(transaction.fee)
+        fee: fromNano(transaction.fee),
       };
     } catch (error) {
       logger.error('Failed to check transaction status', { error, transactionHash });
@@ -307,7 +316,7 @@ export class TONIntegrationService {
         valid: true,
         formatted: address.toString(),
         rawAddress: address.toRawString(),
-        bounceable: address.isBounceable
+        bounceable: address.isBounceable,
       };
     } catch {
       return { valid: false };
@@ -350,16 +359,18 @@ export class TONIntegrationService {
       const estimate = await this.client.estimateFee({
         to: recipient,
         value: amount,
-        payload
+        payload,
       });
 
-      const total = estimate.source_fees.in_fwd_fee +
-                    estimate.source_fees.storage_fee +
-                    estimate.source_fees.gas_fee +
-                    estimate.source_fees.fwd_fee;
-      
+      const total =
+        estimate.source_fees.in_fwd_fee +
+        estimate.source_fees.storage_fee +
+        estimate.source_fees.gas_fee +
+        estimate.source_fees.fwd_fee;
+
       // Add safety buffer
-      const withBuffer = total + (total * BigInt(Math.floor(this.minGasBuffer * 100)) / BigInt(100));
+      const withBuffer =
+        total + (total * BigInt(Math.floor(this.minGasBuffer * 100))) / BigInt(100);
 
       return {
         total: withBuffer,
@@ -367,8 +378,8 @@ export class TONIntegrationService {
           forward: estimate.source_fees.fwd_fee,
           storage: estimate.source_fees.storage_fee,
           gas: estimate.source_fees.gas_fee,
-          inForward: estimate.source_fees.in_fwd_fee
-        }
+          inForward: estimate.source_fees.in_fwd_fee,
+        },
       };
     } catch (error) {
       throw new TonError('Failed to estimate gas', { cause: error });
@@ -392,7 +403,7 @@ export class TONIntegrationService {
         {
           maxRetries: this.maxRetries,
           backoff: 'exponential',
-          logger: this.logger
+          logger: this.logger,
         }
       );
 
@@ -405,7 +416,7 @@ export class TONIntegrationService {
         blockNumber: tx.blockNumber,
         status: TransactionStatus.CONFIRMED,
         gasUsed: tx.totalFees.coins,
-        timestamp: new Date(tx.time * 1000).toISOString()
+        timestamp: new Date(tx.time * 1000).toISOString(),
       };
     } catch (error) {
       throw new TonError('Failed to confirm transaction', { cause: error });
@@ -416,7 +427,7 @@ export class TONIntegrationService {
     let attempts = 0;
     while (attempts < 10) {
       try {
-        if (await this.wallet!.getSeqno() > seqno) {
+        if ((await this.wallet!.getSeqno()) > seqno) {
           // Get the last transaction
           const transactions = await this.wallet!.getTransactions();
           return transactions[0];
@@ -424,7 +435,7 @@ export class TONIntegrationService {
       } catch (error) {
         logger.warn('Error waiting for transaction', { error, seqno });
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 3000));
       attempts++;
     }
@@ -435,22 +446,22 @@ export class TONIntegrationService {
     // Estimate based on current network conditions and number of payments
     const baseFee = 0.1; // 0.1 TON
     const perPaymentFee = 0.05; // 0.05 TON
-    return baseFee + (perPaymentFee * paymentCount);
+    return baseFee + perPaymentFee * paymentCount;
   }
 
   private async createBatch(batch: TONBatchPayment): Promise<string> {
     const batchId = crypto.randomUUID();
-    
+
     await this.batchModel.create({
       batchId,
       payments: batch.payments.map(p => ({
         destinationAddress: p.destinationAddress,
         amount: p.amount,
-        referenceId: p.referenceId
+        referenceId: p.referenceId,
       })),
       totalAmount: batch.payments.reduce((sum, p) => sum + p.amount, 0),
       estimatedFee: await this.estimateBatchFee(batch.payments.length),
-      status: 'pending'
+      status: 'pending',
     });
 
     return batchId;
@@ -461,16 +472,16 @@ export class TONIntegrationService {
   }
 
   private async updateBatchStatus(
-    batchId: string, 
-    status: PaymentBatch['status'], 
+    batchId: string,
+    status: PaymentBatch['status'],
     results?: PaymentBatch['results']
   ): Promise<void> {
     const updates: Partial<PaymentBatch> = { status };
-    
+
     if (results) {
       updates.results = results;
     }
-    
+
     if (status === 'completed' || status === 'partial_failure' || status === 'failed') {
       updates.processedAt = new Date().toISOString();
     }
@@ -483,10 +494,12 @@ export class TONIntegrationService {
   }
 
   private async getWalletMnemonic(): Promise<string> {
-    const result = await this.kms.decrypt({
-      CiphertextBlob: Buffer.from(process.env.ENCRYPTED_WALLET_MNEMONIC!, 'base64'),
-      KeyId: process.env.KMS_KEY_ID!
-    }).promise();
+    const result = await this.kms
+      .decrypt({
+        CiphertextBlob: Buffer.from(process.env.ENCRYPTED_WALLET_MNEMONIC!, 'base64'),
+        KeyId: process.env.KMS_KEY_ID!,
+      })
+      .promise();
 
     return result.Plaintext!.toString();
   }
@@ -496,4 +509,4 @@ export class TONIntegrationService {
     const key = await mnemonicToWalletKey(mnemonic.split(' '));
     return key.secretKey;
   }
-} 
+}

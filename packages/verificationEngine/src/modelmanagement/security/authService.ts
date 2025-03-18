@@ -5,7 +5,7 @@ import {
   UserProfile,
   AuthConfig,
   createConfigValidator,
-  z
+  z,
 } from '@mindburn/shared';
 
 const AuthConfigSchema = z.object({
@@ -113,4 +113,4 @@ export class ModelAuthService {
       throw error;
     }
   }
-} 
+}

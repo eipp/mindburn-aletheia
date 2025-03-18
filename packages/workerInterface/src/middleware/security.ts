@@ -87,7 +87,8 @@ function validateSecurityHeaders(headers: Record<string, string>) {
 
 function getSecurityHeaders() {
   return {
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+    'Content-Security-Policy':
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
@@ -123,4 +124,4 @@ async function logSecurityEvent(event: Record<string, any>) {
   } catch (error) {
     log.error('Failed to log to CloudTrail', error as Error);
   }
-} 
+}

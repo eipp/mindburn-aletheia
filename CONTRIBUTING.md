@@ -1,132 +1,118 @@
 # Contributing to Mindburn Aletheia
 
-Thank you for your interest in contributing to Mindburn Aletheia. This document provides guidelines and best practices to ensure we maintain a high-quality, well-organized codebase.
+Thanks for your interest in contributing to the Mindburn Aletheia platform. This document outlines our contribution process and guidelines.
 
-## Monorepo Structure
-
-Mindburn Aletheia uses a monorepo structure with Turborepo. The repository is organized as follows:
+## Project Structure
 
 ```
 mindburn-aletheia/
-├── packages/           # Standalone package modules
-│   ├── shared/         # Shared utilities and types
-│   ├── worker-bot/     # Telegram bot implementation
-│   ├── worker-webapp/  # Web application for workers
-│   └── ...
-├── src/                # Legacy code being migrated to packages
-├── api/                # API specifications and implementations
-├── docs/               # Documentation
-└── infrastructure/     # Infrastructure as code
+├── packages/
+│   ├── core/            # Core shared functionality
+│   ├── shared/          # Shared utilities and types
+│   ├── developerPlatform/ # Developer API and portal
+│   ├── taskManagement/  # Task distribution system
+│   ├── verificationEngine/ # Verification logic
+│   ├── workerBot/       # Telegram bot implementation
+│   ├── workerWebapp/    # Web application for workers
+│   ├── workerInterface/ # API for worker interactions
+│   ├── paymentSystem/   # Payment processing
+│   ├── tonContracts/    # TON blockchain contracts
+│   └── tokenEconomy/    # Token economics system
+├── infrastructure/      # IaC and deployment
+└── scripts/             # Utility scripts
 ```
 
-## Code Organization Guidelines
+## Development Environment
 
-### 1. Package Ownership
+### Prerequisites
 
-Each package should have clear ownership and responsibility. Before creating a new file, consider:
+- Node.js v20+
+- pnpm v10.5+
+- Docker (for local dev environment)
 
-- Which package should own this functionality?
-- Does similar functionality already exist elsewhere?
-- Should this be in a shared package instead?
+### Setup
 
-### 2. Preventing Duplication
-
-To prevent code duplication:
-
-- **Search First**: Before implementing new functionality, search the codebase for similar implementations.
-- **Use Shared Packages**: Common utilities, types, and functions should be in the `shared` package.
-- **Follow Naming Conventions**: Use consistent naming patterns to make existing code discoverable.
-
-### 3. Naming Conventions
-
-- **Files**: Use `kebab-case` for filenames.
-- **Classes**: Use `PascalCase` for class names.
-- **Functions/Variables**: Use `camelCase` for functions and variables.
-- **Constants**: Use `UPPER_SNAKE_CASE` for constants.
-- **Interfaces/Types**: Use `PascalCase` with descriptive names.
-
-Avoid adding version numbers or qualifiers like "Enhanced" to filenames or class names. Instead, create a single authoritative implementation with appropriate configuration options.
-
-### 4. Directory Structure
-
-Each package should follow a consistent structure:
-
-```
-package-name/
-├── src/                # Source code
-│   ├── index.ts        # Main exports
-│   ├── types/          # Type definitions
-│   │   └── index.ts
-│   ├── utils/          # Utilities
-│   │   └── index.ts
-│   ├── components/     # For UI packages
-│   └── services/       # Service implementations
-├── tests/              # Tests
-├── package.json        # Package definition
-├── tsconfig.json       # TypeScript configuration
-└── README.md           # Package documentation
+1. Clone the repository:
+```bash
+git clone https://github.com/mindburn/aletheia.git
+cd aletheia
 ```
 
-### 5. Package Exports
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-- Each package should have a well-defined public API in its `index.ts` file.
-- Use explicit exports instead of barrel exports (`export *`).
-- For utility functions, export from `utils/index.ts`.
-- For types, export from `types/index.ts`.
+3. Copy example environment variables:
+```bash
+cp .env.example .env
+```
+
+4. Start development environment:
+```bash
+pnpm dev
+```
+
+## Coding Standards
+
+### TypeScript
+
+- Use strong typing - avoid `any` when possible
+- Document public APIs with JSDoc comments
+- Follow the existing patterns for error handling
+
+### React
+
+- Use functional components with hooks
+- Keep components focused on a single responsibility
+- Use prop types or TypeScript interfaces for component props
+
+### Testing
+
+- Write unit tests for all business logic
+- Test components using React Testing Library
+- Aim for minimum 80% code coverage
+
+## Git Workflow
+
+1. Create a feature branch from `develop`:
+```bash
+git checkout -b feature/your-feature-name
+```
+
+2. Make your changes with clear, descriptive commits:
+```bash
+git commit -m "feat: Add new verification method"
+```
+
+3. Push changes and create a pull request against `develop`:
+```bash
+git push origin feature/your-feature-name
+```
 
 ## Pull Request Process
 
-When submitting a pull request:
+1. Ensure your code passes all tests and linting
+2. Update documentation if necessary
+3. Add a clear description of the changes
+4. Request review from at least one maintainer
+5. Respond to feedback and make requested changes
 
-1. **Dependency Mapping**: Document which other packages this change affects.
-2. **Duplication Check**: Verify no duplication is being introduced. Use `jscpd` if necessary.
-3. **Lint and Test**: Ensure all linters and tests pass.
-4. **Reviewers**: Include package owners as reviewers.
+## Release Process
 
-## Development Workflow
+1. Merges to `develop` trigger deployment to staging
+2. After QA approval, changes are merged to `main`
+3. Release tags are created according to semantic versioning
+4. Deployment to production happens automatically on new tags
 
-1. Install dependencies with `pnpm install`.
-2. Run the development server with `pnpm dev`.
-3. Build packages with `pnpm build`.
-4. Test with `pnpm test`.
+## Code of Conduct
 
-## Refactoring Legacy Code
+Please be respectful of other contributors. We're committed to providing a welcoming and inclusive environment.
 
-We're gradually migrating code from the `src/` directory to the packages structure. When refactoring:
+### Reporting Issues
 
-1. First move the code to the appropriate package.
-2. Update imports in dependent files.
-3. Add tests for the migrated code.
-4. Update documentation.
-5. Delete the old code only after all references have been updated.
+If you find a bug or have a feature request, please create a detailed issue in our GitHub repository.
 
-## Tools for Detecting Duplication
+## License
 
-- Run `jscpd` to detect code duplication:
-  ```
-  npx jscpd . --min-lines 10 --min-tokens 100 --threshold 80 --output ./jscpd-report --ignore "node_modules/**,dist/**,.git/**,.vscode/**,**/test/**,**/tests/**" --reporters "json,html"
-  ```
-
-- Use `depcheck` to find unused dependencies:
-  ```
-  npx depcheck
-  ```
-
-- Use `turbo-typecheck` to verify type compatibility:
-  ```
-  pnpm turbo typecheck
-  ```
-
-## Style Guide
-
-We follow the Airbnb JavaScript Style Guide with TypeScript extensions. Key points:
-
-- Use TypeScript for all new code.
-- Write comprehensive JSDoc comments for public APIs.
-- Use functional programming patterns where appropriate.
-- Prefer immutability and pure functions.
-- Use async/await instead of Promises.
-
-## Questions?
-
-If you have questions about the codebase organization or contribution process, please reach out to the maintainers. 
+By contributing to this project, you agree that your contributions will be licensed under the project's MIT license.

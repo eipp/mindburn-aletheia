@@ -3,7 +3,7 @@ export enum TaskType {
   FACT_CHECK = 'fact_check',
   TOXICITY = 'toxicity',
   SENTIMENT = 'sentiment',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
 export enum ContentType {
@@ -11,31 +11,31 @@ export enum ContentType {
   IMAGE = 'image',
   AUDIO = 'audio',
   VIDEO = 'video',
-  DOCUMENT = 'document'
+  DOCUMENT = 'document',
 }
 
 export enum VerificationStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export enum PaymentType {
   TASK_REWARD = 'task_reward',
   BONUS = 'bonus',
-  WITHDRAWAL = 'withdrawal'
+  WITHDRAWAL = 'withdrawal',
 }
 
 export enum PaymentStatus {
   PENDING = 'pending',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export enum Priority {
   LOW = 'low',
   MEDIUM = 'medium',
-  HIGH = 'high'
-} 
+  HIGH = 'high',
+}

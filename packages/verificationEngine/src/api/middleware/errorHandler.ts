@@ -5,12 +5,7 @@ import { ApiError } from '../errors/ApiError';
 
 const logger = createLogger('ErrorHandler');
 
-export function errorHandler(
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction) {
   logger.error('Error occurred', {
     error,
     path: req.path,
@@ -20,8 +15,8 @@ export function errorHandler(
     params: req.params,
     headers: {
       ...req.headers,
-      authorization: undefined // Don't log auth headers
-    }
+      authorization: undefined, // Don't log auth headers
+    },
   });
 
   // Handle validation errors
@@ -30,7 +25,7 @@ export function errorHandler(
       status: 'error',
       code: 'VALIDATION_ERROR',
       message: 'Invalid request data',
-      errors: error.errors
+      errors: error.errors,
     });
   }
 
@@ -40,7 +35,7 @@ export function errorHandler(
       status: 'error',
       code: error.code,
       message: error.message,
-      details: error.details
+      details: error.details,
     });
   }
 
@@ -49,7 +44,7 @@ export function errorHandler(
     return res.status(401).json({
       status: 'error',
       code: 'UNAUTHORIZED',
-      message: 'Invalid or missing authentication token'
+      message: 'Invalid or missing authentication token',
     });
   }
 
@@ -58,7 +53,7 @@ export function errorHandler(
     return res.status(429).json({
       status: 'error',
       code: 'RATE_LIMIT_EXCEEDED',
-      message: 'Too many requests, please try again later'
+      message: 'Too many requests, please try again later',
     });
   }
 
@@ -67,7 +62,7 @@ export function errorHandler(
     return res.status(503).json({
       status: 'error',
       code: 'DATABASE_ERROR',
-      message: 'Database service unavailable'
+      message: 'Database service unavailable',
     });
   }
 
@@ -76,7 +71,7 @@ export function errorHandler(
     return res.status(503).json({
       status: 'error',
       code: 'AWS_SERVICE_ERROR',
-      message: 'AWS service unavailable'
+      message: 'AWS service unavailable',
     });
   }
 
@@ -85,7 +80,7 @@ export function errorHandler(
     return res.status(503).json({
       status: 'error',
       code: 'BLOCKCHAIN_SERVICE_ERROR',
-      message: 'Blockchain service unavailable'
+      message: 'Blockchain service unavailable',
     });
   }
 
@@ -93,6 +88,6 @@ export function errorHandler(
   return res.status(500).json({
     status: 'error',
     code: 'INTERNAL_SERVER_ERROR',
-    message: 'An unexpected error occurred'
+    message: 'An unexpected error occurred',
   });
-} 
+}

@@ -22,6 +22,7 @@ npm install @mindburn/plugin-system
 ### Creating a Plugin
 
 1. Create a new directory for your plugin:
+
 ```bash
 mkdir my-verification-plugin
 cd my-verification-plugin
@@ -29,6 +30,7 @@ npm init
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install @mindburn/plugin-system
 ```
@@ -36,7 +38,10 @@ npm install @mindburn/plugin-system
 3. Create your plugin using one of the base classes:
 
 ```typescript
-import { VerificationPlugin, createPluginManifest } from '@mindburn/plugin-system';
+import {
+  VerificationPlugin,
+  createPluginManifest,
+} from '@mindburn/plugin-system';
 
 export class MyVerificationPlugin extends VerificationPlugin {
   async verify(data: unknown): Promise<boolean> {
@@ -47,7 +52,7 @@ export class MyVerificationPlugin extends VerificationPlugin {
   async getVerificationMetadata(): Promise<Record<string, any>> {
     return {
       method: 'custom-verification',
-      confidence: 0.95
+      confidence: 0.95,
     };
   }
 }
@@ -71,6 +76,7 @@ export default new MyVerificationPlugin(manifest);
 ## Plugin Types
 
 ### Verification Plugins
+
 Implement custom verification methods for content validation.
 
 ```typescript
@@ -81,6 +87,7 @@ interface IVerificationPlugin {
 ```
 
 ### Data Enrichment Plugins
+
 Add additional data or context to verification tasks.
 
 ```typescript
@@ -91,6 +98,7 @@ interface IDataEnrichmentPlugin {
 ```
 
 ### Visualization Plugins
+
 Create custom visualizations for the dashboard.
 
 ```typescript
@@ -101,6 +109,7 @@ interface IVisualizationPlugin {
 ```
 
 ### Integration Plugins
+
 Connect with external systems and APIs.
 
 ```typescript
@@ -158,13 +167,15 @@ import { PluginTester } from '@mindburn/plugin-system/testing';
 
 describe('MyVerificationPlugin', () => {
   let tester: PluginTester;
-  
+
   beforeEach(() => {
     tester = new PluginTester(MyVerificationPlugin);
   });
 
   it('should verify valid data', async () => {
-    const result = await tester.verify({ /* test data */ });
+    const result = await tester.verify({
+      /* test data */
+    });
     expect(result).toBe(true);
   });
 });
@@ -191,4 +202,4 @@ describe('MyVerificationPlugin', () => {
 
 - Documentation: [docs.mindburn.org/plugins](https://docs.mindburn.org/plugins)
 - Issues: [GitHub Issues](https://github.com/mindburn/plugin-system/issues)
-- Community: [Discord](https://discord.gg/mindburn) 
+- Community: [Discord](https://discord.gg/mindburn)

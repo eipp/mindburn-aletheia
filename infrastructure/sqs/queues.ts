@@ -6,7 +6,7 @@ export const createTaskQueues = (scope: any) => {
   const taskDLQ = new Queue(scope, 'TaskAssignmentDLQ', {
     queueName: 'task-assignment-dlq',
     encryption: QueueEncryption.KMS_MANAGED,
-    retentionPeriod: Duration.days(14)
+    retentionPeriod: Duration.days(14),
   });
 
   // Main task assignment queue
@@ -16,8 +16,8 @@ export const createTaskQueues = (scope: any) => {
     visibilityTimeout: Duration.minutes(5),
     deadLetterQueue: {
       queue: taskDLQ,
-      maxReceiveCount: 3
-    }
+      maxReceiveCount: 3,
+    },
   });
 
   // Task expiration queue with delayed processing
@@ -27,15 +27,15 @@ export const createTaskQueues = (scope: any) => {
     visibilityTimeout: Duration.minutes(5),
     deadLetterQueue: {
       queue: taskDLQ,
-      maxReceiveCount: 3
-    }
+      maxReceiveCount: 3,
+    },
   });
 
   // Results processing queue
   const resultsDLQ = new Queue(scope, 'ResultsProcessingDLQ', {
     queueName: 'results-processing-dlq',
     encryption: QueueEncryption.KMS_MANAGED,
-    retentionPeriod: Duration.days(14)
+    retentionPeriod: Duration.days(14),
   });
 
   const resultsProcessingQueue = new Queue(scope, 'ResultsProcessingQueue', {
@@ -44,8 +44,8 @@ export const createTaskQueues = (scope: any) => {
     visibilityTimeout: Duration.minutes(10),
     deadLetterQueue: {
       queue: resultsDLQ,
-      maxReceiveCount: 3
-    }
+      maxReceiveCount: 3,
+    },
   });
 
   return {
@@ -53,6 +53,6 @@ export const createTaskQueues = (scope: any) => {
     taskExpirationQueue,
     resultsProcessingQueue,
     taskDLQ,
-    resultsDLQ
+    resultsDLQ,
   };
-}; 
+};

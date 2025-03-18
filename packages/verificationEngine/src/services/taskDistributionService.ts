@@ -7,7 +7,7 @@ import {
   MatchingStrategy,
   TaskPriority,
   WorkerStatus,
-  AssignmentResult
+  AssignmentResult,
 } from '../types';
 import { WorkerMatcherService } from './workerMatcherService';
 import { AuctionService } from './auctionService';
@@ -23,7 +23,7 @@ export class TaskDistributionService {
   private readonly assignmentTimeouts = {
     [TaskPriority.HIGH]: 5 * 60 * 1000, // 5 minutes
     [TaskPriority.MEDIUM]: 15 * 60 * 1000, // 15 minutes
-    [TaskPriority.LOW]: 30 * 60 * 1000 // 30 minutes
+    [TaskPriority.LOW]: 30 * 60 * 1000, // 30 minutes
   };
 
   constructor(
@@ -51,15 +51,15 @@ export class TaskDistributionService {
         case TaskDistributionStrategy.BROADCAST:
           assignments = await this.broadcastTask(task, availableWorkers);
           break;
-        
+
         case TaskDistributionStrategy.TARGETED:
           assignments = await this.targetTask(task, availableWorkers);
           break;
-        
+
         case TaskDistributionStrategy.AUCTION:
           assignments = await this.auctionTask(task, availableWorkers);
           break;
-        
+
         default:
           throw new ValidationError(`Invalid distribution strategy: ${strategy}`);
       }
@@ -70,7 +70,7 @@ export class TaskDistributionService {
       this.logger.info('Task distributed successfully', {
         taskId: task.taskId,
         strategy,
-        assignmentCount: assignments.length
+        assignmentCount: assignments.length,
       });
 
       return {
@@ -78,15 +78,14 @@ export class TaskDistributionService {
         assignments,
         metadata: {
           strategy,
-          distributedAt: new Date().toISOString()
-        }
+          distributedAt: new Date().toISOString(),
+        },
       };
-
     } catch (error) {
       this.logger.error('Task distribution failed', {
         error,
         taskId: task.taskId,
-        strategy
+        strategy,
       });
       throw new DistributionError('Failed to distribute task', { cause: error });
     }
@@ -97,10 +96,11 @@ export class TaskDistributionService {
     workers: WorkerProfile[]
   ): Promise<TaskAssignment[]> {
     // Filter eligible workers
-    const eligibleWorkers = workers.filter(worker =>
-      worker.status === WorkerStatus.AVAILABLE &&
-      worker.skills.includes(task.type) &&
-      worker.reputationScore >= task.requirements.minReputation
+    const eligibleWorkers = workers.filter(
+      worker =>
+        worker.status === WorkerStatus.AVAILABLE &&
+        worker.skills.includes(task.type) &&
+        worker.reputationScore >= task.requirements.minReputation
     );
 
     if (eligibleWorkers.length === 0) {
@@ -116,8 +116,8 @@ export class TaskDistributionService {
       expiresAt: Date.now() + this.getAssignmentTimeout(task.priority),
       metadata: {
         strategy: TaskDistributionStrategy.BROADCAST,
-        distributionTimestamp: new Date().toISOString()
-      }
+        distributionTimestamp: new Date().toISOString(),
+      },
     }));
   }
 
@@ -143,8 +143,8 @@ export class TaskDistributionService {
       metadata: {
         strategy: TaskDistributionStrategy.TARGETED,
         matchScore: match.score,
-        distributionTimestamp: new Date().toISOString()
-      }
+        distributionTimestamp: new Date().toISOString(),
+      },
     }));
   }
 
@@ -153,10 +153,7 @@ export class TaskDistributionService {
     workers: WorkerProfile[]
   ): Promise<TaskAssignment[]> {
     // Create auction
-    const auctionId = await this.auctionService.createAuction(
-      task,
-      workers
-    );
+    const auctionId = await this.auctionService.createAuction(task, workers);
 
     // Wait for auction to complete
     const assignments = await this.auctionService.closeAuction(auctionId);
@@ -166,15 +163,12 @@ export class TaskDistributionService {
       metadata: {
         ...assignment.metadata,
         strategy: TaskDistributionStrategy.AUCTION,
-        distributionTimestamp: new Date().toISOString()
-      }
+        distributionTimestamp: new Date().toISOString(),
+      },
     }));
   }
 
-  private validateDistributionRequirements(
-    task: VerificationTask,
-    workers: WorkerProfile[]
-  ): void {
+  private validateDistributionRequirements(task: VerificationTask, workers: WorkerProfile[]): void {
     if (!task.taskId) {
       throw new ValidationError('Task ID is required');
     }
@@ -187,9 +181,7 @@ export class TaskDistributionService {
       throw new ValidationError('Minimum submissions requirement is missing');
     }
 
-    const availableWorkers = workers.filter(w => 
-      w.status === WorkerStatus.AVAILABLE
-    );
+    const availableWorkers = workers.filter(w => w.status === WorkerStatus.AVAILABLE);
 
     if (availableWorkers.length < task.requirements.minSubmissions) {
       throw new ValidationError(
@@ -201,29 +193,26 @@ export class TaskDistributionService {
   private async notifyWorkers(assignments: TaskAssignment[]): Promise<void> {
     await Promise.all(
       assignments.map(assignment =>
-        this.notificationService.notifyWorker(
-          assignment.workerId,
-          'TASK_ASSIGNED',
-          {
+        this.notificationService
+          .notifyWorker(assignment.workerId, 'TASK_ASSIGNED', {
             taskId: assignment.taskId,
             expiresAt: assignment.expiresAt,
-            metadata: assignment.metadata
-          }
-        ).catch(error => {
-          this.logger.warn('Failed to notify worker', {
-            error,
-            workerId: assignment.workerId,
-            taskId: assignment.taskId
-          });
-          // Don't fail the distribution if notification fails
-          return null;
-        })
+            metadata: assignment.metadata,
+          })
+          .catch(error => {
+            this.logger.warn('Failed to notify worker', {
+              error,
+              workerId: assignment.workerId,
+              taskId: assignment.taskId,
+            });
+            // Don't fail the distribution if notification fails
+            return null;
+          })
       )
     );
   }
 
   private getAssignmentTimeout(priority: TaskPriority): number {
-    return this.assignmentTimeouts[priority] || 
-           this.assignmentTimeouts[TaskPriority.MEDIUM];
+    return this.assignmentTimeouts[priority] || this.assignmentTimeouts[TaskPriority.MEDIUM];
   }
-} 
+}

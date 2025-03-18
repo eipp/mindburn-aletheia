@@ -7,78 +7,92 @@ const LambdaConfigSchema = z.object({
   provisionedConcurrency: z.number().min(0),
   coldStartPrewarmCount: z.number().min(0),
   regions: z.array(z.string()),
-  enableSnapStart: z.boolean()
+  enableSnapStart: z.boolean(),
 });
 
 const DynamoDBConfigSchema = z.object({
-  tables: z.record(z.object({
-    readCapacityUnits: z.number().min(1),
-    writeCapacityUnits: z.number().min(1),
-    autoscaling: z.object({
-      minCapacity: z.number().min(1),
-      maxCapacity: z.number().min(1),
-      targetUtilization: z.number().min(1).max(100)
-    }),
-    globalTables: z.array(z.string()),
-    enableDAX: z.boolean(),
-    daxConfig: z.object({
-      nodeType: z.string(),
-      replicationFactor: z.number().min(1),
-      availabilityZones: z.array(z.string())
-    }).optional()
-  }))
+  tables: z.record(
+    z.object({
+      readCapacityUnits: z.number().min(1),
+      writeCapacityUnits: z.number().min(1),
+      autoscaling: z.object({
+        minCapacity: z.number().min(1),
+        maxCapacity: z.number().min(1),
+        targetUtilization: z.number().min(1).max(100),
+      }),
+      globalTables: z.array(z.string()),
+      enableDAX: z.boolean(),
+      daxConfig: z
+        .object({
+          nodeType: z.string(),
+          replicationFactor: z.number().min(1),
+          availabilityZones: z.array(z.string()),
+        })
+        .optional(),
+    })
+  ),
 });
 
 const ApiGatewayConfigSchema = z.object({
-  stages: z.record(z.object({
-    caching: z.object({
-      enabled: z.boolean(),
-      ttl: z.number().min(0),
-      size: z.string(),
-      dataEncrypted: z.boolean()
-    }),
-    throttling: z.object({
-      rateLimit: z.number().min(1),
-      burstLimit: z.number().min(1)
-    }),
-    compression: z.boolean(),
-    minimumCompressionSize: z.number().min(0),
-    regions: z.array(z.string())
-  }))
+  stages: z.record(
+    z.object({
+      caching: z.object({
+        enabled: z.boolean(),
+        ttl: z.number().min(0),
+        size: z.string(),
+        dataEncrypted: z.boolean(),
+      }),
+      throttling: z.object({
+        rateLimit: z.number().min(1),
+        burstLimit: z.number().min(1),
+      }),
+      compression: z.boolean(),
+      minimumCompressionSize: z.number().min(0),
+      regions: z.array(z.string()),
+    })
+  ),
 });
 
 const CloudFrontConfigSchema = z.object({
-  distributions: z.record(z.object({
-    priceClass: z.enum(['PriceClass_100', 'PriceClass_200', 'PriceClass_All']),
-    origins: z.array(z.object({
-      domainName: z.string(),
-      failoverCriteria: z.object({
-        statusCodes: z.array(z.number()),
-        failoverOrigin: z.string()
-      })
-    })),
-    cacheBehaviors: z.array(z.object({
-      pathPattern: z.string(),
-      ttl: z.number().min(0),
-      allowedMethods: z.array(z.string()),
-      cachedMethods: z.array(z.string()),
-      compress: z.boolean()
-    })),
-    invalidationPatterns: z.array(z.string())
-  }))
+  distributions: z.record(
+    z.object({
+      priceClass: z.enum(['PriceClass_100', 'PriceClass_200', 'PriceClass_All']),
+      origins: z.array(
+        z.object({
+          domainName: z.string(),
+          failoverCriteria: z.object({
+            statusCodes: z.array(z.number()),
+            failoverOrigin: z.string(),
+          }),
+        })
+      ),
+      cacheBehaviors: z.array(
+        z.object({
+          pathPattern: z.string(),
+          ttl: z.number().min(0),
+          allowedMethods: z.array(z.string()),
+          cachedMethods: z.array(z.string()),
+          compress: z.boolean(),
+        })
+      ),
+      invalidationPatterns: z.array(z.string()),
+    })
+  ),
 });
 
 const CostProjectionSchema = z.object({
-  scales: z.record(z.object({
-    tasksPerDay: z.number(),
-    estimatedCosts: z.object({
-      lambda: z.number(),
-      dynamodb: z.number(),
-      apiGateway: z.number(),
-      cloudFront: z.number(),
-      total: z.number()
+  scales: z.record(
+    z.object({
+      tasksPerDay: z.number(),
+      estimatedCosts: z.object({
+        lambda: z.number(),
+        dynamodb: z.number(),
+        apiGateway: z.number(),
+        cloudFront: z.number(),
+        total: z.number(),
+      }),
     })
-  }))
+  ),
 });
 
 export class ScalingConfig {
@@ -111,7 +125,7 @@ export class ScalingConfig {
         provisionedConcurrency: 50,
         coldStartPrewarmCount: 10,
         regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
-        enableSnapStart: true
+        enableSnapStart: true,
       },
       dynamodb: {
         tables: {
@@ -121,15 +135,15 @@ export class ScalingConfig {
             autoscaling: {
               minCapacity: 50,
               maxCapacity: 1000,
-              targetUtilization: 70
+              targetUtilization: 70,
             },
             globalTables: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
             enableDAX: true,
             daxConfig: {
               nodeType: 'dax.r5.large',
               replicationFactor: 3,
-              availabilityZones: ['a', 'b', 'c']
-            }
+              availabilityZones: ['a', 'b', 'c'],
+            },
           },
           fraud_events: {
             readCapacityUnits: 50,
@@ -137,17 +151,17 @@ export class ScalingConfig {
             autoscaling: {
               minCapacity: 25,
               maxCapacity: 500,
-              targetUtilization: 70
+              targetUtilization: 70,
             },
             globalTables: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
             enableDAX: true,
             daxConfig: {
               nodeType: 'dax.r5.large',
               replicationFactor: 3,
-              availabilityZones: ['a', 'b', 'c']
-            }
-          }
-        }
+              availabilityZones: ['a', 'b', 'c'],
+            },
+          },
+        },
       },
       apiGateway: {
         stages: {
@@ -156,17 +170,17 @@ export class ScalingConfig {
               enabled: true,
               ttl: 300,
               size: '1.6GB',
-              dataEncrypted: true
+              dataEncrypted: true,
             },
             throttling: {
               rateLimit: 10000,
-              burstLimit: 5000
+              burstLimit: 5000,
             },
             compression: true,
             minimumCompressionSize: 1024,
-            regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1']
-          }
-        }
+            regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+          },
+        },
       },
       cloudFront: {
         distributions: {
@@ -177,9 +191,9 @@ export class ScalingConfig {
                 domainName: 'mini-app.mindburn.org',
                 failoverCriteria: {
                   statusCodes: [500, 502, 503, 504],
-                  failoverOrigin: 'mini-app-failover.mindburn.org'
-                }
-              }
+                  failoverOrigin: 'mini-app-failover.mindburn.org',
+                },
+              },
             ],
             cacheBehaviors: [
               {
@@ -187,19 +201,19 @@ export class ScalingConfig {
                 ttl: 86400,
                 allowedMethods: ['GET', 'HEAD'],
                 cachedMethods: ['GET', 'HEAD'],
-                compress: true
+                compress: true,
               },
               {
                 pathPattern: '/api/*',
                 ttl: 0,
                 allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
                 cachedMethods: ['GET', 'HEAD'],
-                compress: true
-              }
+                compress: true,
+              },
             ],
-            invalidationPatterns: ['/static/*', '/api/cache/*']
-          }
-        }
+            invalidationPatterns: ['/static/*', '/api/cache/*'],
+          },
+        },
       },
       costProjections: {
         scales: {
@@ -210,8 +224,8 @@ export class ScalingConfig {
               dynamodb: 200,
               apiGateway: 100,
               cloudFront: 50,
-              total: 500
-            }
+              total: 500,
+            },
           },
           medium: {
             tasksPerDay: 1000000,
@@ -220,8 +234,8 @@ export class ScalingConfig {
               dynamodb: 1500,
               apiGateway: 800,
               cloudFront: 300,
-              total: 3800
-            }
+              total: 3800,
+            },
           },
           large: {
             tasksPerDay: 10000000,
@@ -230,11 +244,11 @@ export class ScalingConfig {
               dynamodb: 12000,
               apiGateway: 6000,
               cloudFront: 2000,
-              total: 30000
-            }
-          }
-        }
-      }
+              total: 30000,
+            },
+          },
+        },
+      },
     };
   }
 
@@ -257,4 +271,4 @@ export class ScalingConfig {
   getCostProjection(scale: 'small' | 'medium' | 'large'): any {
     return this.config.costProjections.scales[scale];
   }
-} 
+}

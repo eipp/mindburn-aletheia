@@ -3,13 +3,13 @@ export * from './types/core';
 
 // TON utilities
 export { ton } from './utils/ton';
-export type { 
-  TransactionData, 
+export type {
+  TransactionData,
   ValidationResult as TONValidationResult,
   TransactionType,
   TransactionStatus,
   Transaction,
-  TonNetworkConfig
+  TonNetworkConfig,
 } from './utils/ton';
 
 // Configuration utilities
@@ -17,12 +17,12 @@ export {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from './config/validator';
 export type {
   ValidationResult as ConfigValidationResult,
   ConfigValidator,
-  ConfigValidatorOptions
+  ConfigValidatorOptions,
 } from './config/validator';
 
 // Re-export commonly used dependencies to ensure version consistency
@@ -35,18 +35,15 @@ export type { LogContext } from './utils/logging/logger';
 
 // Export verification service
 export { VerificationService } from './services/verification';
-export type { 
-  VerificationOptions, 
-  VerificationRequest, 
-  VerificationResult 
+export type {
+  VerificationOptions,
+  VerificationRequest,
+  VerificationResult,
 } from './services/verification';
 
 // Export fraud detection
 export { FraudDetector } from './utils/fraud-detector';
-export type { 
-  FraudCheckOptions, 
-  FraudCheckResult 
-} from './utils/fraud-detector';
+export type { FraudCheckOptions, FraudCheckResult } from './utils/fraud-detector';
 
 // Export TON service
 export { TonService, createTonService } from './services/ton';
@@ -54,7 +51,7 @@ export type {
   ILogger as TonServiceLogger,
   PaymentContractInterface,
   NetworkConfig as TonNetworkConfig,
-  TransactionHistoryItem
+  TransactionHistoryItem,
 } from './services/ton';
 
 // Payment types

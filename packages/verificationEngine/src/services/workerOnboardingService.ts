@@ -1,11 +1,5 @@
 import { Logger } from '@mindburn/shared/logger';
-import {
-  WorkerProfile,
-  WorkerStatus,
-  TaskType,
-  WorkerLevel,
-  NotificationService
-} from '../types';
+import { WorkerProfile, WorkerStatus, TaskType, WorkerLevel, NotificationService } from '../types';
 
 interface OnboardingStep {
   step: string;
@@ -37,21 +31,15 @@ export class WorkerOnboardingService {
     'WALLET_CONNECTION',
     'IDENTITY_VERIFICATION',
     'SKILLS_ASSESSMENT',
-    'GUIDELINES_ACCEPTANCE'
+    'GUIDELINES_ACCEPTANCE',
   ];
 
-  constructor(
-    logger: Logger,
-    notificationService: NotificationService
-  ) {
+  constructor(logger: Logger, notificationService: NotificationService) {
     this.logger = logger.child({ service: 'WorkerOnboarding' });
     this.notificationService = notificationService;
   }
 
-  async startOnboarding(
-    telegramId: string,
-    language: string = 'en'
-  ): Promise<WorkerProfile> {
+  async startOnboarding(telegramId: string, language: string = 'en'): Promise<WorkerProfile> {
     try {
       // Create initial worker profile
       const workerId = this.generateWorkerId();
@@ -69,32 +57,27 @@ export class WorkerOnboardingService {
           onboarding: {
             started: new Date().toISOString(),
             currentStep: 'TELEGRAM_REGISTRATION',
-            steps: this.initializeOnboardingSteps()
-          }
-        }
+            steps: this.initializeOnboardingSteps(),
+          },
+        },
       };
 
       this.logger.info('Worker onboarding started', {
         workerId,
-        telegramId
+        telegramId,
       });
 
       // Send welcome message
-      await this.notificationService.notifyWorker(
-        workerId,
-        'ONBOARDING_STARTED',
-        {
-          nextStep: 'TELEGRAM_REGISTRATION',
-          language
-        }
-      );
+      await this.notificationService.notifyWorker(workerId, 'ONBOARDING_STARTED', {
+        nextStep: 'TELEGRAM_REGISTRATION',
+        language,
+      });
 
       return worker;
-
     } catch (error) {
       this.logger.error('Failed to start worker onboarding', {
         error,
-        telegramId
+        telegramId,
       });
       throw error;
     }
@@ -118,7 +101,7 @@ export class WorkerOnboardingService {
           telegramVerification: {
             status: 'VERIFIED',
             timestamp: new Date().toISOString(),
-            data: telegramData
+            data: telegramData,
           },
           onboarding: {
             ...worker.metadata?.onboarding,
@@ -127,40 +110,32 @@ export class WorkerOnboardingService {
               worker.metadata?.onboarding?.steps || [],
               'TELEGRAM_REGISTRATION',
               true
-            )
-          }
-        }
+            ),
+          },
+        },
       };
 
       this.logger.info('Telegram registration verified', {
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
 
       // Send next step notification
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'ONBOARDING_STEP_COMPLETED',
-        {
-          step: 'TELEGRAM_REGISTRATION',
-          nextStep: 'WALLET_CONNECTION'
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'ONBOARDING_STEP_COMPLETED', {
+        step: 'TELEGRAM_REGISTRATION',
+        nextStep: 'WALLET_CONNECTION',
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Telegram verification failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
   }
 
-  async connectWallet(
-    worker: WorkerProfile,
-    walletAddress: string
-  ): Promise<WorkerProfile> {
+  async connectWallet(worker: WorkerProfile, walletAddress: string): Promise<WorkerProfile> {
     try {
       // Verify wallet address format
       if (!this.isValidWalletAddress(walletAddress)) {
@@ -178,7 +153,7 @@ export class WorkerOnboardingService {
           wallet: {
             address: walletAddress,
             verified: verification.verified,
-            connectedAt: new Date().toISOString()
+            connectedAt: new Date().toISOString(),
           },
           onboarding: {
             ...worker.metadata?.onboarding,
@@ -187,41 +162,33 @@ export class WorkerOnboardingService {
               worker.metadata?.onboarding?.steps || [],
               'WALLET_CONNECTION',
               true
-            )
-          }
-        }
+            ),
+          },
+        },
       };
 
       this.logger.info('Wallet connected', {
         workerId: worker.workerId,
-        walletAddress
+        walletAddress,
       });
 
       // Send next step notification
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'ONBOARDING_STEP_COMPLETED',
-        {
-          step: 'WALLET_CONNECTION',
-          nextStep: 'IDENTITY_VERIFICATION'
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'ONBOARDING_STEP_COMPLETED', {
+        step: 'WALLET_CONNECTION',
+        nextStep: 'IDENTITY_VERIFICATION',
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Wallet connection failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
   }
 
-  async verifyIdentity(
-    worker: WorkerProfile,
-    verificationData: any
-  ): Promise<WorkerProfile> {
+  async verifyIdentity(worker: WorkerProfile, verificationData: any): Promise<WorkerProfile> {
     try {
       // Perform identity verification
       const verification = await this.performIdentityVerification(verificationData);
@@ -239,32 +206,27 @@ export class WorkerOnboardingService {
               worker.metadata?.onboarding?.steps || [],
               'IDENTITY_VERIFICATION',
               true
-            )
-          }
-        }
+            ),
+          },
+        },
       };
 
       this.logger.info('Identity verified', {
         workerId: worker.workerId,
-        method: verification.method
+        method: verification.method,
       });
 
       // Send next step notification
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'ONBOARDING_STEP_COMPLETED',
-        {
-          step: 'IDENTITY_VERIFICATION',
-          nextStep: 'SKILLS_ASSESSMENT'
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'ONBOARDING_STEP_COMPLETED', {
+        step: 'IDENTITY_VERIFICATION',
+        nextStep: 'SKILLS_ASSESSMENT',
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Identity verification failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -292,32 +254,27 @@ export class WorkerOnboardingService {
               worker.metadata?.onboarding?.steps || [],
               'SKILLS_ASSESSMENT',
               true
-            )
-          }
-        }
+            ),
+          },
+        },
       };
 
       this.logger.info('Skills assessed', {
         workerId: worker.workerId,
-        skills: validatedSkills
+        skills: validatedSkills,
       });
 
       // Send next step notification
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'ONBOARDING_STEP_COMPLETED',
-        {
-          step: 'SKILLS_ASSESSMENT',
-          nextStep: 'GUIDELINES_ACCEPTANCE'
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'ONBOARDING_STEP_COMPLETED', {
+        step: 'SKILLS_ASSESSMENT',
+        nextStep: 'GUIDELINES_ACCEPTANCE',
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Skills assessment failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -350,31 +307,26 @@ export class WorkerOnboardingService {
               worker.metadata?.onboarding?.steps || [],
               'GUIDELINES_ACCEPTANCE',
               true
-            )
-          }
-        }
+            ),
+          },
+        },
       };
 
       this.logger.info('Onboarding completed', {
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
 
       // Send completion notification
-      await this.notificationService.notifyWorker(
-        worker.workerId,
-        'ONBOARDING_COMPLETED',
-        {
-          skills: updatedWorker.skills,
-          status: updatedWorker.status
-        }
-      );
+      await this.notificationService.notifyWorker(worker.workerId, 'ONBOARDING_COMPLETED', {
+        skills: updatedWorker.skills,
+        status: updatedWorker.status,
+      });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Guidelines acceptance failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -388,7 +340,7 @@ export class WorkerOnboardingService {
     return this.requiredSteps.map(step => ({
       step,
       completed: false,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }));
   }
 
@@ -397,10 +349,8 @@ export class WorkerOnboardingService {
     stepName: string,
     completed: boolean
   ): OnboardingStep[] {
-    return steps.map(step => 
-      step.step === stepName
-        ? { ...step, completed, timestamp: new Date().toISOString() }
-        : step
+    return steps.map(step =>
+      step.step === stepName ? { ...step, completed, timestamp: new Date().toISOString() } : step
     );
   }
 
@@ -414,26 +364,22 @@ export class WorkerOnboardingService {
     return true;
   }
 
-  private async verifyWalletBalance(
-    address: string
-  ): Promise<WalletVerification> {
+  private async verifyWalletBalance(address: string): Promise<WalletVerification> {
     // TODO: Implement TON wallet balance verification
     return {
       address,
       verified: true,
       balance: 0,
-      lastChecked: new Date().toISOString()
+      lastChecked: new Date().toISOString(),
     };
   }
 
-  private async performIdentityVerification(
-    data: any
-  ): Promise<IdentityVerification> {
+  private async performIdentityVerification(data: any): Promise<IdentityVerification> {
     // TODO: Implement identity verification logic
     return {
       status: 'VERIFIED',
       method: 'TELEGRAM',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -450,4 +396,4 @@ export class WorkerOnboardingService {
 
     return validated;
   }
-} 
+}

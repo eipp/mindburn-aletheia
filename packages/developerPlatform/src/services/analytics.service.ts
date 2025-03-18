@@ -9,18 +9,22 @@ const TASKS_TABLE = process.env.TASKS_TABLE!;
 const BILLING_TABLE = process.env.BILLING_TABLE!;
 
 export class AnalyticsService {
-  async getTaskMetrics(developerId: string, params: {
-    startDate: string,
-    endDate: string,
-    type?: string
-  }) {
+  async getTaskMetrics(
+    developerId: string,
+    params: {
+      startDate: string;
+      endDate: string;
+      type?: string;
+    }
+  ) {
     logger.info('Fetching task metrics', { developerId, ...params });
 
-    let filterExpression = 'developerId = :developerId AND createdAt BETWEEN :startDate AND :endDate';
+    let filterExpression =
+      'developerId = :developerId AND createdAt BETWEEN :startDate AND :endDate';
     let expressionAttributeValues: any = {
       ':developerId': developerId,
       ':startDate': params.startDate,
-      ':endDate': params.endDate
+      ':endDate': params.endDate,
     };
 
     if (params.type) {
@@ -33,7 +37,7 @@ export class AnalyticsService {
       IndexName: 'DeveloperIdIndex',
       KeyConditionExpression: filterExpression,
       ExpressionAttributeValues: expressionAttributeValues,
-      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined
+      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined,
     });
 
     const tasks = result.Items || [];
@@ -45,7 +49,7 @@ export class AnalyticsService {
       processing: 0,
       cancelled: 0,
       avgProcessingTime: 0,
-      avgCompletionTime: 0
+      avgCompletionTime: 0,
     };
 
     let totalProcessingTime = 0;
@@ -57,15 +61,15 @@ export class AnalyticsService {
       metrics[task.status]++;
 
       if (task.startedAt && task.status !== 'pending') {
-        const processingTime = new Date(task.completedAt || new Date()).getTime() - 
-                             new Date(task.startedAt).getTime();
+        const processingTime =
+          new Date(task.completedAt || new Date()).getTime() - new Date(task.startedAt).getTime();
         totalProcessingTime += processingTime;
         processedCount++;
       }
 
       if (task.completedAt && task.status === 'completed') {
-        const completionTime = new Date(task.completedAt).getTime() - 
-                             new Date(task.createdAt).getTime();
+        const completionTime =
+          new Date(task.completedAt).getTime() - new Date(task.createdAt).getTime();
         totalCompletionTime += completionTime;
         completedCount++;
       }
@@ -82,18 +86,22 @@ export class AnalyticsService {
     return metrics;
   }
 
-  async getBillingMetrics(developerId: string, params: {
-    startDate: string,
-    endDate: string,
-    type?: string
-  }) {
+  async getBillingMetrics(
+    developerId: string,
+    params: {
+      startDate: string;
+      endDate: string;
+      type?: string;
+    }
+  ) {
     logger.info('Fetching billing metrics', { developerId, ...params });
 
-    let filterExpression = 'developerId = :developerId AND billingDate BETWEEN :startDate AND :endDate';
+    let filterExpression =
+      'developerId = :developerId AND billingDate BETWEEN :startDate AND :endDate';
     let expressionAttributeValues: any = {
       ':developerId': developerId,
       ':startDate': params.startDate,
-      ':endDate': params.endDate
+      ':endDate': params.endDate,
     };
 
     if (params.type) {
@@ -106,7 +114,7 @@ export class AnalyticsService {
       IndexName: 'DeveloperIdIndex',
       KeyConditionExpression: filterExpression,
       ExpressionAttributeValues: expressionAttributeValues,
-      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined
+      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined,
     });
 
     const billingRecords = result.Items || [];
@@ -115,18 +123,18 @@ export class AnalyticsService {
       totalTasks: 0,
       avgCostPerTask: 0,
       costByType: {} as Record<string, number>,
-      tasksByType: {} as Record<string, number>
+      tasksByType: {} as Record<string, number>,
     };
 
     billingRecords.forEach(record => {
       metrics.totalAmount += record.amount;
       metrics.totalTasks += record.taskCount;
-      
+
       if (!metrics.costByType[record.type]) {
         metrics.costByType[record.type] = 0;
         metrics.tasksByType[record.type] = 0;
       }
-      
+
       metrics.costByType[record.type] += record.amount;
       metrics.tasksByType[record.type] += record.taskCount;
     });
@@ -144,7 +152,7 @@ export class AnalyticsService {
     const result = await ddb.get({
       TableName: BILLING_TABLE,
       Key: { developerId },
-      ProjectionExpression: 'quota, usage'
+      ProjectionExpression: 'quota, usage',
     });
 
     if (!result.Item) {
@@ -152,27 +160,30 @@ export class AnalyticsService {
         quota: {
           maxTasks: 1000,
           maxConcurrent: 10,
-          maxStorage: 1024 * 1024 * 100 // 100MB
+          maxStorage: 1024 * 1024 * 100, // 100MB
         },
         usage: {
           tasks: 0,
           concurrent: 0,
-          storage: 0
-        }
+          storage: 0,
+        },
       };
     }
 
     return {
       quota: result.Item.quota,
-      usage: result.Item.usage
+      usage: result.Item.usage,
     };
   }
 
-  async trackUsage(developerId: string, data: {
-    tasks?: number,
-    concurrent?: number,
-    storage?: number
-  }) {
+  async trackUsage(
+    developerId: string,
+    data: {
+      tasks?: number;
+      concurrent?: number;
+      storage?: number;
+    }
+  ) {
     logger.info('Tracking usage', { developerId, ...data });
 
     const updateExpressions = [];
@@ -201,22 +212,26 @@ export class AnalyticsService {
       TableName: BILLING_TABLE,
       Key: { developerId },
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: expressionAttributeValues,
     });
   }
 
-  async getDailyTaskBreakdown(developerId: string, params: {
-    startDate: string,
-    endDate: string,
-    type?: string
-  }) {
+  async getDailyTaskBreakdown(
+    developerId: string,
+    params: {
+      startDate: string;
+      endDate: string;
+      type?: string;
+    }
+  ) {
     logger.info('Fetching daily task breakdown', { developerId, ...params });
 
-    let filterExpression = 'developerId = :developerId AND createdAt BETWEEN :startDate AND :endDate';
+    let filterExpression =
+      'developerId = :developerId AND createdAt BETWEEN :startDate AND :endDate';
     let expressionAttributeValues: any = {
       ':developerId': developerId,
       ':startDate': params.startDate,
-      ':endDate': params.endDate
+      ':endDate': params.endDate,
     };
 
     if (params.type) {
@@ -229,37 +244,40 @@ export class AnalyticsService {
       IndexName: 'DeveloperIdIndex',
       KeyConditionExpression: filterExpression,
       ExpressionAttributeValues: expressionAttributeValues,
-      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined
+      ExpressionAttributeNames: params.type ? { '#type': 'type' } : undefined,
     });
 
-    const breakdown: Record<string, {
-      total: number;
-      completed: number;
-      failed: number;
-      avgProcessingTime: number;
-    }> = {};
+    const breakdown: Record<
+      string,
+      {
+        total: number;
+        completed: number;
+        failed: number;
+        avgProcessingTime: number;
+      }
+    > = {};
 
     (result.Items || []).forEach(task => {
       const date = task.createdAt.split('T')[0];
-      
+
       if (!breakdown[date]) {
         breakdown[date] = {
           total: 0,
           completed: 0,
           failed: 0,
-          avgProcessingTime: 0
+          avgProcessingTime: 0,
         };
       }
 
       breakdown[date].total++;
-      
+
       if (task.status === 'completed') {
         breakdown[date].completed++;
         if (task.startedAt && task.completedAt) {
-          const processingTime = new Date(task.completedAt).getTime() - 
-                               new Date(task.startedAt).getTime();
-          breakdown[date].avgProcessingTime = 
-            (breakdown[date].avgProcessingTime * (breakdown[date].completed - 1) + processingTime) / 
+          const processingTime =
+            new Date(task.completedAt).getTime() - new Date(task.startedAt).getTime();
+          breakdown[date].avgProcessingTime =
+            (breakdown[date].avgProcessingTime * (breakdown[date].completed - 1) + processingTime) /
             breakdown[date].completed;
         }
       } else if (task.status === 'failed') {
@@ -269,4 +287,4 @@ export class AnalyticsService {
 
     return breakdown;
   }
-} 
+}

@@ -40,7 +40,7 @@ export class MetricsCollector {
       [ExpertiseLevel.NOVICE]: { tasks: 0, accuracy: 0 },
       [ExpertiseLevel.INTERMEDIATE]: { tasks: 50, accuracy: 0.7 },
       [ExpertiseLevel.EXPERT]: { tasks: 200, accuracy: 0.85 },
-      [ExpertiseLevel.MASTER]: { tasks: 1000, accuracy: 0.95 }
+      [ExpertiseLevel.MASTER]: { tasks: 1000, accuracy: 0.95 },
     }
   ) {
     this.dynamodb = new DynamoDB.DocumentClient();
@@ -50,19 +50,19 @@ export class MetricsCollector {
     try {
       // Get recent activity
       const recentActivity = await this.getRecentActivity(workerId);
-      
+
       // Get current metrics
       const currentMetrics = await this.getWorkerMetrics(workerId);
-      
+
       // Calculate new metrics
       const newMetrics = await this.calculateMetrics(workerId, recentActivity, currentMetrics);
-      
+
       // Update expertise level if needed
       newMetrics.expertiseLevel = this.determineExpertiseLevel(newMetrics);
-      
+
       // Update specializations
       newMetrics.specializations = this.determineSpecializations(newMetrics.taskTypeDistribution);
-      
+
       // Save updated metrics
       await this.saveMetrics(newMetrics);
 
@@ -74,30 +74,34 @@ export class MetricsCollector {
   }
 
   private async getRecentActivity(workerId: string): Promise<WorkerActivity[]> {
-    const timeWindow = Date.now() - (this.accuracyWindowDays * 24 * 60 * 60 * 1000);
+    const timeWindow = Date.now() - this.accuracyWindowDays * 24 * 60 * 60 * 1000;
 
-    const result = await this.dynamodb.query({
-      TableName: this.activitiesTable,
-      KeyConditionExpression: 'workerId = :workerId AND #ts >= :timeWindow',
-      ExpressionAttributeNames: {
-        '#ts': 'timestamp'
-      },
-      ExpressionAttributeValues: {
-        ':workerId': workerId,
-        ':timeWindow': timeWindow
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.activitiesTable,
+        KeyConditionExpression: 'workerId = :workerId AND #ts >= :timeWindow',
+        ExpressionAttributeNames: {
+          '#ts': 'timestamp',
+        },
+        ExpressionAttributeValues: {
+          ':workerId': workerId,
+          ':timeWindow': timeWindow,
+        },
+      })
+      .promise();
 
     return result.Items as WorkerActivity[];
   }
 
   private async getWorkerMetrics(workerId: string): Promise<WorkerMetrics | null> {
-    const result = await this.dynamodb.get({
-      TableName: this.metricsTable,
-      Key: { workerId }
-    }).promise();
+    const result = await this.dynamodb
+      .get({
+        TableName: this.metricsTable,
+        Key: { workerId },
+      })
+      .promise();
 
-    return result.Item as WorkerMetrics || null;
+    return (result.Item as WorkerMetrics) || null;
   }
 
   private async calculateMetrics(
@@ -107,27 +111,32 @@ export class MetricsCollector {
   ): Promise<WorkerMetrics> {
     // Calculate basic metrics
     const processingTimes = recentActivity.map(a => a.processingTime);
-    const averageProcessingTime = processingTimes.reduce((sum, time) => sum + time, 0) / 
-                                (processingTimes.length || 1);
+    const averageProcessingTime =
+      processingTimes.reduce((sum, time) => sum + time, 0) / (processingTimes.length || 1);
 
     const decisions = recentActivity.map(a => a.decision);
     const approvedCount = decisions.filter(d => d === 'APPROVED').length;
     const rejectedCount = decisions.length - approvedCount;
 
     // Calculate task type distribution
-    const taskTypeDistribution = recentActivity.reduce((dist, activity) => {
-      dist[activity.taskType] = (dist[activity.taskType] || 0) + 1;
-      return dist;
-    }, {} as Record<string, number>);
+    const taskTypeDistribution = recentActivity.reduce(
+      (dist, activity) => {
+        dist[activity.taskType] = (dist[activity.taskType] || 0) + 1;
+        return dist;
+      },
+      {} as Record<string, number>
+    );
 
     // Calculate accuracy
     const recentAccuracy = await this.calculateAccuracy(workerId, recentActivity);
 
     // Update total metrics
     const totalTasks = (currentMetrics?.totalTasks || 0) + recentActivity.length;
-    const accuracyScore = currentMetrics ? 
-      (currentMetrics.accuracyScore * currentMetrics.totalTasks + recentAccuracy * recentActivity.length) / totalTasks :
-      recentAccuracy;
+    const accuracyScore = currentMetrics
+      ? (currentMetrics.accuracyScore * currentMetrics.totalTasks +
+          recentAccuracy * recentActivity.length) /
+        totalTasks
+      : recentAccuracy;
 
     return {
       workerId,
@@ -135,7 +144,7 @@ export class MetricsCollector {
       averageProcessingTime,
       decisionDistribution: {
         approved: approvedCount,
-        rejected: rejectedCount
+        rejected: rejectedCount,
       },
       taskTypeDistribution,
       accuracyScore,
@@ -143,7 +152,7 @@ export class MetricsCollector {
       totalTasks,
       recentAccuracy,
       recentTaskCount: recentActivity.length,
-      specializations: currentMetrics?.specializations || []
+      specializations: currentMetrics?.specializations || [],
     };
   }
 
@@ -186,13 +195,15 @@ export class MetricsCollector {
 
     const results = await Promise.all(
       batches.map(batch =>
-        this.dynamodb.batchGet({
-          RequestItems: {
-            [this.resultsTable]: {
-              Keys: batch.map(id => ({ taskId: id }))
-            }
-          }
-        }).promise()
+        this.dynamodb
+          .batchGet({
+            RequestItems: {
+              [this.resultsTable]: {
+                Keys: batch.map(id => ({ taskId: id })),
+              },
+            },
+          })
+          .promise()
       )
     );
 
@@ -210,13 +221,12 @@ export class MetricsCollector {
       ExpertiseLevel.MASTER,
       ExpertiseLevel.EXPERT,
       ExpertiseLevel.INTERMEDIATE,
-      ExpertiseLevel.NOVICE
+      ExpertiseLevel.NOVICE,
     ];
 
     for (const level of levels) {
       const threshold = this.expertiseThresholds[level];
-      if (metrics.totalTasks >= threshold.tasks && 
-          metrics.accuracyScore >= threshold.accuracy) {
+      if (metrics.totalTasks >= threshold.tasks && metrics.accuracyScore >= threshold.accuracy) {
         return level;
       }
     }
@@ -224,11 +234,9 @@ export class MetricsCollector {
     return ExpertiseLevel.NOVICE;
   }
 
-  private determineSpecializations(
-    taskTypeDistribution: Record<string, number>
-  ): string[] {
+  private determineSpecializations(taskTypeDistribution: Record<string, number>): string[] {
     const totalTasks = Object.values(taskTypeDistribution).reduce((sum, count) => sum + count, 0);
-    
+
     return Object.entries(taskTypeDistribution)
       .filter(([_, count]) => count / totalTasks >= this.specializationThreshold)
       .map(([taskType]) => taskType);
@@ -236,13 +244,15 @@ export class MetricsCollector {
 
   private async saveMetrics(metrics: WorkerMetrics): Promise<void> {
     try {
-      await this.dynamodb.put({
-        TableName: this.metricsTable,
-        Item: metrics
-      }).promise();
+      await this.dynamodb
+        .put({
+          TableName: this.metricsTable,
+          Item: metrics,
+        })
+        .promise();
     } catch (error) {
       console.error('Error saving metrics:', error);
       throw error;
     }
   }
-} 
+}

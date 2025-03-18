@@ -5,7 +5,7 @@ export enum VerificationStrategy {
   EXPERT_WEIGHTED = 'EXPERT_WEIGHTED',
   AI_ASSISTED = 'AI_ASSISTED',
   GOLDEN_SET = 'GOLDEN_SET',
-  HYBRID = 'HYBRID'
+  HYBRID = 'HYBRID',
 }
 
 export enum ExpertiseLevel {
@@ -13,13 +13,13 @@ export enum ExpertiseLevel {
   INTERMEDIATE = 'INTERMEDIATE',
   ADVANCED = 'ADVANCED',
   EXPERT = 'EXPERT',
-  MASTER = 'MASTER'
+  MASTER = 'MASTER',
 }
 
 export enum AIModel {
   CLAUDE = 'CLAUDE',
   GEMINI = 'GEMINI',
-  CUSTOM = 'CUSTOM'
+  CUSTOM = 'CUSTOM',
 }
 
 export interface VerificationConfig {
@@ -233,4 +233,4 @@ export interface QualityMetrics {
   timeQualityScore: number;
   peerReviewScore: number;
   timestamp: number;
-} 
+}

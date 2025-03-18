@@ -30,10 +30,7 @@ async function deploy() {
     mintable: true,
   };
 
-  const mbu = MindBurnToken.createFromConfig(
-    mbuConfig,
-    await loadCode('MindBurnUtility.fc')
-  );
+  const mbu = MindBurnToken.createFromConfig(mbuConfig, await loadCode('MindBurnUtility.fc'));
 
   await sender.send({
     to: mbu.address,
@@ -103,10 +100,7 @@ async function deploy() {
   console.log('Deployment completed successfully!');
 }
 
-async function initializeTokenDistribution(
-  mbu: MindBurnToken,
-  sender: Sender
-) {
+async function initializeTokenDistribution(mbu: MindBurnToken, sender: Sender) {
   const distribution = {
     platform: '400000000', // 40% Platform Operations & Rewards
     team: '200000000', // 20% Team & Advisors
@@ -159,4 +153,4 @@ async function loadCode(filename: string) {
 }
 
 // Run deployment
-deploy().catch(console.error); 
+deploy().catch(console.error);

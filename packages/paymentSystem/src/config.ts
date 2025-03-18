@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export interface PaymentSystemConfig {
@@ -26,7 +26,7 @@ const defaultConfig: PaymentSystemConfig = {
   apiKey: '',
   retryAttempts: 3,
   retryDelay: 1000,
-  batchSize: 50
+  batchSize: 50,
 };
 
 const PaymentSystemSchema = z.object({
@@ -38,7 +38,7 @@ const PaymentSystemSchema = z.object({
   webhookUrl: z.string().url().optional(),
   retryAttempts: z.number().min(1).max(10),
   retryDelay: z.number().min(100).max(10000),
-  batchSize: z.number().min(1).max(100)
+  batchSize: z.number().min(1).max(100),
 });
 
 const envMap: Record<keyof PaymentSystemConfig, string> = {
@@ -50,24 +50,22 @@ const envMap: Record<keyof PaymentSystemConfig, string> = {
   webhookUrl: 'WEBHOOK_URL',
   retryAttempts: 'RETRY_ATTEMPTS',
   retryDelay: 'RETRY_DELAY',
-  batchSize: 'BATCH_SIZE'
+  batchSize: 'BATCH_SIZE',
 };
 
 export const validateConfig = createConfigValidator<PaymentSystemConfig>({
   schema: PaymentSystemSchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['apiKey']),
     createPerformanceValidator({
       batchSize: 50,
-      retryDelay: 5000
-    })
-  ]
+      retryDelay: 5000,
+    }),
+  ],
 });
 
 export function getConfig(): PaymentSystemConfig {
   return validateConfig({});
-} 
+}

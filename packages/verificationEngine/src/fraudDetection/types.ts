@@ -78,4 +78,4 @@ export interface RiskThresholds {
   MEDIUM: number;
   HIGH: number;
   CRITICAL: number;
-} 
+}

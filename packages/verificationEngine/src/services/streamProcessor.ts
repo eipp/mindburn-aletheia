@@ -1,9 +1,4 @@
-import {
-  StreamProcessor,
-  EventBus,
-  StorageService,
-  LoggerService
-} from '@mindburn/shared';
+import { StreamProcessor, EventBus, StorageService, LoggerService } from '@mindburn/shared';
 
 export class ModelStreamProcessor {
   private streamProcessor: StreamProcessor;
@@ -22,7 +17,7 @@ export class ModelStreamProcessor {
     try {
       const records = await this.streamProcessor.getRecords({
         streamName: 'model-events',
-        batchSize: 100
+        batchSize: 100,
       });
 
       for (const record of records) {
@@ -44,7 +39,7 @@ export class ModelStreamProcessor {
       // Store event data
       await this.storage.put(`events/${modelId}/${version}/${type}`, {
         timestamp: new Date().toISOString(),
-        metadata
+        metadata,
       });
 
       // Emit processed event
@@ -53,7 +48,7 @@ export class ModelStreamProcessor {
         modelId,
         version,
         metadata,
-        processedAt: new Date().toISOString()
+        processedAt: new Date().toISOString(),
       });
 
       this.logger.info('Successfully processed model event', { type, modelId });
@@ -61,7 +56,7 @@ export class ModelStreamProcessor {
       this.logger.error('Failed to process model event', {
         type,
         modelId,
-        error
+        error,
       });
       throw error;
     }
@@ -69,14 +64,14 @@ export class ModelStreamProcessor {
 
   async start(): Promise<void> {
     this.logger.info('Starting model stream processor');
-    
+
     try {
       await this.streamProcessor.start({
         streamName: 'model-events',
         handler: this.processModelEvents.bind(this),
-        errorHandler: (error) => {
+        errorHandler: error => {
           this.logger.error('Stream processing error', { error });
-        }
+        },
       });
     } catch (error) {
       this.logger.error('Failed to start stream processor', { error });
@@ -88,4 +83,4 @@ export class ModelStreamProcessor {
     this.logger.info('Stopping model stream processor');
     await this.streamProcessor.stop();
   }
-} 
+}

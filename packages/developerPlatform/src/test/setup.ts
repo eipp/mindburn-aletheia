@@ -54,4 +54,4 @@ process.env.TASKS_TABLE = 'test-tasks';
 process.env.WEBHOOKS_TABLE = 'test-webhooks';
 process.env.WEBHOOK_DELIVERIES_TABLE = 'test-webhook-deliveries';
 process.env.BILLING_TABLE = 'test-billing';
-process.env.TASK_QUEUE_URL = 'http://localhost:4566/000000000000/test-task-queue'; 
+process.env.TASK_QUEUE_URL = 'http://localhost:4566/000000000000/test-task-queue';

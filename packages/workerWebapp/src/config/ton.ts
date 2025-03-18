@@ -22,21 +22,21 @@ export const tonConfig = {
   rewardMultipliers: {
     quality: {
       min: 0.5,
-      max: 1.5
+      max: 1.5,
     },
     speed: {
       min: 1.0,
-      max: 2.0
+      max: 2.0,
     },
     complexity: {
       min: 1.0,
-      max: 3.0
+      max: 3.0,
     },
     urgency: {
       min: 1.0,
-      max: 2.5
-    }
-  }
+      max: 2.5,
+    },
+  },
 };
 
 /**
@@ -46,6 +46,6 @@ export function getTonNetworkConfig(): TonNetworkConfig {
   return {
     endpoint: tonConfig.endpoint,
     apiKey: tonConfig.apiKey,
-    network: tonConfig.network as 'mainnet' | 'testnet'
+    network: tonConfig.network as 'mainnet' | 'testnet',
   };
-} 
+}

@@ -28,7 +28,7 @@ export class WebSocketClient extends EventEmitter {
     this.options = {
       reconnectInterval: 1000,
       maxReconnectAttempts: 5,
-      ...options
+      ...options,
     };
   }
 
@@ -52,12 +52,12 @@ export class WebSocketClient extends EventEmitter {
           this.attemptReconnect();
         };
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = error => {
           this.emit('error', error);
           reject(error);
         };
 
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = event => {
           try {
             const message = JSON.parse(event.data.toString());
             this.emit(message.type, message.data);
@@ -80,13 +80,13 @@ export class WebSocketClient extends EventEmitter {
     const subscription: Subscription = {
       id: uuidv4(),
       type,
-      filter
+      filter,
     };
 
     await this.sendMessage({
       action: 'subscribe',
       type,
-      filter
+      filter,
     });
 
     this.subscriptions.set(subscription.id, subscription);
@@ -102,7 +102,7 @@ export class WebSocketClient extends EventEmitter {
     if (this.ws?.readyState === WebSocket.OPEN) {
       await this.sendMessage({
         action: 'unsubscribe',
-        type: subscription.type
+        type: subscription.type,
       });
     }
 
@@ -159,7 +159,7 @@ export class WebSocketClient extends EventEmitter {
         await this.sendMessage({
           action: 'subscribe',
           type: subscription.type,
-          filter: subscription.filter
+          filter: subscription.filter,
         });
       } catch (error) {
         this.emit('error', error);
@@ -173,13 +173,16 @@ export class WebSocketClient extends EventEmitter {
       return;
     }
 
-    this.reconnectTimeout = setTimeout(async () => {
-      this.reconnectAttempts++;
-      try {
-        await this.connect();
-      } catch (error) {
-        this.emit('error', error);
-      }
-    }, this.options.reconnectInterval * Math.pow(2, this.reconnectAttempts));
+    this.reconnectTimeout = setTimeout(
+      async () => {
+        this.reconnectAttempts++;
+        try {
+          await this.connect();
+        } catch (error) {
+          this.emit('error', error);
+        }
+      },
+      this.options.reconnectInterval * Math.pow(2, this.reconnectAttempts)
+    );
   }
-} 
+}

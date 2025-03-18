@@ -30,19 +30,19 @@ export class WorkerBot {
     this.monitoring = new MonitoringService();
 
     this.bot = new Telegraf<BotContext>(process.env.TELEGRAM_BOT_TOKEN!);
-    
+
     // Initialize middleware
     this.setupMiddleware();
-    
+
     // Register commands
     this.registerCommands();
-    
+
     // Register scenes for complex flows
     registerScenes(this.bot);
-    
+
     // Setup monitoring
     this.setupMonitoring();
-    
+
     // Error handling
     this.bot.catch(errorHandler);
   }
@@ -59,16 +59,16 @@ export class WorkerBot {
   private setupMiddleware(): void {
     // Session management
     this.bot.use(session());
-    
+
     // Authentication
     this.bot.use(authMiddleware(this.dynamodb));
-    
+
     // Rate limiting
     this.bot.use(rateLimiter());
-    
+
     // Analytics
     this.bot.use(analyticsMiddleware());
-    
+
     // Localization
     this.bot.use(i18n.middleware());
   }
@@ -79,11 +79,11 @@ export class WorkerBot {
     this.bot.command('profile', profileCommand(this.dynamodb));
     this.bot.command('tasks', tasksCommand(this.dynamodb, this.sqs));
     this.bot.command('wallet', walletCommand(this.dynamodb));
-    
+
     // Help command
-    this.bot.help((ctx) => {
+    this.bot.help(ctx => {
       return ctx.reply(ctx.i18n.t('help.message'), {
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
       });
     });
   }
@@ -96,7 +96,7 @@ export class WorkerBot {
       // Polling for development
       await this.bot.launch();
     }
-    
+
     logger.info('Worker bot started');
   }
 
@@ -117,23 +117,23 @@ export class WorkerBot {
 // Lambda handler
 export const handler = async (event: any): Promise<any> => {
   const bot = new WorkerBot();
-  
+
   try {
     if (event.source === 'serverless-plugin-warmup') {
       return { statusCode: 200, body: 'Warmed up' };
     }
 
     await bot.handleUpdate(event.body ? JSON.parse(event.body) : event);
-    
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ status: 'ok' })
+      body: JSON.stringify({ status: 'ok' }),
     };
   } catch (error) {
     logger.error('Lambda handler error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-}; 
+};

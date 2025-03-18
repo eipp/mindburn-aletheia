@@ -11,10 +11,7 @@ export class LambdaHardeningStack extends cdk.Stack {
     const securityLayer = new lambda.LayerVersion(this, 'SecurityLayer', {
       code: lambda.Code.fromAsset('layers/security'),
       description: 'Security controls and RASP implementation',
-      compatibleRuntimes: [
-        lambda.Runtime.NODEJS_18_X,
-        lambda.Runtime.NODEJS_20_X
-      ],
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X, lambda.Runtime.NODEJS_20_X],
     });
 
     // Create Lambda role with restricted permissions
@@ -22,23 +19,18 @@ export class LambdaHardeningStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       description: 'Hardened Lambda execution role',
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          'service-role/AWSLambdaBasicExecutionRole'
-        ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
       ],
     });
 
     // Add custom policy for runtime protection
-    functionRole.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.DENY,
-      actions: [
-        'iam:*',
-        'lambda:UpdateFunctionCode',
-        'ec2:*',
-        's3:*',
-      ],
-      resources: ['*'],
-    }));
+    functionRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.DENY,
+        actions: ['iam:*', 'lambda:UpdateFunctionCode', 'ec2:*', 's3:*'],
+        resources: ['*'],
+      })
+    );
 
     // Lambda function configuration with hardening
     const hardenedFunctionProps: lambda.FunctionProps = {
@@ -71,19 +63,22 @@ export class LambdaHardeningStack extends cdk.Stack {
   public static applyHardening(fn: lambda.Function): void {
     // Enable X-Ray tracing
     fn.addEnvironment('AWS_XRAY_DEBUG_MODE', '1');
-    
+
     // Add security headers
-    fn.addEnvironment('SECURE_HEADERS', JSON.stringify({
-      'Content-Security-Policy': "default-src 'self'",
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-    }));
+    fn.addEnvironment(
+      'SECURE_HEADERS',
+      JSON.stringify({
+        'Content-Security-Policy': "default-src 'self'",
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+      })
+    );
 
     // Add runtime protection
     fn.addEnvironment('NODE_OPTIONS', '--enable-source-maps --disable-proto=throw');
-    
+
     // Enable enhanced monitoring
     fn.addEnvironment('ENHANCED_MONITORING', 'true');
   }
-} 
+}

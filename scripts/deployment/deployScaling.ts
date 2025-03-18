@@ -11,49 +11,55 @@ async function createScalingAlerts(region: string) {
 
   try {
     // Lambda concurrency alert
-    await cloudWatch.send(new PutMetricAlarmCommand({
-      AlarmName: `${region}-lambda-concurrency-alert`,
-      MetricName: 'ConcurrentExecutions',
-      Namespace: 'AWS/Lambda',
-      Period: 300,
-      EvaluationPeriods: 2,
-      Threshold: 800,
-      ComparisonOperator: 'GreaterThanThreshold',
-      Statistic: 'Maximum',
-      ActionsEnabled: true,
-      AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
-      AlarmDescription: 'Alert when Lambda concurrency exceeds 80% of limit'
-    }));
+    await cloudWatch.send(
+      new PutMetricAlarmCommand({
+        AlarmName: `${region}-lambda-concurrency-alert`,
+        MetricName: 'ConcurrentExecutions',
+        Namespace: 'AWS/Lambda',
+        Period: 300,
+        EvaluationPeriods: 2,
+        Threshold: 800,
+        ComparisonOperator: 'GreaterThanThreshold',
+        Statistic: 'Maximum',
+        ActionsEnabled: true,
+        AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
+        AlarmDescription: 'Alert when Lambda concurrency exceeds 80% of limit',
+      })
+    );
 
     // DynamoDB throttling alert
-    await cloudWatch.send(new PutMetricAlarmCommand({
-      AlarmName: `${region}-dynamodb-throttling-alert`,
-      MetricName: 'ThrottledRequests',
-      Namespace: 'AWS/DynamoDB',
-      Period: 300,
-      EvaluationPeriods: 2,
-      Threshold: 100,
-      ComparisonOperator: 'GreaterThanThreshold',
-      Statistic: 'Sum',
-      ActionsEnabled: true,
-      AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
-      AlarmDescription: 'Alert when DynamoDB throttling exceeds threshold'
-    }));
+    await cloudWatch.send(
+      new PutMetricAlarmCommand({
+        AlarmName: `${region}-dynamodb-throttling-alert`,
+        MetricName: 'ThrottledRequests',
+        Namespace: 'AWS/DynamoDB',
+        Period: 300,
+        EvaluationPeriods: 2,
+        Threshold: 100,
+        ComparisonOperator: 'GreaterThanThreshold',
+        Statistic: 'Sum',
+        ActionsEnabled: true,
+        AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
+        AlarmDescription: 'Alert when DynamoDB throttling exceeds threshold',
+      })
+    );
 
     // API Gateway latency alert
-    await cloudWatch.send(new PutMetricAlarmCommand({
-      AlarmName: `${region}-apigateway-latency-alert`,
-      MetricName: 'Latency',
-      Namespace: 'AWS/ApiGateway',
-      Period: 300,
-      EvaluationPeriods: 2,
-      Threshold: 1000,
-      ComparisonOperator: 'GreaterThanThreshold',
-      Statistic: 'p99',
-      ActionsEnabled: true,
-      AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
-      AlarmDescription: 'Alert when API Gateway p99 latency exceeds 1s'
-    }));
+    await cloudWatch.send(
+      new PutMetricAlarmCommand({
+        AlarmName: `${region}-apigateway-latency-alert`,
+        MetricName: 'Latency',
+        Namespace: 'AWS/ApiGateway',
+        Period: 300,
+        EvaluationPeriods: 2,
+        Threshold: 1000,
+        ComparisonOperator: 'GreaterThanThreshold',
+        Statistic: 'p99',
+        ActionsEnabled: true,
+        AlarmActions: ['YOUR_SNS_TOPIC_ARN'],
+        AlarmDescription: 'Alert when API Gateway p99 latency exceeds 1s',
+      })
+    );
 
     logger.info('Scaling alerts created', { region });
   } catch (error) {
@@ -93,7 +99,7 @@ async function deployScalingInfrastructure() {
     // Analyze performance and costs
     const startTime = new Date();
     startTime.setHours(startTime.getHours() - 1);
-    
+
     for (const region of regions) {
       // Get resource utilization
       const utilization = await costManager.analyzeResourceUtilization(
@@ -108,7 +114,7 @@ async function deployScalingInfrastructure() {
       // Apply optimizations if needed
       if (costReport.projectedSavings > 1000) {
         await costManager.optimizeResources(region, utilization);
-        
+
         // Update dashboard after optimization
         await dashboard.updateDashboard(regions);
       }
@@ -116,7 +122,7 @@ async function deployScalingInfrastructure() {
       logger.info('Region deployment completed', {
         region,
         costReport,
-        benchmarkResults: benchmarkResults.find(r => r.region === region)
+        benchmarkResults: benchmarkResults.find(r => r.region === region),
       });
     }
 
@@ -131,4 +137,4 @@ async function deployScalingInfrastructure() {
 deployScalingInfrastructure().catch(error => {
   console.error('Deployment failed:', error);
   process.exit(1);
-}); 
+});

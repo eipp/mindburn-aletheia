@@ -5,7 +5,7 @@ export enum TaskType {
   TEXT_VERIFICATION = 'TEXT_VERIFICATION',
   IMAGE_VERIFICATION = 'IMAGE_VERIFICATION',
   CODE_VERIFICATION = 'CODE_VERIFICATION',
-  AUDIO_VERIFICATION = 'AUDIO_VERIFICATION'
+  AUDIO_VERIFICATION = 'AUDIO_VERIFICATION',
 }
 
 export enum TaskStatus {
@@ -14,7 +14,7 @@ export enum TaskStatus {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   EXPIRED = 'EXPIRED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export enum VerificationStrategy {
@@ -22,7 +22,7 @@ export enum VerificationStrategy {
   EXPERT_WEIGHTED = 'EXPERT_WEIGHTED',
   AI_ASSISTED = 'AI_ASSISTED',
   GOLDEN_SET = 'GOLDEN_SET',
-  HYBRID = 'HYBRID'
+  HYBRID = 'HYBRID',
 }
 
 export interface BaseTask {
@@ -108,4 +108,4 @@ export interface PaymentResult {
   amount?: BigNumber;
   fee?: BigNumber;
   status?: 'pending' | 'completed' | 'failed';
-} 
+}

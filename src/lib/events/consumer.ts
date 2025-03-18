@@ -7,10 +7,12 @@ import { z } from 'zod';
 import { captureAWS } from 'aws-xray-sdk-core';
 
 // Wrap AWS clients with X-Ray
-const dynamoDB = captureAWS(new DynamoDB({
-  maxAttempts: 3,
-  retryMode: 'adaptive',
-}));
+const dynamoDB = captureAWS(
+  new DynamoDB({
+    maxAttempts: 3,
+    retryMode: 'adaptive',
+  })
+);
 
 const cloudWatch = captureAWS(new CloudWatch());
 const sns = captureAWS(new SNS());
@@ -36,7 +38,7 @@ export abstract class EventConsumer<T extends AletheiaEvent> {
 
     try {
       parsedEvent = await this.validateAndParseEvent(event);
-      
+
       if (await this.isEventProcessed(parsedEvent.id)) {
         console.log(`Event ${parsedEvent.id} already processed, skipping`);
         return;
@@ -111,7 +113,7 @@ export abstract class EventConsumer<T extends AletheiaEvent> {
 
   private async markEventAsProcessed(event: T): Promise<void> {
     const ttl = Math.floor(Date.now() / 1000) + 86400 * 30; // 30 days
-    
+
     await this.dynamoDB.putItem({
       TableName: this.processingTableName,
       Item: {
@@ -203,19 +205,25 @@ export abstract class EventConsumer<T extends AletheiaEvent> {
       await this.sns.publish({
         TopicArn: this.alertTopicArn,
         Subject: alert.subject,
-        Message: JSON.stringify({
-          message: alert.message,
-          severity: alert.severity,
-          timestamp: new Date().toISOString(),
-          environment: this.environment,
-          functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-          event: alert.event,
-          error: alert.error ? {
-            message: alert.error.message,
-            stack: alert.error.stack,
-            name: alert.error.name,
-          } : undefined,
-        }, null, 2),
+        Message: JSON.stringify(
+          {
+            message: alert.message,
+            severity: alert.severity,
+            timestamp: new Date().toISOString(),
+            environment: this.environment,
+            functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+            event: alert.event,
+            error: alert.error
+              ? {
+                  message: alert.error.message,
+                  stack: alert.error.stack,
+                  name: alert.error.name,
+                }
+              : undefined,
+          },
+          null,
+          2
+        ),
         MessageAttributes: {
           Severity: {
             DataType: 'String',
@@ -227,4 +235,4 @@ export abstract class EventConsumer<T extends AletheiaEvent> {
       console.error('Failed to send alert:', error);
     }
   }
-} 
+}

@@ -22,7 +22,7 @@ export const errorCodes = {
   INVALID_RESULT: 'INVALID_RESULT',
   DATABASE_ERROR: 'DATABASE_ERROR',
   QUEUE_ERROR: 'QUEUE_ERROR',
-  NOTIFICATION_ERROR: 'NOTIFICATION_ERROR'
+  NOTIFICATION_ERROR: 'NOTIFICATION_ERROR',
 } as const;
 
 export function errorHandler<T>(handler: (...args: any[]) => Promise<T>) {
@@ -37,7 +37,7 @@ export function errorHandler<T>(handler: (...args: any[]) => Promise<T>) {
           errorCode: error.errorCode,
           message: error.message,
           details: error.details,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         throw new Error(JSON.stringify(errorResponse));
       }
@@ -49,9 +49,9 @@ export function errorHandler<T>(handler: (...args: any[]) => Promise<T>) {
           message: error.message,
           details: {
             requestId: error.requestId,
-            statusCode: error.statusCode
+            statusCode: error.statusCode,
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         throw new Error(JSON.stringify(errorResponse));
       }
@@ -61,7 +61,7 @@ export function errorHandler<T>(handler: (...args: any[]) => Promise<T>) {
         errorCode: 'INTERNAL_ERROR',
         message: 'An unexpected error occurred',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       throw new Error(JSON.stringify(errorResponse));
     }
@@ -70,33 +70,21 @@ export function errorHandler<T>(handler: (...args: any[]) => Promise<T>) {
 
 export function validateTask(task: any): void {
   if (!task) {
-    throw new TaskManagementError(
-      errorCodes.TASK_NOT_FOUND,
-      'Task not found'
-    );
+    throw new TaskManagementError(errorCodes.TASK_NOT_FOUND, 'Task not found');
   }
 
   if (!task.status) {
-    throw new TaskManagementError(
-      errorCodes.INVALID_TASK_STATUS,
-      'Invalid task status'
-    );
+    throw new TaskManagementError(errorCodes.INVALID_TASK_STATUS, 'Invalid task status');
   }
 }
 
 export function validateWorker(worker: any): void {
   if (!worker) {
-    throw new TaskManagementError(
-      errorCodes.WORKER_NOT_FOUND,
-      'Worker not found'
-    );
+    throw new TaskManagementError(errorCodes.WORKER_NOT_FOUND, 'Worker not found');
   }
 
   if (!worker.status) {
-    throw new TaskManagementError(
-      errorCodes.INVALID_WORKER_STATUS,
-      'Invalid worker status'
-    );
+    throw new TaskManagementError(errorCodes.INVALID_WORKER_STATUS, 'Invalid worker status');
   }
 
   if (worker.currentLoad >= worker.maxLoad) {
@@ -109,9 +97,6 @@ export function validateWorker(worker: any): void {
 
 export function validateResult(result: any): void {
   if (!result || !result.taskId || !result.workerId) {
-    throw new TaskManagementError(
-      errorCodes.INVALID_RESULT,
-      'Invalid verification result'
-    );
+    throw new TaskManagementError(errorCodes.INVALID_RESULT, 'Invalid verification result');
   }
-} 
+}

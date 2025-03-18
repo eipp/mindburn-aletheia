@@ -19,40 +19,40 @@ export class MainSecurityStack extends cdk.Stack {
     const vpcStack = new SecureVpcStack(this, 'SecureVPC', {
       env: {
         account: props.accountId,
-        region: props.env?.region
-      }
+        region: props.env?.region,
+      },
     });
 
     // Deploy WAF rules
     const wafStack = new WafStack(this, 'WAFRules', {
       env: {
         account: props.accountId,
-        region: props.env?.region
-      }
+        region: props.env?.region,
+      },
     });
 
     // Deploy security monitoring
     const monitoringStack = new SecurityDashboardStack(this, 'SecurityMonitoring', {
       env: {
         account: props.accountId,
-        region: props.env?.region
-      }
+        region: props.env?.region,
+      },
     });
 
     // Deploy MFA configuration
     const mfaStack = new MfaAuthStack(this, 'MFAAuth', {
       env: {
         account: props.accountId,
-        region: props.env?.region
-      }
+        region: props.env?.region,
+      },
     });
 
     // Deploy Lambda hardening
     const lambdaHardeningStack = new LambdaHardeningStack(this, 'LambdaHardening', {
       env: {
         account: props.accountId,
-        region: props.env?.region
-      }
+        region: props.env?.region,
+      },
     });
 
     // Tag all resources
@@ -62,13 +62,17 @@ export class MainSecurityStack extends cdk.Stack {
 
     // Output security configuration
     new cdk.CfnOutput(this, 'SecurityConfig', {
-      value: JSON.stringify({
-        vpcId: vpcStack.vpcId,
-        wafAclId: wafStack.webAclId,
-        userPoolId: mfaStack.userPoolId,
-        securityDashboard: monitoringStack.dashboardName,
-      }, null, 2),
-      description: 'Security Configuration Summary'
+      value: JSON.stringify(
+        {
+          vpcId: vpcStack.vpcId,
+          wafAclId: wafStack.webAclId,
+          userPoolId: mfaStack.userPoolId,
+          securityDashboard: monitoringStack.dashboardName,
+        },
+        null,
+        2
+      ),
+      description: 'Security Configuration Summary',
     });
   }
-} 
+}

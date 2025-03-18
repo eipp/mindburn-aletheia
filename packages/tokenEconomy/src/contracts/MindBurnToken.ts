@@ -1,4 +1,13 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
+import {
+  Address,
+  beginCell,
+  Cell,
+  Contract,
+  contractAddress,
+  ContractProvider,
+  Sender,
+  SendMode,
+} from '@ton/core';
 import { TupleBuilder, TupleReader } from '@ton/core';
 import { toNano } from '@ton/core';
 
@@ -82,10 +91,7 @@ export class MindBurnToken implements Contract {
     });
   }
 
-  async approve(
-    provider: ContractProvider,
-    params: { spender: Address; amount: bigint }
-  ) {
+  async approve(provider: ContractProvider, params: { spender: Address; amount: bigint }) {
     await provider.internal(SendMode.PAY_GAS_SEPARATELY, {
       value: toNano('0.05'),
       body: beginCell()
@@ -121,4 +127,4 @@ export class MindBurnToken implements Contract {
     ]);
     return result.stack.readBigNumber();
   }
-} 
+}

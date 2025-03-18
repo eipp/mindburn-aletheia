@@ -24,7 +24,7 @@ export const handler = async (event: any) => {
     // Process verification events from DynamoDB Stream
     const verificationMetrics = event.Records.map((record: any) => {
       const data = unmarshall(record.dynamodb.NewImage);
-      
+
       return {
         taskId: data.taskId,
         workerId: data.workerId,
@@ -34,18 +34,20 @@ export const handler = async (event: any) => {
         responseTimeMs: data.responseTimeMs,
         isAccurate: data.isAccurate,
         cost: data.cost,
-        timestamp: data.timestamp
+        timestamp: data.timestamp,
       } as VerificationMetric;
     });
 
     // Stream to Kinesis for real-time analytics
-    await Promise.all(verificationMetrics.map(metric => 
-      kinesis.putRecord({
-        StreamName: process.env.DATA_STREAM_NAME!,
-        Data: Buffer.from(JSON.stringify(metric)),
-        PartitionKey: metric.taskId
-      })
-    ));
+    await Promise.all(
+      verificationMetrics.map(metric =>
+        kinesis.putRecord({
+          StreamName: process.env.DATA_STREAM_NAME!,
+          Data: Buffer.from(JSON.stringify(metric)),
+          PartitionKey: metric.taskId,
+        })
+      )
+    );
 
     // Batch metrics for S3 storage
     const date = new Date();
@@ -60,18 +62,18 @@ export const handler = async (event: any) => {
       Bucket: process.env.DATA_LAKE_BUCKET!,
       Key: key,
       Body: JSON.stringify(verificationMetrics),
-      ContentType: 'application/json'
+      ContentType: 'application/json',
     });
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: 'Successfully processed verification metrics',
-        processedRecords: verificationMetrics.length
-      })
+        processedRecords: verificationMetrics.length,
+      }),
     };
   } catch (error) {
     console.error('Error processing verification metrics:', error);
     throw error;
   }
-}; 
+};

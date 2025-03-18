@@ -57,4 +57,4 @@ export interface TaskDistributorConfig {
     high: number;
     critical: number;
   };
-} 
+}

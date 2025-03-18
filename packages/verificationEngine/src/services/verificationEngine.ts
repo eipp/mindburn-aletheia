@@ -8,7 +8,7 @@ import {
   ConfidenceLevel,
   QualityMetrics,
   QualityThresholds,
-  TaskType
+  TaskType,
 } from '../types';
 import { ValidationError } from '../errors';
 import { VerificationStrategyFactory } from './taskVerificationStrategies';
@@ -19,18 +19,18 @@ export class VerificationEngine {
     accuracy: {
       low: 0.7,
       medium: 0.85,
-      high: 0.95
+      high: 0.95,
     },
     consistency: {
       low: 0.65,
       medium: 0.8,
-      high: 0.9
+      high: 0.9,
     },
     speedScore: {
       slow: 0.5,
       medium: 0.75,
-      fast: 0.9
-    }
+      fast: 0.9,
+    },
   };
 
   constructor(logger: Logger) {
@@ -59,11 +59,7 @@ export class VerificationEngine {
       );
 
       // Calculate confidence level
-      const confidenceLevel = this.calculateConfidenceLevel(
-        task,
-        submissions,
-        workerMetrics
-      );
+      const confidenceLevel = this.calculateConfidenceLevel(task, submissions, workerMetrics);
 
       // Create verification result
       const result: VerificationResult = {
@@ -77,22 +73,21 @@ export class VerificationEngine {
         metadata: {
           submissionCount: submissions.length,
           averageProcessingTime: this.calculateAverageProcessingTime(submissions),
-          consensusStrategy: task.consensusStrategy
-        }
+          consensusStrategy: task.consensusStrategy,
+        },
       };
 
       this.logger.info('Verification completed', {
         taskId: task.taskId,
         status: result.status,
-        confidenceLevel
+        confidenceLevel,
       });
 
       return result;
-
     } catch (error) {
       this.logger.error('Verification processing failed', {
         error,
-        taskId: task.taskId
+        taskId: task.taskId,
       });
       throw error;
     }
@@ -112,9 +107,7 @@ export class VerificationEngine {
     // Validate submission format based on task type
     submissions.forEach(submission => {
       if (!strategy.validateFormat(submission.result)) {
-        throw new ValidationError(
-          `Invalid submission format for task type ${task.type}`
-        );
+        throw new ValidationError(`Invalid submission format for task type ${task.type}`);
       }
     });
   }
@@ -128,17 +121,14 @@ export class VerificationEngine {
       submissions.map(async submission => {
         const timeSpent = submission.completedAt - submission.startedAt;
         const accuracy = await strategy.calculateAccuracy(submission);
-        const consistencyScore = await this.calculateConsistency(
-          task,
-          submission
-        );
+        const consistencyScore = await this.calculateConsistency(task, submission);
 
         return {
           workerId: submission.workerId,
           submissionId: submission.submissionId,
           accuracy,
           timeSpent,
-          consistencyScore
+          consistencyScore,
         };
       })
     );
@@ -153,17 +143,15 @@ export class VerificationEngine {
     switch (task.consensusStrategy) {
       case ConsensusStrategy.MAJORITY:
         return strategy.aggregateResults(submissions);
-      
+
       case ConsensusStrategy.WEIGHTED:
         return this.applyWeightedConsensus(submissions, metrics, strategy);
-      
+
       case ConsensusStrategy.UNANIMOUS:
         return this.applyUnanimousConsensus(submissions, strategy);
-      
+
       default:
-        throw new ValidationError(
-          `Unsupported consensus strategy: ${task.consensusStrategy}`
-        );
+        throw new ValidationError(`Unsupported consensus strategy: ${task.consensusStrategy}`);
     }
   }
 
@@ -173,16 +161,17 @@ export class VerificationEngine {
     strategy: any
   ): Promise<any> {
     // Calculate weights based on worker metrics
-    const weights = metrics.map(metric => 
-      (metric.accuracy * 0.5) + 
-      (metric.consistencyScore * 0.3) + 
-      (this.normalizeTimeScore(metric.timeSpent) * 0.2)
+    const weights = metrics.map(
+      metric =>
+        metric.accuracy * 0.5 +
+        metric.consistencyScore * 0.3 +
+        this.normalizeTimeScore(metric.timeSpent) * 0.2
     );
 
     // Apply weights to results
     const weightedResults = submissions.map((submission, index) => ({
       result: submission.result,
-      weight: weights[index]
+      weight: weights[index],
     }));
 
     // Use strategy to aggregate weighted results
@@ -190,7 +179,7 @@ export class VerificationEngine {
       weightedResults.map(wr => ({
         ...submissions[0],
         result: wr.result,
-        weight: wr.weight
+        weight: wr.weight,
       }))
     );
   }
@@ -222,10 +211,7 @@ export class VerificationEngine {
     const submissionAgreement = this.calculateSubmissionAgreement(submissions);
 
     // Weight the factors
-    const confidenceScore = 
-      (avgAccuracy * 0.4) +
-      (avgConsistency * 0.3) +
-      (submissionAgreement * 0.3);
+    const confidenceScore = avgAccuracy * 0.4 + avgConsistency * 0.3 + submissionAgreement * 0.3;
 
     // Map score to confidence level
     if (confidenceScore >= 0.9) return ConfidenceLevel.HIGH;
@@ -233,9 +219,7 @@ export class VerificationEngine {
     return ConfidenceLevel.LOW;
   }
 
-  private determineVerificationStatus(
-    confidenceLevel: ConfidenceLevel
-  ): VerificationStatus {
+  private determineVerificationStatus(confidenceLevel: ConfidenceLevel): VerificationStatus {
     switch (confidenceLevel) {
       case ConfidenceLevel.HIGH:
         return VerificationStatus.COMPLETED;
@@ -254,9 +238,7 @@ export class VerificationEngine {
     return 0.8; // Placeholder
   }
 
-  private calculateSubmissionAgreement(
-    submissions: WorkerSubmission[]
-  ): number {
+  private calculateSubmissionAgreement(submissions: WorkerSubmission[]): number {
     const totalPairs = (submissions.length * (submissions.length - 1)) / 2;
     let agreementCount = 0;
 
@@ -280,29 +262,22 @@ export class VerificationEngine {
     return 0.75; // Placeholder
   }
 
-  private calculateAverageProcessingTime(
-    submissions: WorkerSubmission[]
-  ): number {
-    return this.average(
-      submissions.map(s => s.completedAt - s.startedAt)
-    );
+  private calculateAverageProcessingTime(submissions: WorkerSubmission[]): number {
+    return this.average(submissions.map(s => s.completedAt - s.startedAt));
   }
 
   private average(numbers: number[]): number {
     return numbers.reduce((a, b) => a + b, 0) / numbers.length;
   }
 
-  private async detectFraud(
-    task: VerificationTask,
-    submissions: WorkerSubmission[]
-  ): Promise<any> {
+  private async detectFraud(task: VerificationTask, submissions: WorkerSubmission[]): Promise<any> {
     // TODO: Implement fraud detection
     return {
       hasSuspiciousActivity: false,
       suspiciousActivities: [],
       riskLevel: 'LOW',
       workerBehaviorAnalysis: [],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
-} 
+}

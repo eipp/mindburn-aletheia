@@ -1,10 +1,4 @@
-import {
-  TaskType,
-  TaskStatus,
-  WorkerTask,
-  WorkerVerification,
-  Evidence
-} from '@mindburn/shared';
+import { TaskType, TaskStatus, WorkerTask, WorkerVerification, Evidence } from '@mindburn/shared';
 
 export interface WorkerProfile {
   id: string;
@@ -96,4 +90,4 @@ export interface WorkerError {
   details?: Record<string, any>;
   timestamp: Date;
   severity: 'low' | 'medium' | 'high' | 'critical';
-} 
+}

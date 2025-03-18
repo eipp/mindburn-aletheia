@@ -17,7 +17,7 @@ export async function loadTestCode(filename: string): Promise<Cell> {
 export async function deployContract(contract: Contract, client: TonClient) {
   const state = await contract.createStateInit();
   const address = contract.address;
-  
+
   // Deploy contract
   await client.sendExternalMessage(contract, {
     body: Cell.EMPTY,
@@ -41,7 +41,7 @@ export async function advanceTime(seconds: number, client: TonClient) {
     await client.debug.advanceTime(seconds);
     return;
   }
-  
+
   // For local node, we can manipulate the node's time
   await client.setTime(Math.floor(Date.now() / 1000) + seconds);
 }
@@ -92,8 +92,8 @@ export function calculateExpectedReward(
 ): bigint {
   const accuracyMultiplier = accuracy / 100;
   const timeMultiplier = Math.min(timeSpent / 300, 1.5);
-  const complexityMultiplier = 1 + (complexity * 0.5);
-  
+  const complexityMultiplier = 1 + complexity * 0.5;
+
   const totalMultiplier = accuracyMultiplier * timeMultiplier * complexityMultiplier;
   return BigInt(Math.floor(Number(baseReward) * totalMultiplier));
 }
@@ -120,4 +120,4 @@ export async function waitForTransaction(
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   throw new Error('Transaction timeout');
-} 
+}

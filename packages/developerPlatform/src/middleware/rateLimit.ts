@@ -4,7 +4,7 @@ import { createLogger } from '@mindburn/shared';
 
 const logger = createLogger('RateLimitMiddleware');
 const redis = createClient({
-  url: process.env.REDIS_URL
+  url: process.env.REDIS_URL,
 });
 
 interface RateLimitConfig {
@@ -16,7 +16,7 @@ const defaultLimits: { [key: string]: RateLimitConfig } = {
   'POST /tasks': { windowMs: 60 * 1000, max: 10 }, // 10 requests per minute
   'GET /tasks': { windowMs: 60 * 1000, max: 100 }, // 100 requests per minute
   'GET /analytics': { windowMs: 60 * 1000, max: 50 }, // 50 requests per minute
-  'default': { windowMs: 60 * 1000, max: 100 } // Default limit
+  default: { windowMs: 60 * 1000, max: 100 }, // Default limit
 };
 
 export async function rateLimitMiddleware(
@@ -30,7 +30,7 @@ export async function rateLimitMiddleware(
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -53,13 +53,13 @@ export async function rateLimitMiddleware(
       logger.warn('Rate limit exceeded', { developerId, endpoint, requestCount });
       return {
         statusCode: 429,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Too many requests',
-          retryAfter: Math.ceil((windowStart + limit.windowMs - now) / 1000)
+          retryAfter: Math.ceil((windowStart + limit.windowMs - now) / 1000),
         }),
         headers: {
-          'Retry-After': Math.ceil((windowStart + limit.windowMs - now) / 1000).toString()
-        }
+          'Retry-After': Math.ceil((windowStart + limit.windowMs - now) / 1000).toString(),
+        },
       };
     }
 
@@ -72,11 +72,11 @@ export async function rateLimitMiddleware(
     const remaining = limit.max - requestCount - 1;
     const reset = Math.ceil((windowStart + limit.windowMs) / 1000);
 
-    logger.debug('Rate limit check passed', { 
-      developerId, 
-      endpoint, 
+    logger.debug('Rate limit check passed', {
+      developerId,
+      endpoint,
       remaining,
-      reset
+      reset,
     });
 
     // Attach rate limit info to the event for response headers
@@ -84,7 +84,7 @@ export async function rateLimitMiddleware(
       ...event.headers,
       'X-RateLimit-Limit': limit.max.toString(),
       'X-RateLimit-Remaining': remaining.toString(),
-      'X-RateLimit-Reset': reset.toString()
+      'X-RateLimit-Reset': reset.toString(),
     };
 
     return null; // Continue processing
@@ -92,7 +92,7 @@ export async function rateLimitMiddleware(
     logger.error('Rate limit check failed', { error });
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   } finally {
     await redis.disconnect();
@@ -108,12 +108,12 @@ export function addRateLimitHeaders(
     ...response.headers,
     'X-RateLimit-Limit': event.headers['X-RateLimit-Limit'],
     'X-RateLimit-Remaining': event.headers['X-RateLimit-Remaining'],
-    'X-RateLimit-Reset': event.headers['X-RateLimit-Reset']
+    'X-RateLimit-Reset': event.headers['X-RateLimit-Reset'],
   };
 
   return {
     ...response,
-    headers
+    headers,
   };
 }
 
@@ -131,4 +131,4 @@ export function withRateLimit(
     const result = await handler(event);
     return addRateLimitHeaders(result, event);
   };
-} 
+}

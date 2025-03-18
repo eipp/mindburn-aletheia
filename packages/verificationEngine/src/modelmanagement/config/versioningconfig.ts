@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export type VersioningStrategy = 'semantic' | 'timestamp' | 'incremental' | 'git';
@@ -176,25 +176,23 @@ const envMap: Record<string, string> = {
   'rollback.enabled': 'ROLLBACK_ENABLED',
   'rollback.automaticRollback': 'AUTOMATIC_ROLLBACK',
   'rollback.requireApproval': 'ROLLBACK_REQUIRE_APPROVAL',
-  'rollback.keepRollbackVersions': 'KEEP_ROLLBACK_VERSIONS'
+  'rollback.keepRollbackVersions': 'KEEP_ROLLBACK_VERSIONS',
 };
 
 export const validateConfig = createConfigValidator<VersioningConfig>({
   schema: VersioningSchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['storage.encryption']),
     createPerformanceValidator({
       'storage.retentionPolicy.maxVersions': 20,
       'storage.retentionPolicy.maxAgeDays': 180,
-      'rollback.keepRollbackVersions': 5
-    })
-  ]
+      'rollback.keepRollbackVersions': 5,
+    }),
+  ],
 });
 
 export function getConfig(): VersioningConfig {
   return validateConfig({});
-} 
+}

@@ -4,11 +4,7 @@ const config: Config.InitialOptions = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/test'],
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/types/**/*',
-  ],
+  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/types/**/*'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -46,4 +42,4 @@ const config: Config.InitialOptions = {
   ],
 };
 
-export default config; 
+export default config;

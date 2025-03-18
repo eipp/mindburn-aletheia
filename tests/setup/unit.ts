@@ -32,4 +32,4 @@ jest.mock('@ton/ton', () => ({
     disconnect: jest.fn(),
     processTransaction: jest.fn(),
   })),
-})); 
+}));

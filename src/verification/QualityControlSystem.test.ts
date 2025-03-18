@@ -6,12 +6,7 @@ import { MetricsCollector } from './MetricsCollector';
 import { MetricsPublisher } from './MetricsPublisher';
 import { FraudDetector } from './FraudDetector';
 import { QualityControlSystem } from './QualityControlSystem';
-import { 
-  ExpertiseLevel,
-  TaskSubmission,
-  DeviceFingerprint,
-  WorkerProfile
-} from './types';
+import { ExpertiseLevel, TaskSubmission, DeviceFingerprint, WorkerProfile } from './types';
 
 // Mock AWS services
 jest.mock('aws-sdk', () => ({
@@ -20,28 +15,28 @@ jest.mock('aws-sdk', () => ({
       get: jest.fn().mockReturnValue({ promise: () => Promise.resolve({ Item: {} }) }),
       put: jest.fn().mockReturnValue({ promise: () => Promise.resolve() }),
       update: jest.fn().mockReturnValue({ promise: () => Promise.resolve() }),
-      query: jest.fn().mockReturnValue({ promise: () => Promise.resolve({ Items: [] }) })
-    }))
+      query: jest.fn().mockReturnValue({ promise: () => Promise.resolve({ Items: [] }) }),
+    })),
   },
   CloudWatch: jest.fn().mockImplementation(() => ({
     putMetricData: jest.fn().mockReturnValue({ promise: () => Promise.resolve() }),
-    putMetricAlarm: jest.fn().mockReturnValue({ promise: () => Promise.resolve() })
+    putMetricAlarm: jest.fn().mockReturnValue({ promise: () => Promise.resolve() }),
   })),
   EventBridge: jest.fn().mockImplementation(() => ({
-    putEvents: jest.fn().mockReturnValue({ promise: () => Promise.resolve() })
-  }))
+    putEvents: jest.fn().mockReturnValue({ promise: () => Promise.resolve() }),
+  })),
 }));
 
 // Mock services
 const mockML = {
   calculateAccuracyScore: jest.fn().mockResolvedValue(0.85),
   calculateConsistencyScore: jest.fn().mockResolvedValue(0.75),
-  calculateTimeQualityScore: jest.fn().mockResolvedValue(0.9)
+  calculateTimeQualityScore: jest.fn().mockResolvedValue(0.9),
 };
 
 const mockRedis = {
   get: jest.fn().mockResolvedValue(null),
-  set: jest.fn().mockResolvedValue('OK')
+  set: jest.fn().mockResolvedValue('OK'),
 };
 
 const mockIpIntelligence = {
@@ -50,16 +45,16 @@ const mockIpIntelligence = {
     isDatacenter: false,
     isVpn: false,
     isTor: false,
-    isMalicious: false
-  })
+    isMalicious: false,
+  }),
 };
 
 const mockMetricsCollector = {
-  collect: jest.fn().mockResolvedValue(undefined)
+  collect: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockMetricsPublisher = {
-  publish: jest.fn().mockResolvedValue(undefined)
+  publish: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockFraudDetector = {
@@ -72,9 +67,9 @@ const mockFraudDetector = {
       reputation: 0.1,
       activity: 0.2,
       network: 0.1,
-      quality: 0.9
-    }
-  })
+      quality: 0.9,
+    },
+  }),
 };
 
 describe('QualityControlSystem', () => {
@@ -103,8 +98,8 @@ describe('QualityControlSystem', () => {
       hardware: {
         cpuCores: 8,
         memory: 16,
-        gpu: 'Intel HD Graphics'
-      }
+        gpu: 'Intel HD Graphics',
+      },
     };
 
     mockSubmission = {
@@ -119,8 +114,8 @@ describe('QualityControlSystem', () => {
       metadata: {
         deviceFingerprint: mockDeviceFingerprint,
         ipAddress: '192.168.1.1',
-        complexity: 0.5
-      }
+        complexity: 0.5,
+      },
     };
 
     mockWorkerProfile = {
@@ -132,7 +127,7 @@ describe('QualityControlSystem', () => {
       peerReviewScore: 0.9,
       complexityScore: 0.7,
       tasksCompleted: 100,
-      lastUpdate: Date.now()
+      lastUpdate: Date.now(),
     };
 
     // Initialize QualityControlSystem with mocks
@@ -155,7 +150,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(result.qualityScore).toBeGreaterThan(0);
@@ -176,16 +171,18 @@ describe('QualityControlSystem', () => {
           reputation: 0.9,
           activity: 0.8,
           network: 0.9,
-          quality: 0.2
-        }
+          quality: 0.2,
+        },
       });
 
-      await expect(qualityControl.evaluateSubmission({
-        workerId: 'worker123',
-        taskId: 'task123',
-        submission: mockSubmission,
-        isGoldenSet: false
-      })).rejects.toThrow('Submission rejected due to fraudulent activity');
+      await expect(
+        qualityControl.evaluateSubmission({
+          workerId: 'worker123',
+          taskId: 'task123',
+          submission: mockSubmission,
+          isGoldenSet: false,
+        })
+      ).rejects.toThrow('Submission rejected due to fraudulent activity');
     });
 
     it('should handle golden set submissions correctly', async () => {
@@ -193,7 +190,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: true
+        isGoldenSet: true,
       });
 
       expect(result.metrics.accuracy).toBeGreaterThan(0);
@@ -211,7 +208,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(result.qualityScore).toBeLessThan(0.8);
@@ -222,14 +219,14 @@ describe('QualityControlSystem', () => {
         isProxy: true,
         isVpn: true,
         isTor: false,
-        isMalicious: false
+        isMalicious: false,
       });
 
       const result = await qualityControl.evaluateSubmission({
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(result.recommendations).toContain('INCREASE_MONITORING');
@@ -237,17 +234,19 @@ describe('QualityControlSystem', () => {
 
     it('should detect rapid submissions', async () => {
       const rapidSubmission = { ...mockSubmission, processingTime: 1 };
-      
-      await expect(qualityControl.evaluateSubmission({
-        workerId: 'worker123',
-        taskId: 'task123',
-        submission: rapidSubmission,
-        isGoldenSet: false
-      })).resolves.toBeDefined();
+
+      await expect(
+        qualityControl.evaluateSubmission({
+          workerId: 'worker123',
+          taskId: 'task123',
+          submission: rapidSubmission,
+          isGoldenSet: false,
+        })
+      ).resolves.toBeDefined();
 
       expect(mockMetricsCollector.collect).toHaveBeenCalledWith(
         expect.objectContaining({
-          fraudRisk: expect.any(Number)
+          fraudRisk: expect.any(Number),
         })
       );
     });
@@ -264,7 +263,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(result.recommendations).toContain('PROMOTE_TO_EXPERT_REVIEWER');
@@ -279,7 +278,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(result.recommendations).toContain('REQUIRE_ADDITIONAL_TRAINING');
@@ -292,7 +291,7 @@ describe('QualityControlSystem', () => {
         workerId: 'worker123',
         taskId: 'task123',
         submission: mockSubmission,
-        isGoldenSet: false
+        isGoldenSet: false,
       });
 
       expect(mockMetricsCollector.collect).toHaveBeenCalled();
@@ -300,7 +299,7 @@ describe('QualityControlSystem', () => {
         'QualityControl',
         expect.objectContaining({
           workerId: 'worker123',
-          taskId: 'task123'
+          taskId: 'task123',
         })
       );
     });
@@ -311,7 +310,7 @@ describe('QualityControlSystem', () => {
         riskScore: 0.9,
         fraudLevel: 'HIGH',
         actions: ['RESTRICT_ACCESS'],
-        signals: { reputation: 0.9, activity: 0.8, network: 0.9, quality: 0.2 }
+        signals: { reputation: 0.9, activity: 0.8, network: 0.9, quality: 0.2 },
       });
 
       try {
@@ -319,7 +318,7 @@ describe('QualityControlSystem', () => {
           workerId: 'worker123',
           taskId: 'task123',
           submission: mockSubmission,
-          isGoldenSet: false
+          isGoldenSet: false,
         });
       } catch (error) {
         expect(error.message).toContain('fraudulent activity');
@@ -329,8 +328,8 @@ describe('QualityControlSystem', () => {
         'QualityControl',
         expect.objectContaining({
           fraudDetection: expect.objectContaining({
-            fraudLevel: 'HIGH'
-          })
+            fraudLevel: 'HIGH',
+          }),
         })
       );
     });
@@ -340,12 +339,14 @@ describe('QualityControlSystem', () => {
     it('should handle service failures gracefully', async () => {
       mockML.calculateAccuracyScore.mockRejectedValueOnce(new Error('Service unavailable'));
 
-      await expect(qualityControl.evaluateSubmission({
-        workerId: 'worker123',
-        taskId: 'task123',
-        submission: mockSubmission,
-        isGoldenSet: false
-      })).rejects.toThrow();
+      await expect(
+        qualityControl.evaluateSubmission({
+          workerId: 'worker123',
+          taskId: 'task123',
+          submission: mockSubmission,
+          isGoldenSet: false,
+        })
+      ).rejects.toThrow();
 
       expect(mockMetricsCollector.collect).not.toHaveBeenCalled();
     });
@@ -359,7 +360,7 @@ describe('QualityControlSystem', () => {
           workerId: 'worker123',
           taskId: 'task123',
           submission: mockSubmission,
-          isGoldenSet: false
+          isGoldenSet: false,
         });
       } catch (e) {
         expect(e).toBe(error);
@@ -369,9 +370,9 @@ describe('QualityControlSystem', () => {
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
-              MetricName: 'ProcessingError'
-            })
-          ])
+              MetricName: 'ProcessingError',
+            }),
+          ]),
         })
       );
     });
@@ -386,7 +387,7 @@ describe('QualityControlSystem', () => {
         expect.objectContaining({
           AlarmName: 'HighFraudDetectionRate',
           Namespace: 'Aletheia/QualityControl',
-          ActionsEnabled: true
+          ActionsEnabled: true,
         })
       );
 
@@ -394,7 +395,7 @@ describe('QualityControlSystem', () => {
         expect.objectContaining({
           AlarmName: 'LowQualitySubmissions',
           Namespace: 'Aletheia/QualityControl',
-          ActionsEnabled: true
+          ActionsEnabled: true,
         })
       );
 
@@ -402,9 +403,9 @@ describe('QualityControlSystem', () => {
         expect.objectContaining({
           AlarmName: 'HighErrorRate',
           Namespace: 'Aletheia/QualityControl',
-          ActionsEnabled: true
+          ActionsEnabled: true,
         })
       );
     });
   });
-}); 
+});

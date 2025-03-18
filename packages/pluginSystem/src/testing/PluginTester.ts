@@ -27,7 +27,7 @@ export class PluginTester {
 
   async setup(): Promise<void> {
     const manifest = this.createTestManifest();
-    
+
     if (this.sandbox) {
       this.plugin = await this.sandbox.loadPlugin('test-path', manifest);
     } else {
@@ -62,9 +62,7 @@ export class PluginTester {
     try {
       const result = await Promise.race([
         this.callMethod(method, args),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Test timeout')), timeout)
-        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Test timeout')), timeout)),
       ]);
 
       if (options.shouldThrow) {
@@ -169,11 +167,9 @@ export class PluginTester {
   private assertResult(actual: unknown, expected: unknown): void {
     const actualStr = JSON.stringify(actual);
     const expectedStr = JSON.stringify(expected);
-    
+
     if (actualStr !== expectedStr) {
-      throw new Error(
-        `Assertion failed:\nExpected: ${expectedStr}\nActual: ${actualStr}`
-      );
+      throw new Error(`Assertion failed:\nExpected: ${expectedStr}\nActual: ${actualStr}`);
     }
   }
-} 
+}

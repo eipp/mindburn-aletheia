@@ -12,7 +12,7 @@ export const validateRequest = (schema: AnyZodObject) => {
         query: req.query,
         params: req.params,
       });
-      
+
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -20,7 +20,7 @@ export const validateRequest = (schema: AnyZodObject) => {
           path: req.path,
           errors: error.errors,
         });
-        
+
         res.status(400).json({
           error: 'Validation failed',
           details: error.errors.map(err => ({
@@ -33,4 +33,4 @@ export const validateRequest = (schema: AnyZodObject) => {
       }
     }
   };
-}; 
+};

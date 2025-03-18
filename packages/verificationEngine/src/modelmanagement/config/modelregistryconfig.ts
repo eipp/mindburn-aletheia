@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export interface ModelRegistryConfig {
@@ -30,7 +30,7 @@ const defaultConfig: ModelRegistryConfig = {
   autoPromoteToProduction: false,
   retentionDays: 30,
   maxModelSize: 1024 * 1024 * 1024, // 1GB
-  maxConcurrentDeployments: 5
+  maxConcurrentDeployments: 5,
 };
 
 const ModelRegistrySchema = z.object({
@@ -44,7 +44,7 @@ const ModelRegistrySchema = z.object({
   autoPromoteToProduction: z.boolean(),
   retentionDays: z.number().min(1).max(365),
   maxModelSize: z.number().min(1024 * 1024), // Min 1MB
-  maxConcurrentDeployments: z.number().min(1).max(20)
+  maxConcurrentDeployments: z.number().min(1).max(20),
 });
 
 const envMap: Record<keyof ModelRegistryConfig, string> = {
@@ -58,24 +58,22 @@ const envMap: Record<keyof ModelRegistryConfig, string> = {
   autoPromoteToProduction: 'AUTO_PROMOTE_TO_PROD',
   retentionDays: 'MODEL_RETENTION_DAYS',
   maxModelSize: 'MAX_MODEL_SIZE',
-  maxConcurrentDeployments: 'MAX_CONCURRENT_DEPLOYMENTS'
+  maxConcurrentDeployments: 'MAX_CONCURRENT_DEPLOYMENTS',
 };
 
 export const validateConfig = createConfigValidator<ModelRegistryConfig>({
   schema: ModelRegistrySchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['kmsKeyId']),
     createPerformanceValidator({
       maxConcurrentDeployments: 10,
-      maxModelSize: 5 * 1024 * 1024 * 1024 // 5GB
-    })
-  ]
+      maxModelSize: 5 * 1024 * 1024 * 1024, // 5GB
+    }),
+  ],
 });
 
 export function getConfig(): ModelRegistryConfig {
   return validateConfig({});
-} 
+}

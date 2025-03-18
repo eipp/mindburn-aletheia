@@ -28,11 +28,13 @@ export class PluginError extends Error {
       pluginId: this.pluginId,
       details: this.details,
       stack: this.stack,
-      originalError: this.originalError ? {
-        name: this.originalError.name,
-        message: this.originalError.message,
-        stack: this.originalError.stack,
-      } : undefined,
+      originalError: this.originalError
+        ? {
+            name: this.originalError.name,
+            message: this.originalError.message,
+            stack: this.originalError.stack,
+          }
+        : undefined,
     };
   }
 }
@@ -41,33 +43,33 @@ export const PluginErrorCodes = {
   // Lifecycle Errors
   INITIALIZATION_FAILED: 'INITIALIZATION_FAILED',
   TERMINATION_FAILED: 'TERMINATION_FAILED',
-  
+
   // Execution Errors
   EXECUTION_TIMEOUT: 'EXECUTION_TIMEOUT',
   EXECUTION_FAILED: 'EXECUTION_FAILED',
   METHOD_NOT_FOUND: 'METHOD_NOT_FOUND',
   INVALID_ARGUMENTS: 'INVALID_ARGUMENTS',
-  
+
   // Resource Errors
   MEMORY_LIMIT_EXCEEDED: 'MEMORY_LIMIT_EXCEEDED',
   CPU_LIMIT_EXCEEDED: 'CPU_LIMIT_EXCEEDED',
-  
+
   // Security Errors
   SECURITY_VIOLATION: 'SECURITY_VIOLATION',
   UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',
   INVALID_PERMISSION: 'INVALID_PERMISSION',
-  
+
   // Validation Errors
   INVALID_MANIFEST: 'INVALID_MANIFEST',
   INVALID_VERSION: 'INVALID_VERSION',
   INCOMPATIBLE_VERSION: 'INCOMPATIBLE_VERSION',
   INVALID_DEPENDENCY: 'INVALID_DEPENDENCY',
-  
+
   // Runtime Errors
   SANDBOX_ERROR: 'SANDBOX_ERROR',
   WORKER_ERROR: 'WORKER_ERROR',
   IPC_ERROR: 'IPC_ERROR',
-  
+
   // Plugin-specific Errors
   VERIFICATION_FAILED: 'VERIFICATION_FAILED',
   ENRICHMENT_FAILED: 'ENRICHMENT_FAILED',
@@ -75,7 +77,7 @@ export const PluginErrorCodes = {
   INTEGRATION_FAILED: 'INTEGRATION_FAILED',
 } as const;
 
-export type PluginErrorCode = typeof PluginErrorCodes[keyof typeof PluginErrorCodes];
+export type PluginErrorCode = (typeof PluginErrorCodes)[keyof typeof PluginErrorCodes];
 
 export class PluginErrorHandler {
   private errorListeners: Set<(error: PluginError) => void> = new Set();
@@ -99,7 +101,7 @@ export class PluginErrorHandler {
     }
   ): Promise<never> {
     const pluginError = this.normalizeError(error, context);
-    
+
     // Notify all error listeners
     this.errorListeners.forEach(listener => listener(pluginError));
 
@@ -186,4 +188,4 @@ export class PluginErrorHandler {
 
     this.errorListeners.forEach(listener => listener(retryError));
   }
-} 
+}

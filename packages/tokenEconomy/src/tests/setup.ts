@@ -6,18 +6,16 @@ expect.extend({
   toBeValidAddress(received) {
     const pass = /^EQD[a-zA-Z0-9_-]{44}$/.test(received);
     return {
-      message: () =>
-        `expected ${received} to be a valid TON address`,
+      message: () => `expected ${received} to be a valid TON address`,
       pass,
     };
   },
-  
+
   toBeBigIntCloseTo(received: bigint, target: bigint, delta: bigint) {
     const difference = received > target ? received - target : target - received;
     const pass = difference <= delta;
     return {
-      message: () =>
-        `expected ${received} to be within ${delta} of ${target}`,
+      message: () => `expected ${received} to be within ${delta} of ${target}`,
       pass,
     };
   },
@@ -50,4 +48,4 @@ afterEach(async () => {
 // Global teardown
 afterAll(async () => {
   // Clean up any remaining resources
-}); 
+});

@@ -19,14 +19,14 @@ export class BackupManager {
   async enablePointInTimeRecovery() {
     try {
       logger.info('Enabling point-in-time recovery', {
-        tableName: this.config.tableName
+        tableName: this.config.tableName,
       });
 
       await this.dynamodb.updateContinuousBackups({
         TableName: this.config.tableName,
         PointInTimeRecoverySpecification: {
-          PointInTimeRecoveryEnabled: true
-        }
+          PointInTimeRecoveryEnabled: true,
+        },
       });
 
       logger.info('Point-in-time recovery enabled successfully');
@@ -49,25 +49,25 @@ export class BackupManager {
         Tags: [
           {
             Key: 'Environment',
-            Value: this.config.environment
+            Value: this.config.environment,
           },
           {
             Key: 'Service',
-            Value: 'verification-engine'
+            Value: 'verification-engine',
           },
           {
             Key: 'CreatedAt',
-            Value: timestamp
+            Value: timestamp,
           },
           {
             Key: 'Description',
-            Value: description
-          }
-        ]
+            Value: description,
+          },
+        ],
       });
 
       logger.info('Backup created successfully', {
-        backupArn: result.BackupDetails?.BackupArn
+        backupArn: result.BackupDetails?.BackupArn,
       });
 
       await this.notifyBackupStatus('created', result.BackupDetails);
@@ -84,7 +84,7 @@ export class BackupManager {
       logger.info('Listing backups');
 
       const result = await this.dynamodb.listBackups({
-        TableName: this.config.tableName
+        TableName: this.config.tableName,
       });
 
       return result.BackupSummaries || [];
@@ -120,7 +120,7 @@ export class BackupManager {
       logger.info('Deleting backup', { backupArn });
 
       await this.dynamodb.deleteBackup({
-        BackupArn: backupArn
+        BackupArn: backupArn,
       });
 
       logger.info('Backup deleted successfully', { backupArn });
@@ -136,12 +136,12 @@ export class BackupManager {
 
       const result = await this.dynamodb.restoreTableFromBackup({
         BackupArn: backupArn,
-        TargetTableName: targetTableName
+        TargetTableName: targetTableName,
       });
 
       logger.info('Restore initiated successfully', {
         targetTableName,
-        tableStatus: result.TableDescription?.TableStatus
+        tableStatus: result.TableDescription?.TableStatus,
       });
 
       await this.notifyBackupStatus('restored', result.TableDescription);
@@ -167,28 +167,30 @@ export class BackupManager {
           environment: this.config.environment,
           timestamp: new Date().toISOString(),
           details,
-          error: error ? {
-            message: error.message,
-            code: error.code
-          } : undefined
+          error: error
+            ? {
+                message: error.message,
+                code: error.code,
+              }
+            : undefined,
         }),
         MessageAttributes: {
-          'Environment': {
+          Environment: {
             DataType: 'String',
-            StringValue: this.config.environment
+            StringValue: this.config.environment,
           },
-          'Service': {
+          Service: {
             DataType: 'String',
-            StringValue: 'verification-engine'
+            StringValue: 'verification-engine',
           },
-          'Status': {
+          Status: {
             DataType: 'String',
-            StringValue: status
-          }
-        }
+            StringValue: status,
+          },
+        },
       });
     } catch (error) {
       logger.error('Failed to send backup notification', { error });
     }
   }
-} 
+}

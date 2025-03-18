@@ -76,6 +76,7 @@ npm test
 ### Deployment
 
 1. Configure your environment:
+
    ```bash
    cp .env.example .env
    # Edit .env with your settings
@@ -132,4 +133,4 @@ Comprehensive test suites cover:
 
 ## License
 
-MIT License - see LICENSE file for details 
+MIT License - see LICENSE file for details

@@ -134,13 +134,7 @@ export function createPerformanceDashboard(stack: cdk.Stack): cloudwatch.Dashboa
     ],
   });
 
-  dashboard.addWidgets(
-    apiMetrics,
-    lambdaMetrics,
-    dynamoMetrics,
-    businessMetrics,
-    costMetrics,
-  );
+  dashboard.addWidgets(apiMetrics, lambdaMetrics, dynamoMetrics, businessMetrics, costMetrics);
 
   return dashboard;
-} 
+}

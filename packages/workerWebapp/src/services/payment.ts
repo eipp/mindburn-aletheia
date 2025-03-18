@@ -22,7 +22,11 @@ class PaymentService {
   private readonly MAX_REWARD = '10'; // Maximum reward in TON
   private transactionLogs: TransactionLog[] = [];
 
-  async processReward(taskId: string, workerAddress: string, amount: string): Promise<PaymentResult> {
+  async processReward(
+    taskId: string,
+    workerAddress: string,
+    amount: string
+  ): Promise<PaymentResult> {
     try {
       // Validate amount
       if (!this.isValidAmount(amount)) {
@@ -72,9 +76,7 @@ class PaymentService {
   private isValidAmount(amount: string): boolean {
     const value = parseFloat(amount);
     return (
-      !isNaN(value) &&
-      value >= parseFloat(this.MIN_REWARD) &&
-      value <= parseFloat(this.MAX_REWARD)
+      !isNaN(value) && value >= parseFloat(this.MIN_REWARD) && value <= parseFloat(this.MAX_REWARD)
     );
   }
 
@@ -106,24 +108,22 @@ class PaymentService {
     let logs = this.transactionLogs;
 
     if (address) {
-      logs = logs.filter((log) => log.workerAddress === address);
+      logs = logs.filter(log => log.workerAddress === address);
     }
 
     if (startDate) {
-      logs = logs.filter((log) => log.timestamp >= startDate.getTime());
+      logs = logs.filter(log => log.timestamp >= startDate.getTime());
     }
 
     if (endDate) {
-      logs = logs.filter((log) => log.timestamp <= endDate.getTime());
+      logs = logs.filter(log => log.timestamp <= endDate.getTime());
     }
 
     return logs;
   }
 
   async reconcileTransactions(): Promise<void> {
-    const unconfirmedLogs = this.transactionLogs.filter(
-      (log) => log.status === 'pending'
-    );
+    const unconfirmedLogs = this.transactionLogs.filter(log => log.status === 'pending');
 
     for (const log of unconfirmedLogs) {
       try {
@@ -136,4 +136,4 @@ class PaymentService {
   }
 }
 
-export const paymentService = new PaymentService(); 
+export const paymentService = new PaymentService();

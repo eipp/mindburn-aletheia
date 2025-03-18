@@ -23,4 +23,4 @@ export {
   type PluginReview,
   type PluginAnalytics,
   type SearchOptions,
-} from './marketplace/MarketplaceAPI'; 
+} from './marketplace/MarketplaceAPI';

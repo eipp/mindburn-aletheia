@@ -22,15 +22,12 @@ export class FieldEncryption {
 
     for (const field of sensitiveFields) {
       if (field in data) {
-        const encrypted = await this.encryptField(
-          data[field],
-          dataKey.Plaintext as Buffer
-        );
+        const encrypted = await this.encryptField(data[field], dataKey.Plaintext as Buffer);
         encryptedData[field] = {
           encrypted: encrypted.encryptedData,
           iv: encrypted.iv.toString('base64'),
           tag: encrypted.tag.toString('base64'),
-          encryptedKey: dataKey.CiphertextBlob.toString('base64')
+          encryptedKey: dataKey.CiphertextBlob.toString('base64'),
         };
       }
     }
@@ -53,14 +50,14 @@ export class FieldEncryption {
         const dataKey = await this.decryptDataKey(
           Buffer.from(encryptedField.encryptedKey, 'base64')
         );
-        
+
         const decrypted = await this.decryptField(
           encryptedField.encrypted,
           dataKey,
           Buffer.from(encryptedField.iv, 'base64'),
           Buffer.from(encryptedField.tag, 'base64')
         );
-        
+
         decryptedData[field] = decrypted;
       }
     }
@@ -72,7 +69,7 @@ export class FieldEncryption {
     return this.kms
       .generateDataKey({
         KeyId: this.keyId,
-        KeySpec: 'AES_256'
+        KeySpec: 'AES_256',
       })
       .promise();
   }
@@ -81,10 +78,10 @@ export class FieldEncryption {
     const response = await this.kms
       .decrypt({
         CiphertextBlob: encryptedKey,
-        KeyId: this.keyId
+        KeyId: this.keyId,
       })
       .promise();
-    
+
     return response.Plaintext as Buffer;
   }
 
@@ -98,16 +95,13 @@ export class FieldEncryption {
   }> {
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-    
-    const encrypted = Buffer.concat([
-      cipher.update(JSON.stringify(data), 'utf8'),
-      cipher.final()
-    ]);
+
+    const encrypted = Buffer.concat([cipher.update(JSON.stringify(data), 'utf8'), cipher.final()]);
 
     return {
       encryptedData: encrypted.toString('base64'),
       iv,
-      tag: cipher.getAuthTag()
+      tag: cipher.getAuthTag(),
     };
   }
 
@@ -119,12 +113,12 @@ export class FieldEncryption {
   ): Promise<any> {
     const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
     decipher.setAuthTag(tag);
-    
+
     const decrypted = Buffer.concat([
       decipher.update(Buffer.from(encryptedData, 'base64')),
-      decipher.final()
+      decipher.final(),
     ]);
 
     return JSON.parse(decrypted.toString('utf8'));
   }
-} 
+}

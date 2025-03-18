@@ -6,7 +6,7 @@ import {
   FraudDetectionResult,
   SuspiciousActivity,
   FraudPattern,
-  WorkerBehavior
+  WorkerBehavior,
 } from '../types';
 import { AuctionMetricsService } from './auctionMetricsService';
 
@@ -35,10 +35,7 @@ export class AuctionFraudDetectionService {
   private readonly maxSimilarBids = 3;
   private readonly minTimeBetweenBids = 1000; // 1 second
 
-  constructor(
-    logger: Logger,
-    metricsService: AuctionMetricsService
-  ) {
+  constructor(logger: Logger, metricsService: AuctionMetricsService) {
     this.logger = logger.child({ service: 'AuctionFraudDetection' });
     this.metricsService = metricsService;
   }
@@ -59,7 +56,7 @@ export class AuctionFraudDetectionService {
           type: 'SUSPICIOUS_BID_PATTERN',
           description: 'Detected suspicious bidding patterns',
           evidence: bidPatterns,
-          severity: 'MEDIUM'
+          severity: 'MEDIUM',
         });
       }
 
@@ -70,7 +67,7 @@ export class AuctionFraudDetectionService {
           type: 'WORKER_COLLUSION',
           description: 'Detected potential worker collusion',
           evidence: collusion,
-          severity: 'HIGH'
+          severity: 'HIGH',
         });
       }
 
@@ -81,7 +78,7 @@ export class AuctionFraudDetectionService {
           type: 'AUTOMATED_BIDDING',
           description: 'Detected potential automated bidding',
           evidence: automatedBids,
-          severity: 'HIGH'
+          severity: 'HIGH',
         });
       }
 
@@ -100,12 +97,12 @@ export class AuctionFraudDetectionService {
         suspiciousActivities,
         riskLevel,
         workerBehaviorAnalysis: workerBehaviors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       this.logger.error('Fraud detection analysis failed', {
         error,
-        auctionId
+        auctionId,
       });
       throw error;
     }
@@ -131,7 +128,7 @@ export class AuctionFraudDetectionService {
           workerId,
           type: 'REPEATED_SUBMISSIONS',
           submissionIds: rapidBids.map(bid => bid.metadata?.submissionId || ''),
-          confidence: 0.9
+          confidence: 0.9,
         });
       }
 
@@ -142,7 +139,7 @@ export class AuctionFraudDetectionService {
           workerId,
           type: 'TIMING_PATTERN',
           submissionIds: systematicBids.map(bid => bid.metadata?.submissionId || ''),
-          confidence: 0.85
+          confidence: 0.85,
         });
       }
     }
@@ -179,7 +176,7 @@ export class AuctionFraudDetectionService {
           workerId,
           type: 'ANSWER_PATTERN',
           submissionIds: Array.from(group),
-          confidence: 0.8
+          confidence: 0.8,
         });
       }
     }
@@ -205,7 +202,7 @@ export class AuctionFraudDetectionService {
           workerId,
           type: 'TIMING_PATTERN',
           submissionIds: bids.map(bid => bid.metadata?.submissionId || ''),
-          confidence: 0.95
+          confidence: 0.95,
         });
       }
     }
@@ -227,7 +224,7 @@ export class AuctionFraudDetectionService {
         workerId,
         type: 'ANSWER_PATTERN',
         submissionIds: workerBids.map(bid => bid.metadata?.submissionId || ''),
-        confidence: 0.7
+        confidence: 0.7,
       });
       riskScore += 0.3;
     }
@@ -238,7 +235,7 @@ export class AuctionFraudDetectionService {
         workerId,
         type: 'TIMING_PATTERN',
         submissionIds: workerBids.map(bid => bid.metadata?.submissionId || ''),
-        confidence: 0.8
+        confidence: 0.8,
       });
       riskScore += 0.4;
     }
@@ -247,19 +244,17 @@ export class AuctionFraudDetectionService {
       workerId,
       riskScore,
       patterns,
-      lastAnalysis: new Date().toISOString()
+      lastAnalysis: new Date().toISOString(),
     };
   }
 
-  private calculateRiskLevel(
-    activities: SuspiciousActivity[]
-  ): 'LOW' | 'MEDIUM' | 'HIGH' {
+  private calculateRiskLevel(activities: SuspiciousActivity[]): 'LOW' | 'MEDIUM' | 'HIGH' {
     if (activities.length === 0) return 'LOW';
 
     const severityScores = {
-      'LOW': 1,
-      'MEDIUM': 2,
-      'HIGH': 3
+      LOW: 1,
+      MEDIUM: 2,
+      HIGH: 3,
     };
 
     const totalScore = activities.reduce(
@@ -299,8 +294,8 @@ export class AuctionFraudDetectionService {
     }
 
     // Check for consistent increments
-    const isSystematic = increments.every((inc, i) => 
-      i === 0 || Math.abs(inc - increments[i - 1]) < 0.01
+    const isSystematic = increments.every(
+      (inc, i) => i === 0 || Math.abs(inc - increments[i - 1]) < 0.01
     );
 
     if (isSystematic && increments.length > 0) {
@@ -328,8 +323,8 @@ export class AuctionFraudDetectionService {
 
     // Check if intervals are consistent
     const averageInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    return intervals.every(interval => 
-      Math.abs(interval - averageInterval) < this.minTimeBetweenBids
+    return intervals.every(
+      interval => Math.abs(interval - averageInterval) < this.minTimeBetweenBids
     );
   }
 
@@ -362,4 +357,4 @@ export class AuctionFraudDetectionService {
 
     return deviation / average < 0.1; // Suspiciously consistent timing
   }
-} 
+}

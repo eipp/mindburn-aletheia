@@ -3,7 +3,11 @@ import { DynamoDB } from 'aws-sdk';
 import { VerificationEngine } from '../verification/VerificationEngine';
 import { FraudDetector } from '../verification/FraudDetector';
 import { MetricsCollector } from '../verification/MetricsCollector';
-import { VerificationStrategy, VerificationConfig, VerificationContext } from '../verification/types';
+import {
+  VerificationStrategy,
+  VerificationConfig,
+  VerificationContext,
+} from '../verification/types';
 
 interface VerificationRequest {
   taskId: string;
@@ -15,19 +19,17 @@ interface VerificationRequest {
   context?: Partial<VerificationContext>;
 }
 
-export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const request = JSON.parse(event.body || '{}') as VerificationRequest;
-    
+
     // Validate request
     if (!request.taskId || !request.taskType || !request.content) {
       return {
         statusCode: 400,
         body: JSON.stringify({
-          error: 'Missing required fields: taskId, taskType, content'
-        })
+          error: 'Missing required fields: taskId, taskType, content',
+        }),
       };
     }
 
@@ -56,8 +58,8 @@ export const handler = async (
             statusCode: 403,
             body: JSON.stringify({
               error: 'Suspicious activity detected',
-              details: fraudCheck.reasons
-            })
+              details: fraudCheck.reasons,
+            }),
           };
         }
       }
@@ -70,13 +72,13 @@ export const handler = async (
         workerId: request.workerId,
         strategy: request.strategy,
         config: request.config || {},
-        context: request.context || {}
+        context: request.context || {},
       });
 
       // Update metrics if worker verification
       if (request.workerId) {
         const processingTime = Date.now() - startTime;
-        
+
         // Update fraud check with actual decision
         await fraudDetector.detectFraud(
           request.workerId,
@@ -97,39 +99,36 @@ export const handler = async (
         statusCode: 200,
         body: JSON.stringify({
           taskId: request.taskId,
-          result: verificationResult
-        })
+          result: verificationResult,
+        }),
       };
     } catch (error) {
       console.error('Verification error:', error);
-      
+
       return {
         statusCode: 500,
         body: JSON.stringify({
           error: 'Verification process failed',
-          details: error.message
-        })
+          details: error.message,
+        }),
       };
     }
   } catch (error) {
     console.error('Handler error:', error);
-    
+
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: 'Internal server error',
-        details: error.message
-      })
+        details: error.message,
+      }),
     };
   }
 };
 
-async function saveVerificationResult(
-  request: VerificationRequest,
-  result: any
-): Promise<void> {
+async function saveVerificationResult(request: VerificationRequest, result: any): Promise<void> {
   const dynamodb = new DynamoDB.DocumentClient();
-  
+
   const item = {
     taskId: request.taskId,
     workerId: request.workerId || 'SYSTEM',
@@ -139,16 +138,18 @@ async function saveVerificationResult(
     explanation: result.explanation,
     processingTime: result.processingTime,
     contributors: result.contributors,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   try {
-    await dynamodb.put({
-      TableName: 'Results',
-      Item: item
-    }).promise();
+    await dynamodb
+      .put({
+        TableName: 'Results',
+        Item: item,
+      })
+      .promise();
   } catch (error) {
     console.error('Error saving verification result:', error);
     throw error;
   }
-} 
+}

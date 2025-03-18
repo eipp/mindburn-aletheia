@@ -82,21 +82,18 @@ export class PluginValidator {
   ): Promise<void> {
     if (!manifest.dependencies) return;
 
-    const disallowedDeps = Object.keys(manifest.dependencies)
-      .filter(dep => !this.allowedDependencies.has(dep));
+    const disallowedDeps = Object.keys(manifest.dependencies).filter(
+      dep => !this.allowedDependencies.has(dep)
+    );
 
     if (disallowedDeps.length > 0) {
-      result.errors.push(
-        `Disallowed dependencies found: ${disallowedDeps.join(', ')}`
-      );
+      result.errors.push(`Disallowed dependencies found: ${disallowedDeps.join(', ')}`);
     }
 
     // Check dependency versions
     for (const [dep, version] of Object.entries(manifest.dependencies)) {
       if (version.startsWith('^') || version.startsWith('~')) {
-        result.warnings.push(
-          `Loose version specified for ${dep}. Consider using exact versions.`
-        );
+        result.warnings.push(`Loose version specified for ${dep}. Consider using exact versions.`);
       }
     }
   }
@@ -105,12 +102,7 @@ export class PluginValidator {
     manifest: PluginManifest,
     result: ValidationResult
   ): Promise<void> {
-    const validPermissions = new Set([
-      'network',
-      'storage',
-      'visualization',
-      'analytics',
-    ]);
+    const validPermissions = new Set(['network', 'storage', 'visualization', 'analytics']);
 
     for (const permission of manifest.permissions) {
       if (!validPermissions.has(permission)) {
@@ -119,10 +111,7 @@ export class PluginValidator {
     }
 
     // Check for permission combinations that might be suspicious
-    if (
-      manifest.permissions.includes('network') &&
-      manifest.permissions.includes('storage')
-    ) {
+    if (manifest.permissions.includes('network') && manifest.permissions.includes('storage')) {
       result.warnings.push(
         'Plugin requests both network and storage permissions. Ensure this is necessary.'
       );
@@ -147,23 +136,18 @@ export class PluginValidator {
     result.fileHashes = hashes;
   }
 
-  private async validateSourceCode(
-    pluginPath: string,
-    result: ValidationResult
-  ): Promise<void> {
+  private async validateSourceCode(pluginPath: string, result: ValidationResult): Promise<void> {
     const files = await this.getAllFiles(pluginPath);
-    
+
     for (const file of files) {
       if (!file.endsWith('.ts') && !file.endsWith('.js')) continue;
 
       const content = await readFile(file, 'utf8');
-      
+
       // Check for banned patterns
       for (const [rule, pattern] of Object.entries(this.securityRules)) {
         if (pattern.test(content)) {
-          result.errors.push(
-            `Security violation in ${file}: ${rule}`
-          );
+          result.errors.push(`Security violation in ${file}: ${rule}`);
         }
       }
 
@@ -175,21 +159,17 @@ export class PluginValidator {
         });
 
         traverse(ast, {
-          ImportDeclaration: (path) => {
+          ImportDeclaration: path => {
             const importName = path.node.source.value;
             if (this.bannedImports.has(importName)) {
-              result.errors.push(
-                `Banned import '${importName}' found in ${file}`
-              );
+              result.errors.push(`Banned import '${importName}' found in ${file}`);
             }
           },
-          CallExpression: (path) => {
+          CallExpression: path => {
             if (path.node.callee.type === 'Identifier') {
               const funcName = path.node.callee.name;
               if (funcName === 'setTimeout' || funcName === 'setInterval') {
-                result.warnings.push(
-                  `Timer usage found in ${file}. Ensure proper cleanup.`
-                );
+                result.warnings.push(`Timer usage found in ${file}. Ensure proper cleanup.`);
               }
             }
           },
@@ -200,16 +180,11 @@ export class PluginValidator {
     }
   }
 
-  private async runSecurityScans(
-    pluginPath: string,
-    result: ValidationResult
-  ): Promise<void> {
+  private async runSecurityScans(pluginPath: string, result: ValidationResult): Promise<void> {
     // Scan for known vulnerabilities in dependencies
     try {
       const packageLockPath = path.join(pluginPath, 'package-lock.json');
-      const packageLock = JSON.parse(
-        await readFile(packageLockPath, 'utf8')
-      );
+      const packageLock = JSON.parse(await readFile(packageLockPath, 'utf8'));
 
       // Add dependency vulnerability scanning logic here
       // This would typically integrate with a vulnerability database
@@ -229,26 +204,18 @@ export class PluginValidator {
       const content = await readFile(file, 'utf8');
       for (const pattern of sensitivePatterns) {
         if (pattern.test(content)) {
-          result.warnings.push(
-            `Possible sensitive data found in ${file}`
-          );
+          result.warnings.push(`Possible sensitive data found in ${file}`);
         }
       }
     }
   }
 
-  private async validateTypeScript(
-    pluginPath: string,
-    result: ValidationResult
-  ): Promise<void> {
+  private async validateTypeScript(pluginPath: string, result: ValidationResult): Promise<void> {
     // Add TypeScript validation logic
     // This would typically use the TypeScript compiler API
   }
 
-  private async runESLint(
-    pluginPath: string,
-    result: ValidationResult
-  ): Promise<void> {
+  private async runESLint(pluginPath: string, result: ValidationResult): Promise<void> {
     const eslint = new ESLint({
       useEslintrc: false,
       overrideConfig: {
@@ -261,20 +228,14 @@ export class PluginValidator {
       },
     });
 
-    const results = await eslint.lintFiles([
-      path.join(pluginPath, '**/*.{js,ts}'),
-    ]);
+    const results = await eslint.lintFiles([path.join(pluginPath, '**/*.{js,ts}')]);
 
     for (const lintResult of results) {
       for (const message of lintResult.messages) {
         if (message.severity === 2) {
-          result.errors.push(
-            `ESLint error in ${lintResult.filePath}: ${message.message}`
-          );
+          result.errors.push(`ESLint error in ${lintResult.filePath}: ${message.message}`);
         } else {
-          result.warnings.push(
-            `ESLint warning in ${lintResult.filePath}: ${message.message}`
-          );
+          result.warnings.push(`ESLint warning in ${lintResult.filePath}: ${message.message}`);
         }
       }
     }
@@ -306,4 +267,4 @@ export class PluginValidator {
 
     return files;
   }
-} 
+}

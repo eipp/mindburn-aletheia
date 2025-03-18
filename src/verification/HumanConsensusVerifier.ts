@@ -24,9 +24,11 @@ export class HumanConsensusVerifier {
     try {
       // Get all verifications for this task
       const verifications = await this.getVerifications(taskId);
-      
+
       if (verifications.length < this.requiredConsensus) {
-        throw new Error(`Insufficient verifications: ${verifications.length}/${this.requiredConsensus}`);
+        throw new Error(
+          `Insufficient verifications: ${verifications.length}/${this.requiredConsensus}`
+        );
       }
 
       // Calculate weighted consensus
@@ -41,8 +43,8 @@ export class HumanConsensusVerifier {
           type: 'HUMAN',
           workerId: v.workerId,
           expertiseLevel: v.expertiseLevel,
-          confidence: v.confidence
-        }))
+          confidence: v.confidence,
+        })),
       };
     } catch (error) {
       console.error('Human consensus verification error:', error);
@@ -51,13 +53,15 @@ export class HumanConsensusVerifier {
   }
 
   private async getVerifications(taskId: string): Promise<HumanVerification[]> {
-    const result = await this.dynamodb.query({
-      TableName: this.resultsTable,
-      KeyConditionExpression: 'taskId = :taskId',
-      ExpressionAttributeValues: {
-        ':taskId': taskId
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: this.resultsTable,
+        KeyConditionExpression: 'taskId = :taskId',
+        ExpressionAttributeValues: {
+          ':taskId': taskId,
+        },
+      })
+      .promise();
 
     return result.Items as HumanVerification[];
   }
@@ -70,7 +74,7 @@ export class HumanConsensusVerifier {
     // Weight verifications by expertise level and confidence
     const weightedVotes = verifications.map(v => ({
       ...v,
-      weight: this.calculateWeight(v.expertiseLevel, v.confidence)
+      weight: this.calculateWeight(v.expertiseLevel, v.confidence),
     }));
 
     // Calculate total weights
@@ -85,16 +89,12 @@ export class HumanConsensusVerifier {
     const confidence = Math.abs(approvalRatio - 0.5) * 2; // Scale to 0-1
 
     // Generate explanation
-    const explanation = this.generateConsensusExplanation(
-      weightedVotes,
-      decision,
-      confidence
-    );
+    const explanation = this.generateConsensusExplanation(weightedVotes, decision, confidence);
 
     return {
       decision,
       confidence,
-      explanation
+      explanation,
     };
   }
 
@@ -103,7 +103,7 @@ export class HumanConsensusVerifier {
       [ExpertiseLevel.NOVICE]: 1,
       [ExpertiseLevel.INTERMEDIATE]: 2,
       [ExpertiseLevel.EXPERT]: 3,
-      [ExpertiseLevel.MASTER]: 4
+      [ExpertiseLevel.MASTER]: 4,
     };
 
     return expertiseWeights[expertiseLevel] * confidence;
@@ -119,11 +119,17 @@ export class HumanConsensusVerifier {
     const rejectedCount = totalVerifiers - approvedCount;
 
     const expertApproval = weightedVotes
-      .filter(v => v.expertiseLevel === ExpertiseLevel.EXPERT || v.expertiseLevel === ExpertiseLevel.MASTER)
+      .filter(
+        v =>
+          v.expertiseLevel === ExpertiseLevel.EXPERT || v.expertiseLevel === ExpertiseLevel.MASTER
+      )
       .filter(v => v.decision === 'APPROVED').length;
 
     const expertRejection = weightedVotes
-      .filter(v => v.expertiseLevel === ExpertiseLevel.EXPERT || v.expertiseLevel === ExpertiseLevel.MASTER)
+      .filter(
+        v =>
+          v.expertiseLevel === ExpertiseLevel.EXPERT || v.expertiseLevel === ExpertiseLevel.MASTER
+      )
       .filter(v => v.decision === 'REJECTED').length;
 
     // Combine key explanations from verifiers
@@ -133,11 +139,13 @@ export class HumanConsensusVerifier {
       .map(v => v.explanation)
       .join(' ');
 
-    return `Consensus ${decision} with ${confidence.toFixed(2)} confidence. ` +
-           `${approvedCount}/${totalVerifiers} verifiers approved, ` +
-           `including ${expertApproval} experts. ` +
-           `${rejectedCount}/${totalVerifiers} verifiers rejected, ` +
-           `including ${expertRejection} experts. ` +
-           `Key observations: ${keyExplanations}`;
+    return (
+      `Consensus ${decision} with ${confidence.toFixed(2)} confidence. ` +
+      `${approvedCount}/${totalVerifiers} verifiers approved, ` +
+      `including ${expertApproval} experts. ` +
+      `${rejectedCount}/${totalVerifiers} verifiers rejected, ` +
+      `including ${expertRejection} experts. ` +
+      `Key observations: ${keyExplanations}`
+    );
   }
-} 
+}

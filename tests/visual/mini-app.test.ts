@@ -56,4 +56,4 @@ test.describe('Mini App Visual Tests', () => {
       maxDiffPixelRatio: 0.01,
     });
   });
-}); 
+});

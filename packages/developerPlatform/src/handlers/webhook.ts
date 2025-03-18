@@ -13,14 +13,14 @@ export async function createWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -29,7 +29,7 @@ export async function createWebhook(event: APIGatewayProxyEvent): Promise<APIGat
 
     return {
       statusCode: 201,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Webhook creation failed', { error });
@@ -37,16 +37,16 @@ export async function createWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request data',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -57,7 +57,7 @@ export async function getWebhook(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -65,7 +65,7 @@ export async function getWebhook(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!webhookId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing webhook ID' })
+        body: JSON.stringify({ error: 'Missing webhook ID' }),
       };
     }
 
@@ -73,7 +73,7 @@ export async function getWebhook(event: APIGatewayProxyEvent): Promise<APIGatewa
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get webhook', { error });
@@ -82,20 +82,20 @@ export async function getWebhook(event: APIGatewayProxyEvent): Promise<APIGatewa
       if (error.message === 'Webhook not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to webhook') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -106,7 +106,7 @@ export async function listWebhooks(event: APIGatewayProxyEvent): Promise<APIGate
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -114,14 +114,14 @@ export async function listWebhooks(event: APIGatewayProxyEvent): Promise<APIGate
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to list webhooks', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -132,7 +132,7 @@ export async function updateWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -140,14 +140,14 @@ export async function updateWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (!webhookId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing webhook ID' })
+        body: JSON.stringify({ error: 'Missing webhook ID' }),
       };
     }
 
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -156,7 +156,7 @@ export async function updateWebhook(event: APIGatewayProxyEvent): Promise<APIGat
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Webhook updated successfully' })
+      body: JSON.stringify({ message: 'Webhook updated successfully' }),
     };
   } catch (error) {
     logger.error('Failed to update webhook', { error });
@@ -164,10 +164,10 @@ export async function updateWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request data',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
@@ -175,20 +175,20 @@ export async function updateWebhook(event: APIGatewayProxyEvent): Promise<APIGat
       if (error.message === 'Webhook not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to webhook') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -199,7 +199,7 @@ export async function deleteWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -207,7 +207,7 @@ export async function deleteWebhook(event: APIGatewayProxyEvent): Promise<APIGat
     if (!webhookId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing webhook ID' })
+        body: JSON.stringify({ error: 'Missing webhook ID' }),
       };
     }
 
@@ -215,7 +215,7 @@ export async function deleteWebhook(event: APIGatewayProxyEvent): Promise<APIGat
 
     return {
       statusCode: 204,
-      body: ''
+      body: '',
     };
   } catch (error) {
     logger.error('Failed to delete webhook', { error });
@@ -224,20 +224,20 @@ export async function deleteWebhook(event: APIGatewayProxyEvent): Promise<APIGat
       if (error.message === 'Webhook not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to webhook') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -248,7 +248,7 @@ export async function listDeliveries(event: APIGatewayProxyEvent): Promise<APIGa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -256,11 +256,11 @@ export async function listDeliveries(event: APIGatewayProxyEvent): Promise<APIGa
     if (!webhookId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing webhook ID' })
+        body: JSON.stringify({ error: 'Missing webhook ID' }),
       };
     }
 
-    const limit = event.queryStringParameters?.limit 
+    const limit = event.queryStringParameters?.limit
       ? parseInt(event.queryStringParameters.limit)
       : undefined;
 
@@ -268,7 +268,7 @@ export async function listDeliveries(event: APIGatewayProxyEvent): Promise<APIGa
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to list webhook deliveries', { error });
@@ -277,20 +277,20 @@ export async function listDeliveries(event: APIGatewayProxyEvent): Promise<APIGa
       if (error.message === 'Webhook not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to webhook') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-} 
+}

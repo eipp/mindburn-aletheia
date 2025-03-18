@@ -41,7 +41,11 @@ export class CostOptimizationManager {
     this.logger = new Logger();
   }
 
-  async analyzeResourceUtilization(region: string, startTime: Date, endTime: Date): Promise<ResourceUtilization> {
+  async analyzeResourceUtilization(
+    region: string,
+    startTime: Date,
+    endTime: Date
+  ): Promise<ResourceUtilization> {
     try {
       const metricData = await this.getCloudWatchMetrics(region, startTime, endTime);
       return this.processMetricData(metricData);
@@ -62,22 +66,22 @@ export class CostOptimizationManager {
           MetricStat: {
             Metric: {
               Namespace: 'AWS/Lambda',
-              MetricName: 'ConcurrentExecutions'
+              MetricName: 'ConcurrentExecutions',
             },
             Period: 300,
-            Stat: 'Average'
-          }
+            Stat: 'Average',
+          },
         },
         {
           Id: 'lambda_provisioned_util',
           MetricStat: {
             Metric: {
               Namespace: 'AWS/Lambda',
-              MetricName: 'ProvisionedConcurrencyUtilization'
+              MetricName: 'ProvisionedConcurrencyUtilization',
             },
             Period: 300,
-            Stat: 'Average'
-          }
+            Stat: 'Average',
+          },
         },
         // DynamoDB metrics
         {
@@ -85,22 +89,22 @@ export class CostOptimizationManager {
           MetricStat: {
             Metric: {
               Namespace: 'AWS/DynamoDB',
-              MetricName: 'ConsumedReadCapacityUnits'
+              MetricName: 'ConsumedReadCapacityUnits',
             },
             Period: 300,
-            Stat: 'Sum'
-          }
+            Stat: 'Sum',
+          },
         },
         {
           Id: 'dynamodb_write_util',
           MetricStat: {
             Metric: {
               Namespace: 'AWS/DynamoDB',
-              MetricName: 'ConsumedWriteCapacityUnits'
+              MetricName: 'ConsumedWriteCapacityUnits',
             },
             Period: 300,
-            Stat: 'Sum'
-          }
+            Stat: 'Sum',
+          },
         },
         // API Gateway metrics
         {
@@ -108,11 +112,11 @@ export class CostOptimizationManager {
           MetricStat: {
             Metric: {
               Namespace: 'AWS/ApiGateway',
-              MetricName: 'CacheHitCount'
+              MetricName: 'CacheHitCount',
             },
             Period: 300,
-            Stat: 'Sum'
-          }
+            Stat: 'Sum',
+          },
         },
         // CloudFront metrics
         {
@@ -120,13 +124,13 @@ export class CostOptimizationManager {
           MetricStat: {
             Metric: {
               Namespace: 'AWS/CloudFront',
-              MetricName: 'Requests'
+              MetricName: 'Requests',
             },
             Period: 300,
-            Stat: 'Sum'
-          }
-        }
-      ]
+            Stat: 'Sum',
+          },
+        },
+      ],
     });
 
     return this.cloudWatch.send(command);
@@ -136,26 +140,29 @@ export class CostOptimizationManager {
     return {
       lambda: {
         concurrentExecutions: this.extractMetricValue(metricData, 'lambda_concurrent'),
-        provisionedConcurrencyUtilization: this.extractMetricValue(metricData, 'lambda_provisioned_util'),
+        provisionedConcurrencyUtilization: this.extractMetricValue(
+          metricData,
+          'lambda_provisioned_util'
+        ),
         coldStarts: 0, // Calculated separately
-        averageMemoryUsage: 0 // Calculated separately
+        averageMemoryUsage: 0, // Calculated separately
       },
       dynamodb: {
         readCapacityUtilization: this.extractMetricValue(metricData, 'dynamodb_read_util'),
         writeCapacityUtilization: this.extractMetricValue(metricData, 'dynamodb_write_util'),
         storageUtilization: 0, // Calculated separately
-        daxUtilization: 0 // Calculated separately
+        daxUtilization: 0, // Calculated separately
       },
       apiGateway: {
         cacheHitRate: this.extractMetricValue(metricData, 'api_cache_hits'),
         throttledRequests: 0, // Calculated separately
-        averageLatency: 0 // Calculated separately
+        averageLatency: 0, // Calculated separately
       },
       cloudFront: {
         cacheHitRate: 0, // Calculated separately
         dataTransfer: 0, // Calculated separately
-        requests: this.extractMetricValue(metricData, 'cf_requests')
-      }
+        requests: this.extractMetricValue(metricData, 'cf_requests'),
+      },
     };
   }
 
@@ -176,7 +183,10 @@ export class CostOptimizationManager {
     }
   }
 
-  private async optimizeLambda(region: string, utilization: ResourceUtilization['lambda']): Promise<void> {
+  private async optimizeLambda(
+    region: string,
+    utilization: ResourceUtilization['lambda']
+  ): Promise<void> {
     const lambdaConfig = this.config.getLambdaConfig();
 
     // Adjust provisioned concurrency based on utilization
@@ -192,7 +202,10 @@ export class CostOptimizationManager {
     }
   }
 
-  private async optimizeDynamoDB(region: string, utilization: ResourceUtilization['dynamodb']): Promise<void> {
+  private async optimizeDynamoDB(
+    region: string,
+    utilization: ResourceUtilization['dynamodb']
+  ): Promise<void> {
     const dynamoConfig = this.config.getDynamoDBConfig();
 
     // Adjust read/write capacity based on utilization
@@ -207,7 +220,10 @@ export class CostOptimizationManager {
     }
   }
 
-  private async optimizeApiGateway(region: string, utilization: ResourceUtilization['apiGateway']): Promise<void> {
+  private async optimizeApiGateway(
+    region: string,
+    utilization: ResourceUtilization['apiGateway']
+  ): Promise<void> {
     const apiConfig = this.config.getApiGatewayConfig();
 
     // Adjust cache size based on hit rate
@@ -235,7 +251,10 @@ export class CostOptimizationManager {
     }
   }
 
-  async generateCostReport(region: string, utilization: ResourceUtilization): Promise<{
+  async generateCostReport(
+    region: string,
+    utilization: ResourceUtilization
+  ): Promise<{
     currentCosts: number;
     projectedSavings: number;
     recommendations: string[];
@@ -268,7 +287,7 @@ export class CostOptimizationManager {
     return {
       currentCosts: costProjection.estimatedCosts.total,
       projectedSavings,
-      recommendations
+      recommendations,
     };
   }
-} 
+}

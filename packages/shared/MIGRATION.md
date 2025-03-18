@@ -5,6 +5,7 @@ This guide outlines the changes made to reduce code duplication and standardize 
 ## Core Changes
 
 ### 1. Shared Types
+
 All common types are now centralized in `@mindburn/shared`:
 
 ```typescript
@@ -14,11 +15,12 @@ import {
   BaseTask,
   VerificationTask,
   WorkerTask,
-  BaseVerificationResult
+  BaseVerificationResult,
 } from '@mindburn/shared';
 ```
 
 #### Migration Steps:
+
 1. Remove local type definitions
 2. Import types from `@mindburn/shared`
 3. Extend base types for package-specific needs:
@@ -40,6 +42,7 @@ interface CustomTask extends BaseTask {
 ```
 
 ### 2. TON Utilities
+
 Consolidated TON-related utilities into a single namespace:
 
 ```typescript
@@ -56,7 +59,7 @@ const result = ton.validation.transaction({
   amount,
   address,
   balance,
-  minWithdrawal
+  minWithdrawal,
 });
 
 // Fee calculation
@@ -64,18 +67,20 @@ const fee = ton.calculation.fee(amount);
 ```
 
 #### Migration Steps:
+
 1. Remove local TON utility functions
 2. Import from `@mindburn/shared`
 3. Update function calls to use the new namespace
 
 ### 3. Configuration Validation
+
 New type-safe configuration system:
 
 ```typescript
 import {
   createConfigValidator,
   createEnvironmentTransformer,
-  createSecurityValidator
+  createSecurityValidator,
 } from '@mindburn/shared';
 
 const validateConfig = createConfigValidator({
@@ -84,16 +89,15 @@ const validateConfig = createConfigValidator({
   transformers: [
     createEnvironmentTransformer({
       apiKey: 'MY_API_KEY',
-      endpoint: 'MY_ENDPOINT'
-    })
+      endpoint: 'MY_ENDPOINT',
+    }),
   ],
-  validators: [
-    createSecurityValidator(['apiKey'])
-  ]
+  validators: [createSecurityValidator(['apiKey'])],
 });
 ```
 
 #### Migration Steps:
+
 1. Define Zod schema for your config
 2. Create config validator using the factory
 3. Remove old validation logic
@@ -102,6 +106,7 @@ const validateConfig = createConfigValidator({
 ## Directory Structure Changes
 
 ### Test Organization
+
 - Consolidated test directories
 - Standardized test file naming
 - Added shared test utilities
@@ -116,7 +121,9 @@ const validateConfig = createConfigValidator({
 ```
 
 ### Package Structure
+
 Updated package organization for better separation of concerns:
+
 ```
 /packages
   /shared             # Common utilities and types
@@ -151,6 +158,7 @@ Updated package organization for better separation of concerns:
 ## Examples
 
 ### Configuration Management
+
 ```typescript
 // config/model-registry.ts
 import { z } from 'zod';
@@ -158,19 +166,20 @@ import { createConfigValidator } from '@mindburn/shared';
 
 const schema = z.object({
   tableName: z.string(),
-  maxItems: z.number().min(1)
+  maxItems: z.number().min(1),
 });
 
 export const validateConfig = createConfigValidator({
   schema,
   defaultConfig: {
     tableName: 'models',
-    maxItems: 1000
-  }
+    maxItems: 1000,
+  },
 });
 ```
 
 ### TON Integration
+
 ```typescript
 // services/payment.ts
 import { ton, BigNumber, PaymentResult } from '@mindburn/shared';
@@ -182,7 +191,7 @@ export async function processPayment(
   const validation = ton.validation.transaction({
     amount,
     address,
-    balance: await getBalance()
+    balance: await getBalance(),
   });
 
   if (!validation.isValid) {
@@ -195,6 +204,7 @@ export async function processPayment(
 ```
 
 ### Type Extension
+
 ```typescript
 // types/verification.ts
 import { BaseVerificationResult } from '@mindburn/shared';
@@ -210,6 +220,7 @@ export interface CustomVerification extends BaseVerificationResult {
 ## Need Help?
 
 If you encounter any issues during migration:
+
 1. Check the test files for usage examples
 2. Review the TypeScript types for proper usage
 3. Consult the shared package documentation
@@ -218,7 +229,8 @@ If you encounter any issues during migration:
 ## Contributing
 
 When adding new functionality:
+
 1. Consider if it should be in the shared package
 2. Follow the established patterns
 3. Add comprehensive tests
-4. Update this migration guide 
+4. Update this migration guide

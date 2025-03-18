@@ -41,12 +41,15 @@ export class VerificationEngine {
   private streamProcessor: import('./services/stream-processor').ModelStreamProcessor;
 
   constructor() {
-    this.orchestrator = new (require('./orchestrator/verification-orchestrator').VerificationOrchestrator)();
+    this.orchestrator =
+      new (require('./orchestrator/verification-orchestrator').VerificationOrchestrator)();
     this.optimizer = new (require('./services/verification-optimizer').VerificationOptimizer)();
     this.streamProcessor = new (require('./services/stream-processor').ModelStreamProcessor)();
   }
 
-  async verify(request: import('@mindburn/shared').VerificationRequest): Promise<import('@mindburn/shared').VerificationFlow> {
+  async verify(
+    request: import('@mindburn/shared').VerificationRequest
+  ): Promise<import('@mindburn/shared').VerificationFlow> {
     return this.orchestrator.processVerificationRequest(request);
   }
 

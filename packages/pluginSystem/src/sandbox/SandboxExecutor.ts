@@ -23,7 +23,7 @@ export class SandboxExecutor {
     });
 
     // Set up error handling
-    worker.on('error', (error) => {
+    worker.on('error', error => {
       console.error(`Plugin ${manifest.id} worker error:`, error);
       this.unloadPlugin(manifest.id);
     });
@@ -31,7 +31,7 @@ export class SandboxExecutor {
     // Create proxy object that forwards calls to the worker
     const plugin: IPlugin = {
       manifest,
-      initialize: (config) => this.sendToWorker(worker, 'initialize', [config]),
+      initialize: config => this.sendToWorker(worker, 'initialize', [config]),
       terminate: () => this.sendToWorker(worker, 'terminate', []),
     };
 
@@ -39,25 +39,25 @@ export class SandboxExecutor {
     switch (manifest.type) {
       case 'verification':
         Object.assign(plugin, {
-          verify: (data) => this.sendToWorker(worker, 'verify', [data]),
+          verify: data => this.sendToWorker(worker, 'verify', [data]),
           getVerificationMetadata: () => this.sendToWorker(worker, 'getVerificationMetadata', []),
         });
         break;
       case 'data_enrichment':
         Object.assign(plugin, {
-          enrich: (data) => this.sendToWorker(worker, 'enrich', [data]),
+          enrich: data => this.sendToWorker(worker, 'enrich', [data]),
           getSupportedDataTypes: () => this.sendToWorker(worker, 'getSupportedDataTypes', []),
         });
         break;
       case 'visualization':
         Object.assign(plugin, {
-          render: (data) => this.sendToWorker(worker, 'render', [data]),
+          render: data => this.sendToWorker(worker, 'render', [data]),
           getSupportedChartTypes: () => this.sendToWorker(worker, 'getSupportedChartTypes', []),
         });
         break;
       case 'integration':
         Object.assign(plugin, {
-          connect: (credentials) => this.sendToWorker(worker, 'connect', [credentials]),
+          connect: credentials => this.sendToWorker(worker, 'connect', [credentials]),
           disconnect: () => this.sendToWorker(worker, 'disconnect', []),
           execute: (action, params) => this.sendToWorker(worker, 'execute', [action, params]),
         });
@@ -79,7 +79,7 @@ export class SandboxExecutor {
   private sendToWorker(worker: Worker, method: string, args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
       const messageId = Math.random().toString(36).slice(2);
-      
+
       const timeout = setTimeout(() => {
         cleanup();
         reject(new Error('Plugin execution timed out'));
@@ -105,4 +105,4 @@ export class SandboxExecutor {
       worker.postMessage({ id: messageId, method, args });
     });
   }
-} 
+}

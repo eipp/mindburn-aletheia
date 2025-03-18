@@ -6,7 +6,7 @@ import {
   ModelStatus,
   PerformanceMetrics,
   AuditReport,
-  ChangelogEntry
+  ChangelogEntry,
 } from '@mindburn/shared';
 import { z } from 'zod';
 import * as semver from 'semver';
@@ -37,13 +37,15 @@ const ModelMetadataSchema = z.object({
     complianceStatus: z.enum(['compliant', 'pending_review', 'non_compliant']),
     riskLevel: z.enum(['low', 'medium', 'high']),
   }),
-  changelog: z.array(z.object({
-    version: z.string(),
-    date: z.string(),
-    author: z.string(),
-    changes: z.array(z.string()),
-    type: z.enum(['major', 'minor', 'patch']),
-  })),
+  changelog: z.array(
+    z.object({
+      version: z.string(),
+      date: z.string(),
+      author: z.string(),
+      changes: z.array(z.string()),
+      type: z.enum(['major', 'minor', 'patch']),
+    })
+  ),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -73,24 +75,24 @@ export class ModelRegistry {
       // Store model metadata
       await this.storage.put('models', {
         ...metadata,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       // Emit model registration event
       await this.eventBus.emit('model.registered', {
         modelId: metadata.modelId,
         version: metadata.version,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
-      this.logger.info('Model registered successfully', { 
+      this.logger.info('Model registered successfully', {
         modelId: metadata.modelId,
-        version: metadata.version
+        version: metadata.version,
       });
     } catch (error) {
       this.logger.error('Failed to register model', {
         modelId: metadata.modelId,
-        error
+        error,
       });
       throw error;
     }
@@ -106,7 +108,7 @@ export class ModelRegistry {
       this.logger.info('Updating model status', { modelId, version, status });
 
       const model = await this.getModel(modelId, version);
-      
+
       if (!model) {
         throw new Error(`Model not found: ${modelId}@${version}`);
       }
@@ -117,7 +119,7 @@ export class ModelRegistry {
 
       await this.storage.update('models', `${modelId}:${version}`, {
         status,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       await this.eventBus.emit('model.status.updated', {
@@ -126,7 +128,7 @@ export class ModelRegistry {
         oldStatus: model.status,
         newStatus: status,
         approver,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model status updated', { modelId, version, status });
@@ -134,7 +136,7 @@ export class ModelRegistry {
       this.logger.error('Failed to update model status', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
@@ -149,7 +151,7 @@ export class ModelRegistry {
       this.logger.info('Updating performance metrics', { modelId, version });
 
       const model = await this.getModel(modelId, version);
-      
+
       if (!model) {
         throw new Error(`Model not found: ${modelId}@${version}`);
       }
@@ -157,19 +159,19 @@ export class ModelRegistry {
       const updatedPerformance = {
         ...model.performance,
         ...metrics,
-        lastEvaluated: new Date().toISOString()
+        lastEvaluated: new Date().toISOString(),
       };
 
       await this.storage.update('models', `${modelId}:${version}`, {
         performance: updatedPerformance,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       await this.eventBus.emit('model.metrics.updated', {
         modelId,
         version,
         metrics,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Performance metrics updated', { modelId, version });
@@ -177,22 +179,18 @@ export class ModelRegistry {
       this.logger.error('Failed to update performance metrics', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
   }
 
-  async addChangelogEntry(
-    modelId: string,
-    version: string,
-    entry: ChangelogEntry
-  ): Promise<void> {
+  async addChangelogEntry(modelId: string, version: string, entry: ChangelogEntry): Promise<void> {
     try {
       this.logger.info('Adding changelog entry', { modelId, version });
 
       const model = await this.getModel(modelId, version);
-      
+
       if (!model) {
         throw new Error(`Model not found: ${modelId}@${version}`);
       }
@@ -200,19 +198,19 @@ export class ModelRegistry {
       const changelogEntry = {
         ...entry,
         version,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       };
 
       await this.storage.update('models', `${modelId}:${version}`, {
         changelog: [...model.changelog, changelogEntry],
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       await this.eventBus.emit('model.changelog.updated', {
         modelId,
         version,
         entry: changelogEntry,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Changelog entry added', { modelId, version });
@@ -220,22 +218,18 @@ export class ModelRegistry {
       this.logger.error('Failed to add changelog entry', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
   }
 
-  async conductAudit(
-    modelId: string,
-    version: string,
-    audit: AuditReport
-  ): Promise<void> {
+  async conductAudit(modelId: string, version: string, audit: AuditReport): Promise<void> {
     try {
       this.logger.info('Conducting audit', { modelId, version });
 
       const model = await this.getModel(modelId, version);
-      
+
       if (!model) {
         throw new Error(`Model not found: ${modelId}@${version}`);
       }
@@ -244,26 +238,26 @@ export class ModelRegistry {
         ...model.governance,
         lastAudit: new Date().toISOString(),
         complianceStatus: audit.complianceStatus,
-        riskLevel: audit.riskAssessment.level
+        riskLevel: audit.riskAssessment.level,
       };
 
       await this.storage.update('models', `${modelId}:${version}`, {
         governance: updatedGovernance,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       await this.storage.put('audits', {
         modelId,
         version,
         ...audit,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       await this.eventBus.emit('model.audit.completed', {
         modelId,
         version,
         audit,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Audit completed', { modelId, version });
@@ -271,7 +265,7 @@ export class ModelRegistry {
       this.logger.error('Failed to conduct audit', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
@@ -285,25 +279,22 @@ export class ModelRegistry {
     } catch (error) {
       this.logger.error('Failed to list model versions', {
         modelId,
-        error
+        error,
       });
       throw error;
     }
   }
 
-  private async getModel(
-    modelId: string,
-    version: string
-  ): Promise<ModelMetadata | null> {
+  private async getModel(modelId: string, version: string): Promise<ModelMetadata | null> {
     try {
-      return await this.storage.get('models', `${modelId}:${version}`) as ModelMetadata;
+      return (await this.storage.get('models', `${modelId}:${version}`)) as ModelMetadata;
     } catch (error) {
       this.logger.error('Failed to get model', {
         modelId,
         version,
-        error
+        error,
       });
       throw error;
     }
   }
-} 
+}

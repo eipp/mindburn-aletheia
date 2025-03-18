@@ -23,7 +23,7 @@ export class WorkerController {
     } catch (error) {
       this.logger.error('Failed to register worker', {
         error,
-        walletAddress: data.walletAddress
+        walletAddress: data.walletAddress,
       });
       throw new ApiError('Failed to register worker', 400, error);
     }
@@ -41,7 +41,7 @@ export class WorkerController {
     } catch (error) {
       this.logger.error('Failed to fetch worker profile', {
         error,
-        workerId
+        workerId,
       });
       throw new ApiError('Failed to fetch worker profile', 500, error);
     }
@@ -56,16 +56,13 @@ export class WorkerController {
     } catch (error) {
       this.logger.error('Failed to complete worker onboarding', {
         error,
-        workerId
+        workerId,
       });
       throw new ApiError('Failed to complete worker onboarding', 400, error);
     }
   }
 
-  async updateWorkerStatus(
-    workerId: string,
-    status: WorkerStatus
-  ): Promise<WorkerProfile> {
+  async updateWorkerStatus(workerId: string, status: WorkerStatus): Promise<WorkerProfile> {
     try {
       this.logger.info('Updating worker status', { workerId, status });
       const worker = await this.workerService.updateWorkerStatus(workerId, status);
@@ -75,16 +72,13 @@ export class WorkerController {
       this.logger.error('Failed to update worker status', {
         error,
         workerId,
-        status
+        status,
       });
       throw new ApiError('Failed to update worker status', 400, error);
     }
   }
 
-  async reassessWorkerSkills(
-    workerId: string,
-    taskType: string
-  ): Promise<WorkerProfile> {
+  async reassessWorkerSkills(workerId: string, taskType: string): Promise<WorkerProfile> {
     try {
       this.logger.info('Reassessing worker skills', { workerId, taskType });
       const worker = await this.workerService.reassessWorkerSkills(workerId, taskType);
@@ -94,9 +88,9 @@ export class WorkerController {
       this.logger.error('Failed to reassess worker skills', {
         error,
         workerId,
-        taskType
+        taskType,
       });
       throw new ApiError('Failed to reassess worker skills', 400, error);
     }
   }
-} 
+}

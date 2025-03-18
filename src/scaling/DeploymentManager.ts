@@ -39,10 +39,10 @@ export class DeploymentManager {
       // Apply optimizations based on benchmark results
       await this.applyOptimizations(region, analysis);
 
-      this.logger.info('Regional deployment completed', { 
+      this.logger.info('Regional deployment completed', {
         region,
         benchmarkResults,
-        analysis
+        analysis,
       });
     } catch (error) {
       this.logger.error('Regional deployment failed', { error, region });
@@ -102,4 +102,4 @@ export class DeploymentManager {
       throw error;
     }
   }
-} 
+}

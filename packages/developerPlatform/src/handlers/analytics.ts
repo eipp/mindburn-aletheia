@@ -9,7 +9,7 @@ const analyticsService = new AnalyticsService();
 const DateRangeSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  type: z.string().optional()
+  type: z.string().optional(),
 });
 
 export async function getTaskMetrics(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -18,7 +18,7 @@ export async function getTaskMetrics(event: APIGatewayProxyEvent): Promise<APIGa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -26,14 +26,14 @@ export async function getTaskMetrics(event: APIGatewayProxyEvent): Promise<APIGa
     const params = DateRangeSchema.parse({
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
-      type: queryParams.type
+      type: queryParams.type,
     });
 
     const result = await analyticsService.getTaskMetrics(developerId, params);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get task metrics', { error });
@@ -41,27 +41,29 @@ export async function getTaskMetrics(event: APIGatewayProxyEvent): Promise<APIGa
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request parameters',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
 
-export async function getBillingMetrics(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+export async function getBillingMetrics(
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
   try {
     const developerId = event.requestContext.authorizer?.developerId;
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -69,14 +71,14 @@ export async function getBillingMetrics(event: APIGatewayProxyEvent): Promise<AP
     const params = DateRangeSchema.parse({
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
-      type: queryParams.type
+      type: queryParams.type,
     });
 
     const result = await analyticsService.getBillingMetrics(developerId, params);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get billing metrics', { error });
@@ -84,16 +86,16 @@ export async function getBillingMetrics(event: APIGatewayProxyEvent): Promise<AP
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request parameters',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -104,7 +106,7 @@ export async function getUsageQuota(event: APIGatewayProxyEvent): Promise<APIGat
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -112,25 +114,27 @@ export async function getUsageQuota(event: APIGatewayProxyEvent): Promise<APIGat
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get usage quota', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
 
-export async function getDailyTaskBreakdown(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+export async function getDailyTaskBreakdown(
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
   try {
     const developerId = event.requestContext.authorizer?.developerId;
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -138,14 +142,14 @@ export async function getDailyTaskBreakdown(event: APIGatewayProxyEvent): Promis
     const params = DateRangeSchema.parse({
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
-      type: queryParams.type
+      type: queryParams.type,
     });
 
     const result = await analyticsService.getDailyTaskBreakdown(developerId, params);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get daily task breakdown', { error });
@@ -153,16 +157,16 @@ export async function getDailyTaskBreakdown(event: APIGatewayProxyEvent): Promis
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request parameters',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -175,14 +179,14 @@ export async function trackUsage(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!process.env.ALLOWED_INTERNAL_IPS?.split(',').includes(sourceIp)) {
       return {
         statusCode: 403,
-        body: JSON.stringify({ error: 'Access denied' })
+        body: JSON.stringify({ error: 'Access denied' }),
       };
     }
 
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -190,7 +194,7 @@ export async function trackUsage(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!developerId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing developer ID' })
+        body: JSON.stringify({ error: 'Missing developer ID' }),
       };
     }
 
@@ -198,14 +202,14 @@ export async function trackUsage(event: APIGatewayProxyEvent): Promise<APIGatewa
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Usage tracked successfully' })
+      body: JSON.stringify({ message: 'Usage tracked successfully' }),
     };
   } catch (error) {
     logger.error('Failed to track usage', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-} 
+}

@@ -16,22 +16,22 @@ interface TaskNotification {
   metadata?: Record<string, any>;
 }
 
-export const handler: SQSHandler = async (event) => {
+export const handler: SQSHandler = async event => {
   const failedNotifications: string[] = [];
 
   for (const record of event.Records) {
     try {
       const notification: TaskNotification = JSON.parse(record.body);
-      logger.info('Processing task notification', { 
-        taskId: notification.taskId, 
+      logger.info('Processing task notification', {
+        taskId: notification.taskId,
         workerId: notification.workerId,
-        type: notification.type 
+        type: notification.type,
       });
 
       // Get worker details
       const worker = await dynamo.get({
         TableName: process.env.WORKERS_TABLE!,
-        Key: { workerId: notification.workerId }
+        Key: { workerId: notification.workerId },
       });
 
       if (!worker.Item) {
@@ -42,7 +42,7 @@ export const handler: SQSHandler = async (event) => {
       // Get task details
       const task = await dynamo.get({
         TableName: process.env.TASKS_TABLE!,
-        Key: { taskId: notification.taskId }
+        Key: { taskId: notification.taskId },
       });
 
       if (!task.Item) {
@@ -58,7 +58,7 @@ export const handler: SQSHandler = async (event) => {
         chatId: worker.Item.telegramChatId,
         message: message,
         parseMode: 'HTML',
-        replyMarkup: prepareReplyMarkup(notification, task.Item)
+        replyMarkup: prepareReplyMarkup(notification, task.Item),
       });
 
       // Update notification status in DynamoDB
@@ -70,32 +70,33 @@ export const handler: SQSHandler = async (event) => {
           ':notification': {
             type: notification.type,
             taskId: notification.taskId,
-            sentAt: new Date().toISOString()
-          }
-        }
+            sentAt: new Date().toISOString(),
+          },
+        },
       });
 
       // Emit notification sent event
       await eventBridge.putEvents({
-        Entries: [{
-          EventBusName: process.env.EVENT_BUS_NAME,
-          Source: 'task-management',
-          DetailType: 'TaskNotificationSent',
-          Detail: JSON.stringify({
-            taskId: notification.taskId,
-            workerId: notification.workerId,
-            type: notification.type,
-            timestamp: new Date().toISOString()
-          })
-        }]
+        Entries: [
+          {
+            EventBusName: process.env.EVENT_BUS_NAME,
+            Source: 'task-management',
+            DetailType: 'TaskNotificationSent',
+            Detail: JSON.stringify({
+              taskId: notification.taskId,
+              workerId: notification.workerId,
+              type: notification.type,
+              timestamp: new Date().toISOString(),
+            }),
+          },
+        ],
       });
 
       logger.info('Task notification sent successfully', {
         taskId: notification.taskId,
         workerId: notification.workerId,
-        type: notification.type
+        type: notification.type,
       });
-
     } catch (error) {
       logger.error('Failed to process notification', { error, record });
       failedNotifications.push(record.messageId);
@@ -114,28 +115,32 @@ function prepareNotificationMessage(
   worker: any
 ): string {
   const messages = {
-    new_task: `🆕 New Task Available!\n\n` +
-              `Title: ${task.title}\n` +
-              `Type: ${task.type}\n` +
-              `Reward: ${task.reward} TON\n\n` +
-              `Description: ${task.description}\n\n` +
-              `Use the buttons below to accept or reject this task.`,
+    new_task:
+      `🆕 New Task Available!\n\n` +
+      `Title: ${task.title}\n` +
+      `Type: ${task.type}\n` +
+      `Reward: ${task.reward} TON\n\n` +
+      `Description: ${task.description}\n\n` +
+      `Use the buttons below to accept or reject this task.`,
 
-    task_reminder: `⏰ Reminder: You have a pending task!\n\n` +
-                  `Title: ${task.title}\n` +
-                  `Time remaining: ${notification.metadata?.timeRemaining || 'Unknown'}\n\n` +
-                  `Please complete this task soon to maintain your performance metrics.`,
+    task_reminder:
+      `⏰ Reminder: You have a pending task!\n\n` +
+      `Title: ${task.title}\n` +
+      `Time remaining: ${notification.metadata?.timeRemaining || 'Unknown'}\n\n` +
+      `Please complete this task soon to maintain your performance metrics.`,
 
-    task_expiring: `⚠️ Task Expiring Soon!\n\n` +
-                  `Title: ${task.title}\n` +
-                  `Time remaining: ${notification.metadata?.timeRemaining || 'Less than 1 hour'}\n\n` +
-                  `Complete this task soon to avoid it being reassigned.`,
+    task_expiring:
+      `⚠️ Task Expiring Soon!\n\n` +
+      `Title: ${task.title}\n` +
+      `Time remaining: ${notification.metadata?.timeRemaining || 'Less than 1 hour'}\n\n` +
+      `Complete this task soon to avoid it being reassigned.`,
 
-    task_completed: `✅ Task Completed Successfully!\n\n` +
-                   `Title: ${task.title}\n` +
-                   `Reward: ${task.reward} TON\n` +
-                   `Time spent: ${notification.metadata?.timeSpent || 'N/A'}\n\n` +
-                   `Thank you for your contribution! Your reward will be processed shortly.`
+    task_completed:
+      `✅ Task Completed Successfully!\n\n` +
+      `Title: ${task.title}\n` +
+      `Reward: ${task.reward} TON\n` +
+      `Time spent: ${notification.metadata?.timeSpent || 'N/A'}\n\n` +
+      `Thank you for your contribution! Your reward will be processed shortly.`,
   };
 
   return messages[notification.type] || 'Task notification';
@@ -144,29 +149,33 @@ function prepareNotificationMessage(
 function prepareReplyMarkup(notification: TaskNotification, task: any): any {
   if (notification.type === 'new_task') {
     return {
-      inline_keyboard: [[
-        {
-          text: '✅ Accept Task',
-          callback_data: `accept_task:${task.taskId}`
-        },
-        {
-          text: '❌ Reject Task',
-          callback_data: `reject_task:${task.taskId}`
-        }
-      ]]
+      inline_keyboard: [
+        [
+          {
+            text: '✅ Accept Task',
+            callback_data: `accept_task:${task.taskId}`,
+          },
+          {
+            text: '❌ Reject Task',
+            callback_data: `reject_task:${task.taskId}`,
+          },
+        ],
+      ],
     };
   }
 
   if (notification.type === 'task_reminder' || notification.type === 'task_expiring') {
     return {
-      inline_keyboard: [[
-        {
-          text: '🔍 View Task',
-          callback_data: `view_task:${task.taskId}`
-        }
-      ]]
+      inline_keyboard: [
+        [
+          {
+            text: '🔍 View Task',
+            callback_data: `view_task:${task.taskId}`,
+          },
+        ],
+      ],
     };
   }
 
   return null;
-} 
+}

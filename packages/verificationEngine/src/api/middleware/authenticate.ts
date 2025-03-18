@@ -22,11 +22,7 @@ declare global {
   }
 }
 
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -56,11 +52,7 @@ export const authenticate = async (
 
       // Check if user is accessing their own resources
       const requestedWorkerId = req.params.workerId;
-      if (
-        requestedWorkerId &&
-        decoded.role !== 'admin' &&
-        decoded.workerId !== requestedWorkerId
-      ) {
+      if (requestedWorkerId && decoded.role !== 'admin' && decoded.workerId !== requestedWorkerId) {
         logger.warn('Unauthorized access attempt', {
           requestedWorkerId,
           userId: decoded.workerId,
@@ -80,4 +72,4 @@ export const authenticate = async (
     logger.error('Authentication error', { error });
     next(error);
   }
-}; 
+};

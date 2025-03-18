@@ -4,7 +4,7 @@ import { TEST_CONFIG } from './config';
 export default async function globalTeardown() {
   // Get test context
   const testContext = global.__testContext;
-  
+
   // Calculate test duration
   const duration = Date.now() - testContext.startTime;
   console.log(`Test suite completed in ${duration}ms`);
@@ -26,4 +26,4 @@ export default async function globalTeardown() {
     console.error('Error during test teardown:', error);
     throw error;
   }
-} 
+}

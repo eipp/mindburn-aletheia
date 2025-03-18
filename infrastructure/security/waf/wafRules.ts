@@ -107,4 +107,4 @@ export class WafStack extends cdk.Stack {
       description: 'WAF Web ACL ID',
     });
   }
-} 
+}

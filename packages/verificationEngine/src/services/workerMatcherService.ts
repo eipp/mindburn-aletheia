@@ -7,7 +7,7 @@ import {
   TaskType,
   MatchingStrategy,
   WorkerLevel,
-  TaskPriority
+  TaskPriority,
 } from '../types';
 import { MatchingError } from '../errors';
 
@@ -28,7 +28,7 @@ export class WorkerMatcherService {
     availability: 0.15,
     taskHistory: 0.15,
     performance: 0.15,
-    loadBalance: 0.05
+    loadBalance: 0.05,
   };
 
   constructor(logger: Logger) {
@@ -44,7 +44,7 @@ export class WorkerMatcherService {
     try {
       // Filter eligible workers
       const eligibleWorkers = this.filterEligibleWorkers(task, availableWorkers);
-      
+
       if (eligibleWorkers.length < count) {
         throw new MatchingError(
           `Insufficient eligible workers. Need ${count}, found ${eligibleWorkers.length}`
@@ -58,42 +58,34 @@ export class WorkerMatcherService {
       const matches = await Promise.all(
         eligibleWorkers.map(async worker => ({
           worker,
-          score: await this.calculateMatchScore(worker, task, weights)
+          score: await this.calculateMatchScore(worker, task, weights),
         }))
       );
 
       // Sort by score and return top matches
-      return matches
-        .sort((a, b) => b.score - a.score)
-        .slice(0, count);
-
+      return matches.sort((a, b) => b.score - a.score).slice(0, count);
     } catch (error) {
       this.logger.error('Failed to find worker matches', {
         error,
         taskId: task.taskId,
-        strategy
+        strategy,
       });
       throw error;
     }
   }
 
-  private filterEligibleWorkers(
-    task: VerificationTask,
-    workers: WorkerProfile[]
-  ): WorkerProfile[] {
-    return workers.filter(worker => 
-      // Basic eligibility
-      worker.status === WorkerStatus.AVAILABLE &&
-      worker.skills.includes(task.type as TaskType) &&
-      
-      // Skill level check
-      this.meetsSkillRequirement(worker, task) &&
-      
-      // Reputation threshold
-      worker.reputationScore >= this.getMinReputationScore(task) &&
-      
-      // Performance check
-      this.meetsPerformanceRequirement(worker, task)
+  private filterEligibleWorkers(task: VerificationTask, workers: WorkerProfile[]): WorkerProfile[] {
+    return workers.filter(
+      worker =>
+        // Basic eligibility
+        worker.status === WorkerStatus.AVAILABLE &&
+        worker.skills.includes(task.type as TaskType) &&
+        // Skill level check
+        this.meetsSkillRequirement(worker, task) &&
+        // Reputation threshold
+        worker.reputationScore >= this.getMinReputationScore(task) &&
+        // Performance check
+        this.meetsPerformanceRequirement(worker, task)
     );
   }
 
@@ -108,7 +100,7 @@ export class WorkerMatcherService {
       availability: await this.calculateAvailabilityScore(worker),
       taskHistory: await this.calculateTaskHistoryScore(worker, task),
       performance: this.calculatePerformanceScore(worker, task),
-      loadBalance: await this.calculateLoadBalanceScore(worker)
+      loadBalance: await this.calculateLoadBalanceScore(worker),
     };
 
     return Object.entries(scores).reduce(
@@ -117,10 +109,7 @@ export class WorkerMatcherService {
     );
   }
 
-  private calculateSkillScore(
-    worker: WorkerProfile,
-    task: VerificationTask
-  ): number {
+  private calculateSkillScore(worker: WorkerProfile, task: VerificationTask): number {
     const taskType = task.type as TaskType;
     const skillLevel = worker.skillLevels[taskType] || 0;
     const maxSkillLevel = 10; // Assuming 10 is max skill level
@@ -132,9 +121,7 @@ export class WorkerMatcherService {
     return worker.reputationScore;
   }
 
-  private async calculateAvailabilityScore(
-    worker: WorkerProfile
-  ): Promise<number> {
+  private async calculateAvailabilityScore(worker: WorkerProfile): Promise<number> {
     // TODO: Implement availability tracking
     return worker.status === WorkerStatus.AVAILABLE ? 1 : 0;
   }
@@ -145,36 +132,23 @@ export class WorkerMatcherService {
   ): Promise<number> {
     const taskType = task.type as TaskType;
     const metrics = worker.performanceMetrics[taskType];
-    
+
     if (!metrics) return 0.5; // Neutral score for new task types
 
-    return (
-      metrics.accuracy * 0.4 +
-      metrics.speed * 0.3 +
-      metrics.consistency * 0.3
-    );
+    return metrics.accuracy * 0.4 + metrics.speed * 0.3 + metrics.consistency * 0.3;
   }
 
-  private calculatePerformanceScore(
-    worker: WorkerProfile,
-    task: VerificationTask
-  ): number {
+  private calculatePerformanceScore(worker: WorkerProfile, task: VerificationTask): number {
     const taskType = task.type as TaskType;
     const metrics = worker.performanceMetrics[taskType];
-    
+
     if (!metrics) return 0.5;
 
     // Weight recent performance more heavily
-    return (
-      metrics.accuracy * 0.5 +
-      metrics.speed * 0.25 +
-      metrics.consistency * 0.25
-    );
+    return metrics.accuracy * 0.5 + metrics.speed * 0.25 + metrics.consistency * 0.25;
   }
 
-  private async calculateLoadBalanceScore(
-    worker: WorkerProfile
-  ): Promise<number> {
+  private async calculateLoadBalanceScore(worker: WorkerProfile): Promise<number> {
     // TODO: Implement load balancing based on active tasks
     return 1.0;
   }
@@ -189,9 +163,9 @@ export class WorkerMatcherService {
           reputation: 0.15,
           availability: 0.1,
           taskHistory: 0.03,
-          loadBalance: 0.02
+          loadBalance: 0.02,
         };
-      
+
       case MatchingStrategy.REPUTATION_FOCUSED:
         return {
           ...this.defaultWeights,
@@ -200,9 +174,9 @@ export class WorkerMatcherService {
           performance: 0.15,
           availability: 0.1,
           taskHistory: 0.03,
-          loadBalance: 0.02
+          loadBalance: 0.02,
         };
-      
+
       case MatchingStrategy.PERFORMANCE_FOCUSED:
         return {
           ...this.defaultWeights,
@@ -211,18 +185,15 @@ export class WorkerMatcherService {
           reputation: 0.15,
           availability: 0.15,
           taskHistory: 0.03,
-          loadBalance: 0.02
+          loadBalance: 0.02,
         };
-      
+
       default:
         return this.defaultWeights;
     }
   }
 
-  private meetsSkillRequirement(
-    worker: WorkerProfile,
-    task: VerificationTask
-  ): boolean {
+  private meetsSkillRequirement(worker: WorkerProfile, task: VerificationTask): boolean {
     const taskType = task.type as TaskType;
     const requiredLevel = this.getRequiredSkillLevel(task);
     return (worker.skillLevels[taskType] || 0) >= requiredLevel;
@@ -233,7 +204,7 @@ export class WorkerMatcherService {
       [WorkerLevel.BEGINNER]: 1,
       [WorkerLevel.INTERMEDIATE]: 4,
       [WorkerLevel.ADVANCED]: 7,
-      [WorkerLevel.EXPERT]: 9
+      [WorkerLevel.EXPERT]: 9,
     };
 
     return levelRequirements[task.requirements.workerLevel || WorkerLevel.BEGINNER];
@@ -241,38 +212,34 @@ export class WorkerMatcherService {
 
   private getMinReputationScore(task: VerificationTask): number {
     const baseScore = 0.7; // Base reputation requirement
-    
+
     // Adjust based on task priority
     const priorityMultipliers = {
       [TaskPriority.LOW]: 0.8,
       [TaskPriority.MEDIUM]: 1.0,
-      [TaskPriority.HIGH]: 1.2
+      [TaskPriority.HIGH]: 1.2,
     };
 
     return baseScore * (priorityMultipliers[task.priority] || 1.0);
   }
 
-  private meetsPerformanceRequirement(
-    worker: WorkerProfile,
-    task: VerificationTask
-  ): boolean {
+  private meetsPerformanceRequirement(worker: WorkerProfile, task: VerificationTask): boolean {
     const metrics = worker.performanceMetrics[task.type as TaskType];
     if (!metrics) return true; // Allow new workers
 
     const minAccuracy = this.getMinAccuracy(task);
     const minConsistency = this.getMinConsistency(task);
 
-    return metrics.accuracy >= minAccuracy && 
-           metrics.consistency >= minConsistency;
+    return metrics.accuracy >= minAccuracy && metrics.consistency >= minConsistency;
   }
 
   private getMinAccuracy(task: VerificationTask): number {
     const baseAccuracy = 0.8;
-    
+
     const priorityMultipliers = {
       [TaskPriority.LOW]: 0.9,
       [TaskPriority.MEDIUM]: 1.0,
-      [TaskPriority.HIGH]: 1.1
+      [TaskPriority.HIGH]: 1.1,
     };
 
     return baseAccuracy * (priorityMultipliers[task.priority] || 1.0);
@@ -280,13 +247,13 @@ export class WorkerMatcherService {
 
   private getMinConsistency(task: VerificationTask): number {
     const baseConsistency = 0.75;
-    
+
     const priorityMultipliers = {
       [TaskPriority.LOW]: 0.9,
       [TaskPriority.MEDIUM]: 1.0,
-      [TaskPriority.HIGH]: 1.1
+      [TaskPriority.HIGH]: 1.1,
     };
 
     return baseConsistency * (priorityMultipliers[task.priority] || 1.0);
   }
-} 
+}

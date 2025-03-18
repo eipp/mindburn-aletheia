@@ -6,7 +6,7 @@ export const tracingMiddleware = (handler: Handler): Handler => {
   return async (event, context) => {
     const segment = AWSXRay.getSegment();
     const subsegment = segment?.addNewSubsegment('handler');
-    
+
     const requestId = context.awsRequestId;
     const startTime = Date.now();
 
@@ -51,4 +51,4 @@ export const tracingMiddleware = (handler: Handler): Handler => {
       subsegment?.close();
     }
   };
-}; 
+};

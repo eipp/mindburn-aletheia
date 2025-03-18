@@ -40,24 +40,28 @@ export class PaymentBatchModel {
     const item: PaymentBatch = {
       ...batch,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
-    await this.dynamoDB.put({
-      TableName: this.tableName,
-      Item: item
-    }).promise();
+    await this.dynamoDB
+      .put({
+        TableName: this.tableName,
+        Item: item,
+      })
+      .promise();
 
     return item;
   }
 
   async get(batchId: string): Promise<PaymentBatch | null> {
-    const result = await this.dynamoDB.get({
-      TableName: this.tableName,
-      Key: { batchId }
-    }).promise();
+    const result = await this.dynamoDB
+      .get({
+        TableName: this.tableName,
+        Key: { batchId },
+      })
+      .promise();
 
-    return result.Item as PaymentBatch || null;
+    return (result.Item as PaymentBatch) || null;
   }
 
   async update(batchId: string, updates: Partial<PaymentBatch>): Promise<PaymentBatch> {
@@ -78,38 +82,44 @@ export class PaymentBatchModel {
     expressionAttributeNames['#updatedAt'] = 'updatedAt';
     expressionAttributeValues[':updatedAt'] = new Date().toISOString();
 
-    const result = await this.dynamoDB.update({
-      TableName: this.tableName,
-      Key: { batchId },
-      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ReturnValues: 'ALL_NEW'
-    }).promise();
+    const result = await this.dynamoDB
+      .update({
+        TableName: this.tableName,
+        Key: { batchId },
+        UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+        ReturnValues: 'ALL_NEW',
+      })
+      .promise();
 
     return result.Attributes as PaymentBatch;
   }
 
   async listPending(): Promise<PaymentBatch[]> {
-    const result = await this.dynamoDB.query({
-      TableName: this.tableName,
-      IndexName: 'StatusIndex',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': 'pending'
-      }
-    }).promise();
+    const result = await this.dynamoDB
+      .query({
+        TableName: this.tableName,
+        IndexName: 'StatusIndex',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'pending',
+        },
+      })
+      .promise();
 
     return result.Items as PaymentBatch[];
   }
 
   async delete(batchId: string): Promise<void> {
-    await this.dynamoDB.delete({
-      TableName: this.tableName,
-      Key: { batchId }
-    }).promise();
+    await this.dynamoDB
+      .delete({
+        TableName: this.tableName,
+        Key: { batchId },
+      })
+      .promise();
   }
-} 
+}

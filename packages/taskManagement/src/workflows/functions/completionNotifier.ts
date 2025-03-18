@@ -37,7 +37,7 @@ export class CompletionNotifier extends WorkflowHandler {
         averageResponseTime: this.calculateAverageResponseTime(
           task.verificationStartTime,
           task.verificationResults || []
-        )
+        ),
       };
 
       // Determine completion status
@@ -50,27 +50,28 @@ export class CompletionNotifier extends WorkflowHandler {
       await this.sendNotifications(taskId, status, metrics);
 
       // Update task status
-      await this.updateTask(taskId,
+      await this.updateTask(
+        taskId,
         'SET #status = :status, completionTime = :time, metrics = :metrics',
         {
           ':status': status,
           ':time': new Date().toISOString(),
           ':metrics': metrics,
-          '#status': 'status'
+          '#status': 'status',
         }
       );
 
       this.logger.info('Task completion processed', {
         taskId,
         status,
-        metrics
+        metrics,
       });
 
       return {
         taskId,
         status,
         completionTime: new Date().toISOString(),
-        metrics
+        metrics,
       };
     } catch (error) {
       this.logger.error('Completion notification failed', { error, input });
@@ -96,57 +97,55 @@ export class CompletionNotifier extends WorkflowHandler {
   ): 'success' | 'failure' {
     const allPaymentsProcessed = payments.every(p => p.status === 'processed');
     const hasConsensus = task.confidenceScore >= 0.7; // Threshold from config
-    
+
     return allPaymentsProcessed && hasConsensus ? 'success' : 'failure';
   }
 
-  private async emitCompletionEvent(
-    taskId: string,
-    status: string,
-    metrics: any
-  ): Promise<void> {
-    await this.eventBridge.putEvents({
-      Entries: [{
-        Source: 'aletheia.task-completion',
-        DetailType: 'TaskCompleted',
-        Detail: JSON.stringify({
-          taskId,
-          status,
-          metrics,
-          timestamp: Date.now()
-        }),
-        EventBusName: this.config.eventBusName
-      }]
-    }).promise();
+  private async emitCompletionEvent(taskId: string, status: string, metrics: any): Promise<void> {
+    await this.eventBridge
+      .putEvents({
+        Entries: [
+          {
+            Source: 'aletheia.task-completion',
+            DetailType: 'TaskCompleted',
+            Detail: JSON.stringify({
+              taskId,
+              status,
+              metrics,
+              timestamp: Date.now(),
+            }),
+            EventBusName: this.config.eventBusName,
+          },
+        ],
+      })
+      .promise();
   }
 
-  private async sendNotifications(
-    taskId: string,
-    status: string,
-    metrics: any
-  ): Promise<void> {
+  private async sendNotifications(taskId: string, status: string, metrics: any): Promise<void> {
     const message = {
       taskId,
       status,
       metrics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    await this.sns.publish({
-      TopicArn: this.config.notificationTopicArn,
-      Message: JSON.stringify(message),
-      MessageAttributes: {
-        taskId: {
-          DataType: 'String',
-          StringValue: taskId
+    await this.sns
+      .publish({
+        TopicArn: this.config.notificationTopicArn,
+        Message: JSON.stringify(message),
+        MessageAttributes: {
+          taskId: {
+            DataType: 'String',
+            StringValue: taskId,
+          },
+          status: {
+            DataType: 'String',
+            StringValue: status,
+          },
         },
-        status: {
-          DataType: 'String',
-          StringValue: status
-        }
-      }
-    }).promise();
+      })
+      .promise();
   }
 }
 
-export const handler = new CompletionNotifier().handler.bind(new CompletionNotifier()); 
+export const handler = new CompletionNotifier().handler.bind(new CompletionNotifier());

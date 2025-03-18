@@ -21,14 +21,14 @@ export class WorkerMatcher extends WorkflowHandler {
   async handler(context: WorkflowContext): Promise<WorkerMatchingOutput> {
     try {
       const { taskData } = context;
-      
+
       // Define matching criteria from task requirements
       const matchCriteria = {
         taskType: taskData.verificationRequirements.type,
         requiredSkills: taskData.verificationRequirements.requiredSkills || [],
         minLevel: taskData.verificationRequirements.minVerifierLevel,
         languageCodes: taskData.verificationRequirements.languageCodes,
-        urgency: taskData.verificationRequirements.urgency
+        urgency: taskData.verificationRequirements.urgency,
       };
 
       // Find eligible workers
@@ -47,20 +47,21 @@ export class WorkerMatcher extends WorkflowHandler {
       );
 
       // Calculate average match score
-      const averageScore = matchResults.reduce((sum, r) => sum + r.matchScore, 0) / matchResults.length;
+      const averageScore =
+        matchResults.reduce((sum, r) => sum + r.matchScore, 0) / matchResults.length;
 
       this.logger.info('Worker matching completed', {
         taskId: taskData.taskId,
         workerCount: eligibleWorkers.length,
         strategy: matchingStrategy,
-        averageScore
+        averageScore,
       });
 
       return {
         taskId: taskData.taskId,
         eligibleWorkers,
         matchingStrategy,
-        matchingScore: averageScore
+        matchingScore: averageScore,
       };
     } catch (error) {
       this.logger.error('Worker matching failed', { error, context });
@@ -82,4 +83,4 @@ export class WorkerMatcher extends WorkflowHandler {
   }
 }
 
-export const handler = new WorkerMatcher().handler.bind(new WorkerMatcher()); 
+export const handler = new WorkerMatcher().handler.bind(new WorkerMatcher());

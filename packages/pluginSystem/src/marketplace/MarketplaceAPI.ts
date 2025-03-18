@@ -61,7 +61,11 @@ export class MarketplaceAPI {
     await this.request('POST', '/plugins', formData);
   }
 
-  async updatePlugin(pluginId: string, manifest: PluginManifest, packageData: Buffer): Promise<void> {
+  async updatePlugin(
+    pluginId: string,
+    manifest: PluginManifest,
+    packageData: Buffer
+  ): Promise<void> {
     const formData = new FormData();
     formData.append('manifest', JSON.stringify(manifest));
     formData.append('package', new Blob([packageData]));
@@ -91,7 +95,7 @@ export class MarketplaceAPI {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': data instanceof FormData ? undefined : 'application/json',
       },
       body: data instanceof FormData ? data : JSON.stringify(data),
@@ -104,4 +108,4 @@ export class MarketplaceAPI {
 
     return response.json();
   }
-} 
+}

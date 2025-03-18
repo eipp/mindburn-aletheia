@@ -1,11 +1,11 @@
 import { DynamoDB } from 'aws-sdk';
 import { Logger } from '@mindburn/shared/logger';
-import { 
-  WorkerProfile, 
+import {
+  WorkerProfile,
   WorkerStatus,
   OnboardingMetadata,
   WorkerActivityMetrics,
-  SkillAssessmentResult
+  SkillAssessmentResult,
 } from '../types';
 
 export class WorkerRepository {
@@ -13,11 +13,7 @@ export class WorkerRepository {
   private readonly tableName: string;
   private readonly logger: Logger;
 
-  constructor(
-    dynamoDB: DynamoDB.DocumentClient,
-    tableName: string,
-    logger: Logger
-  ) {
+  constructor(dynamoDB: DynamoDB.DocumentClient, tableName: string, logger: Logger) {
     this.dynamoDB = dynamoDB;
     this.tableName = tableName;
     this.logger = logger.child({ repository: 'WorkerRepository' });
@@ -25,25 +21,26 @@ export class WorkerRepository {
 
   async createWorker(worker: WorkerProfile): Promise<WorkerProfile> {
     try {
-      await this.dynamoDB.put({
-        TableName: this.tableName,
-        Item: {
-          PK: `WORKER#${worker.workerId}`,
-          SK: 'PROFILE',
-          ...worker,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        ConditionExpression: 'attribute_not_exists(PK)'
-      }).promise();
+      await this.dynamoDB
+        .put({
+          TableName: this.tableName,
+          Item: {
+            PK: `WORKER#${worker.workerId}`,
+            SK: 'PROFILE',
+            ...worker,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          ConditionExpression: 'attribute_not_exists(PK)',
+        })
+        .promise();
 
       this.logger.info('Worker profile created', { workerId: worker.workerId });
       return worker;
-
     } catch (error) {
       this.logger.error('Failed to create worker profile', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -51,13 +48,15 @@ export class WorkerRepository {
 
   async getWorkerById(workerId: string): Promise<WorkerProfile | null> {
     try {
-      const result = await this.dynamoDB.get({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${workerId}`,
-          SK: 'PROFILE'
-        }
-      }).promise();
+      const result = await this.dynamoDB
+        .get({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${workerId}`,
+            SK: 'PROFILE',
+          },
+        })
+        .promise();
 
       if (!result.Item) {
         this.logger.info('Worker profile not found', { workerId });
@@ -66,11 +65,10 @@ export class WorkerRepository {
 
       const { PK, SK, createdAt, updatedAt, ...workerProfile } = result.Item;
       return workerProfile as WorkerProfile;
-
     } catch (error) {
       this.logger.error('Failed to get worker profile', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -79,69 +77,70 @@ export class WorkerRepository {
   async updateWorkerProfile(worker: WorkerProfile): Promise<WorkerProfile> {
     try {
       const updateExpression = this.buildUpdateExpression(worker);
-      
-      await this.dynamoDB.update({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${worker.workerId}`,
-          SK: 'PROFILE'
-        },
-        ...updateExpression,
-        UpdateExpression: `${updateExpression.UpdateExpression} SET updatedAt = :updatedAt`,
-        ExpressionAttributeValues: {
-          ...updateExpression.ExpressionAttributeValues,
-          ':updatedAt': new Date().toISOString()
-        },
-        ConditionExpression: 'attribute_exists(PK)'
-      }).promise();
+
+      await this.dynamoDB
+        .update({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${worker.workerId}`,
+            SK: 'PROFILE',
+          },
+          ...updateExpression,
+          UpdateExpression: `${updateExpression.UpdateExpression} SET updatedAt = :updatedAt`,
+          ExpressionAttributeValues: {
+            ...updateExpression.ExpressionAttributeValues,
+            ':updatedAt': new Date().toISOString(),
+          },
+          ConditionExpression: 'attribute_exists(PK)',
+        })
+        .promise();
 
       this.logger.info('Worker profile updated', { workerId: worker.workerId });
       return worker;
-
     } catch (error) {
       this.logger.error('Failed to update worker profile', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
   }
 
-  async updateWorkerStatus(
-    workerId: string,
-    status: WorkerStatus,
-    reason?: string
-  ): Promise<void> {
+  async updateWorkerStatus(workerId: string, status: WorkerStatus, reason?: string): Promise<void> {
     try {
-      await this.dynamoDB.update({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${workerId}`,
-          SK: 'PROFILE'
-        },
-        UpdateExpression: 'SET #status = :status, statusHistory = list_append(if_not_exists(statusHistory, :empty_list), :status_change), updatedAt = :updatedAt',
-        ExpressionAttributeNames: {
-          '#status': 'status'
-        },
-        ExpressionAttributeValues: {
-          ':status': status,
-          ':status_change': [{
-            status,
-            timestamp: new Date().toISOString(),
-            reason
-          }],
-          ':empty_list': [],
-          ':updatedAt': new Date().toISOString()
-        }
-      }).promise();
+      await this.dynamoDB
+        .update({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${workerId}`,
+            SK: 'PROFILE',
+          },
+          UpdateExpression:
+            'SET #status = :status, statusHistory = list_append(if_not_exists(statusHistory, :empty_list), :status_change), updatedAt = :updatedAt',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':status': status,
+            ':status_change': [
+              {
+                status,
+                timestamp: new Date().toISOString(),
+                reason,
+              },
+            ],
+            ':empty_list': [],
+            ':updatedAt': new Date().toISOString(),
+          },
+        })
+        .promise();
 
       this.logger.info('Worker status updated', { workerId, status, reason });
-
     } catch (error) {
       this.logger.error('Failed to update worker status', {
         error,
         workerId,
-        status
+        status,
       });
       throw error;
     }
@@ -153,37 +152,38 @@ export class WorkerRepository {
   ): Promise<void> {
     try {
       const timestamp = new Date().toISOString();
-      
-      await this.dynamoDB.update({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${workerId}`,
-          SK: 'PROFILE'
-        },
-        UpdateExpression: `
+
+      await this.dynamoDB
+        .update({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${workerId}`,
+            SK: 'PROFILE',
+          },
+          UpdateExpression: `
           SET skills = :skills,
           lastSkillAssessment = :assessment,
           updatedAt = :updatedAt
         `,
-        ExpressionAttributeValues: {
-          ':skills': Object.keys(assessmentResults),
-          ':assessment': {
-            timestamp,
-            results: assessmentResults
+          ExpressionAttributeValues: {
+            ':skills': Object.keys(assessmentResults),
+            ':assessment': {
+              timestamp,
+              results: assessmentResults,
+            },
+            ':updatedAt': timestamp,
           },
-          ':updatedAt': timestamp
-        }
-      }).promise();
+        })
+        .promise();
 
-      this.logger.info('Worker skills updated', { 
+      this.logger.info('Worker skills updated', {
         workerId,
-        skills: Object.keys(assessmentResults)
+        skills: Object.keys(assessmentResults),
       });
-
     } catch (error) {
       this.logger.error('Failed to update worker skills', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -194,54 +194,53 @@ export class WorkerRepository {
     metrics: WorkerActivityMetrics
   ): Promise<void> {
     try {
-      await this.dynamoDB.update({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${workerId}`,
-          SK: 'PROFILE'
-        },
-        UpdateExpression: 'SET activityMetrics = :metrics, updatedAt = :updatedAt',
-        ExpressionAttributeValues: {
-          ':metrics': metrics,
-          ':updatedAt': new Date().toISOString()
-        }
-      }).promise();
+      await this.dynamoDB
+        .update({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${workerId}`,
+            SK: 'PROFILE',
+          },
+          UpdateExpression: 'SET activityMetrics = :metrics, updatedAt = :updatedAt',
+          ExpressionAttributeValues: {
+            ':metrics': metrics,
+            ':updatedAt': new Date().toISOString(),
+          },
+        })
+        .promise();
 
       this.logger.info('Worker activity metrics updated', { workerId });
-
     } catch (error) {
       this.logger.error('Failed to update worker activity metrics', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
   }
 
-  async updateOnboardingMetadata(
-    workerId: string,
-    metadata: OnboardingMetadata
-  ): Promise<void> {
+  async updateOnboardingMetadata(workerId: string, metadata: OnboardingMetadata): Promise<void> {
     try {
-      await this.dynamoDB.update({
-        TableName: this.tableName,
-        Key: {
-          PK: `WORKER#${workerId}`,
-          SK: 'PROFILE'
-        },
-        UpdateExpression: 'SET metadata.onboarding = :metadata, updatedAt = :updatedAt',
-        ExpressionAttributeValues: {
-          ':metadata': metadata,
-          ':updatedAt': new Date().toISOString()
-        }
-      }).promise();
+      await this.dynamoDB
+        .update({
+          TableName: this.tableName,
+          Key: {
+            PK: `WORKER#${workerId}`,
+            SK: 'PROFILE',
+          },
+          UpdateExpression: 'SET metadata.onboarding = :metadata, updatedAt = :updatedAt',
+          ExpressionAttributeValues: {
+            ':metadata': metadata,
+            ':updatedAt': new Date().toISOString(),
+          },
+        })
+        .promise();
 
       this.logger.info('Worker onboarding metadata updated', { workerId });
-
     } catch (error) {
       this.logger.error('Failed to update worker onboarding metadata', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -249,22 +248,23 @@ export class WorkerRepository {
 
   async getActiveWorkers(): Promise<WorkerProfile[]> {
     try {
-      const result = await this.dynamoDB.query({
-        TableName: this.tableName,
-        IndexName: 'StatusIndex',
-        KeyConditionExpression: '#status = :status',
-        ExpressionAttributeNames: {
-          '#status': 'status'
-        },
-        ExpressionAttributeValues: {
-          ':status': WorkerStatus.AVAILABLE
-        }
-      }).promise();
+      const result = await this.dynamoDB
+        .query({
+          TableName: this.tableName,
+          IndexName: 'StatusIndex',
+          KeyConditionExpression: '#status = :status',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':status': WorkerStatus.AVAILABLE,
+          },
+        })
+        .promise();
 
-      return (result.Items || []).map(({ PK, SK, createdAt, updatedAt, ...worker }) => 
-        worker as WorkerProfile
+      return (result.Items || []).map(
+        ({ PK, SK, createdAt, updatedAt, ...worker }) => worker as WorkerProfile
       );
-
     } catch (error) {
       this.logger.error('Failed to get active workers', { error });
       throw error;
@@ -293,7 +293,7 @@ export class WorkerRepository {
     return {
       UpdateExpression: `SET ${updates.join(', ')}`,
       ExpressionAttributeNames: names,
-      ExpressionAttributeValues: values
+      ExpressionAttributeValues: values,
     };
   }
-} 
+}

@@ -19,10 +19,12 @@ export interface Task {
   reward: number;
   estimatedTime: number;
   priority: 'low' | 'medium' | 'high';
-  content?: string | {
-    url: string;
-    hash: string;
-  };
+  content?:
+    | string
+    | {
+        url: string;
+        hash: string;
+      };
   deadline?: string;
   timeRemaining?: number;
   acceptedAt?: string;
@@ -97,4 +99,4 @@ export interface ApiError {
   code: number;
   message: string;
   details?: any;
-} 
+}

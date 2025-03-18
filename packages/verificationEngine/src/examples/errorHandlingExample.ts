@@ -11,8 +11,8 @@ const config: ErrorHandlingConfig = {
     retryConfig: {
       maxAttempts: 3,
       backoffMultiplier: 2,
-      initialDelayMs: 1000
-    }
+      initialDelayMs: 1000,
+    },
   },
   handlers: {
     modelValidation: {
@@ -22,9 +22,9 @@ const config: ErrorHandlingConfig = {
       retryConfig: {
         maxAttempts: 2,
         backoffMultiplier: 1.5,
-        initialDelayMs: 500
-      }
-    }
+        initialDelayMs: 500,
+      },
+    },
   },
   globalConfig: {
     logErrors: true,
@@ -32,14 +32,14 @@ const config: ErrorHandlingConfig = {
     monitoring: {
       enabled: true,
       alertingEnabled: true,
-      errorRateThreshold: 0.1
-    }
+      errorRateThreshold: 0.1,
+    },
   },
   fallbackStrategy: {
     enabled: true,
     logFallback: true,
-    defaultResponse: null
-  }
+    defaultResponse: null,
+  },
 };
 
 // Example usage
@@ -54,7 +54,7 @@ async function main() {
       await errorHandler.handleError(error as Error, {
         modelId: 'model-123',
         severity: 'high',
-        operation: 'validation'
+        operation: 'validation',
       });
     }
 
@@ -64,7 +64,7 @@ async function main() {
     } catch (error) {
       await errorHandler.handleWarning('Minor processing issue', {
         modelId: 'model-123',
-        operation: 'processing'
+        operation: 'processing',
       });
     }
 
@@ -72,21 +72,22 @@ async function main() {
     const errors = [
       new Error('Validation error 1'),
       new Error('Validation error 2'),
-      new Error('Validation error 3')
+      new Error('Validation error 3'),
     ];
 
-    await Promise.all(errors.map(error => 
-      errorHandler.handleError(error, {
-        modelId: 'model-123',
-        severity: 'medium',
-        operation: 'batch-validation'
-      })
-    ));
-
+    await Promise.all(
+      errors.map(error =>
+        errorHandler.handleError(error, {
+          modelId: 'model-123',
+          severity: 'medium',
+          operation: 'batch-validation',
+        })
+      )
+    );
   } catch (error) {
     console.error('Unhandled error:', error);
   }
 }
 
 // Run the example
-main().catch(console.error); 
+main().catch(console.error);

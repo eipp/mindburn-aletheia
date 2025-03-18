@@ -16,10 +16,7 @@ interface WalletState {
   setSecretKey: (key: Uint8Array) => void;
   fetchBalance: (address: string) => Promise<void>;
   fetchTransactions: (address: string, limit?: number) => Promise<void>;
-  withdraw: (params: {
-    toAddress: string;
-    amount: number;
-  }) => Promise<{ hash: string }>;
+  withdraw: (params: { toAddress: string; amount: number }) => Promise<{ hash: string }>;
   createWallet: (mnemonic: string[]) => Promise<void>;
   reset: () => void;
 }
@@ -36,11 +33,11 @@ export const useWalletStore = create<WalletState>()(
         secretKey: null,
         pendingWithdrawal: false,
 
-        setAddress: (address) => set({ address }),
+        setAddress: address => set({ address }),
 
-        setSecretKey: (key) => set({ secretKey: key }),
+        setSecretKey: key => set({ secretKey: key }),
 
-        fetchBalance: async (address) => {
+        fetchBalance: async address => {
           try {
             set({ isLoading: true, error: null });
             const balance = await walletService.getBalance(address);
@@ -48,7 +45,7 @@ export const useWalletStore = create<WalletState>()(
           } catch (error) {
             set({
               error: error instanceof Error ? error.message : 'Failed to fetch balance',
-              isLoading: false
+              isLoading: false,
             });
           }
         },
@@ -61,7 +58,7 @@ export const useWalletStore = create<WalletState>()(
           } catch (error) {
             set({
               error: error instanceof Error ? error.message : 'Failed to fetch transactions',
-              isLoading: false
+              isLoading: false,
             });
           }
         },
@@ -78,7 +75,7 @@ export const useWalletStore = create<WalletState>()(
               fromAddress: state.address,
               toAddress,
               amount,
-              secretKey: state.secretKey
+              secretKey: state.secretKey,
             });
 
             // Refresh balance and transactions after withdrawal
@@ -90,20 +87,20 @@ export const useWalletStore = create<WalletState>()(
           } catch (error) {
             set({
               error: error instanceof Error ? error.message : 'Withdrawal failed',
-              pendingWithdrawal: false
+              pendingWithdrawal: false,
             });
             throw error;
           }
         },
 
-        createWallet: async (mnemonic) => {
+        createWallet: async mnemonic => {
           try {
             set({ isLoading: true, error: null });
             const { address, secretKey } = await walletService.createWallet(mnemonic);
             set({
               address,
               secretKey,
-              isLoading: false
+              isLoading: false,
             });
 
             // Initialize wallet data
@@ -112,29 +109,30 @@ export const useWalletStore = create<WalletState>()(
           } catch (error) {
             set({
               error: error instanceof Error ? error.message : 'Failed to create wallet',
-              isLoading: false
+              isLoading: false,
             });
             throw error;
           }
         },
 
-        reset: () => set({
-          address: null,
-          balance: null,
-          transactions: [],
-          isLoading: false,
-          error: null,
-          secretKey: null,
-          pendingWithdrawal: false
-        })
+        reset: () =>
+          set({
+            address: null,
+            balance: null,
+            transactions: [],
+            isLoading: false,
+            error: null,
+            secretKey: null,
+            pendingWithdrawal: false,
+          }),
       }),
       {
         name: 'wallet-storage',
-        partialize: (state) => ({
+        partialize: state => ({
           address: state.address,
           // Don't persist sensitive data like secretKey
-        })
+        }),
       }
     )
   )
-); 
+);

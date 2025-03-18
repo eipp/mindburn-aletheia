@@ -9,12 +9,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { UserSession } from './types';
 
 // Validate required environment variables
-const requiredEnvVars = [
-  'BOT_TOKEN',
-  'ENVIRONMENT',
-  'AWS_REGION',
-  'TASK_QUEUE_URL',
-];
+const requiredEnvVars = ['BOT_TOKEN', 'ENVIRONMENT', 'AWS_REGION', 'TASK_QUEUE_URL'];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
@@ -49,9 +44,9 @@ bot.catch((err: unknown, ctx: BotContext) => {
 if (process.env.ENVIRONMENT !== 'dev') {
   const domain = process.env.WEBHOOK_DOMAIN;
   const path = `/webhook/${process.env.BOT_TOKEN}`;
-  
+
   bot.telegram.setWebhook(`${domain}${path}`);
-  
+
   // Export handler for AWS Lambda
   export const handler = async (event: APIGatewayProxyEvent) => {
     try {
@@ -66,7 +61,7 @@ if (process.env.ENVIRONMENT !== 'dev') {
 } else {
   // Use polling for development
   bot.launch();
-  
+
   // Enable graceful stop
   process.once('SIGINT', () => bot.stop('SIGINT'));
   process.once('SIGTERM', () => bot.stop('SIGTERM'));

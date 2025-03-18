@@ -37,7 +37,7 @@ describe('TON Utilities', () => {
       amount: '1.5',
       address: 'EQDrjaLahLkMB-hMCmkzOyBuHJ139ZUYmPHu6RRBKnbdLIYI',
       balance: '2.0',
-      minWithdrawal: 1
+      minWithdrawal: 1,
     };
 
     it('should validate valid transaction data', () => {
@@ -49,7 +49,7 @@ describe('TON Utilities', () => {
     it('should reject transactions with insufficient balance', () => {
       const result = ton.validation.transaction({
         ...validData,
-        balance: '1.0'
+        balance: '1.0',
       });
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Insufficient balance');
@@ -59,7 +59,7 @@ describe('TON Utilities', () => {
       const result = ton.validation.transaction({
         ...validData,
         amount: '0.5',
-        minWithdrawal: 1
+        minWithdrawal: 1,
       });
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Minimum withdrawal');
@@ -68,7 +68,7 @@ describe('TON Utilities', () => {
     it('should reject invalid addresses', () => {
       const result = ton.validation.transaction({
         ...validData,
-        address: 'invalid-address'
+        address: 'invalid-address',
       });
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Invalid TON address');
@@ -92,4 +92,4 @@ describe('TON Utilities', () => {
       expect(fee.toString()).toBe('0.01'); // Only base fee
     });
   });
-}); 
+});

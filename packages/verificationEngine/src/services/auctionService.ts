@@ -6,7 +6,7 @@ import {
   TaskPriority,
   WorkerStatus,
   AuctionResult,
-  FraudDetectionResult
+  FraudDetectionResult,
 } from '../types';
 import { AuctionError, ValidationError } from '../errors';
 import { AuctionMetricsService } from './auctionMetricsService';
@@ -36,11 +36,11 @@ export class AuctionService {
   private readonly auctions: Map<string, Auction> = new Map();
   private readonly metricsService: AuctionMetricsService;
   private readonly fraudDetectionService: AuctionFraudDetectionService;
-  
+
   private readonly auctionTimeouts = {
     [TaskPriority.HIGH]: 2 * 60 * 1000, // 2 minutes
     [TaskPriority.MEDIUM]: 5 * 60 * 1000, // 5 minutes
-    [TaskPriority.LOW]: 10 * 60 * 1000 // 10 minutes
+    [TaskPriority.LOW]: 10 * 60 * 1000, // 10 minutes
   };
 
   constructor(
@@ -53,10 +53,7 @@ export class AuctionService {
     this.fraudDetectionService = fraudDetectionService;
   }
 
-  async createAuction(
-    task: VerificationTask,
-    eligibleWorkers: WorkerProfile[]
-  ): Promise<string> {
+  async createAuction(task: VerificationTask, eligibleWorkers: WorkerProfile[]): Promise<string> {
     try {
       this.validateAuctionRequirements(task, eligibleWorkers);
 
@@ -69,36 +66,31 @@ export class AuctionService {
         endTime: Date.now() + this.getAuctionTimeout(task.priority),
         minBid: this.calculateMinBid(task),
         maxBid: this.calculateMaxBid(task),
-        bids: []
+        bids: [],
       };
 
       this.auctions.set(auctionId, auction);
-      
+
       // Schedule auction closing
-      setTimeout(() => this.closeAuction(auctionId), 
-        auction.endTime - auction.startTime);
+      setTimeout(() => this.closeAuction(auctionId), auction.endTime - auction.startTime);
 
       this.logger.info('Created new auction', {
         auctionId,
         taskId: task.taskId,
-        eligibleWorkers: eligibleWorkers.length
+        eligibleWorkers: eligibleWorkers.length,
       });
 
       return auctionId;
     } catch (error) {
       this.logger.error('Failed to create auction', {
         error,
-        taskId: task.taskId
+        taskId: task.taskId,
       });
       throw new AuctionError('Failed to create auction', { cause: error });
     }
   }
 
-  async placeBid(
-    auctionId: string,
-    workerId: string,
-    amount: number
-  ): Promise<boolean> {
+  async placeBid(auctionId: string, workerId: string, amount: number): Promise<boolean> {
     const auction = this.auctions.get(auctionId);
     if (!auction) {
       throw new AuctionError(`Auction ${auctionId} not found`);
@@ -115,7 +107,7 @@ export class AuctionService {
     const bid: Bid = {
       workerId,
       amount,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Check for fraud before accepting bid
@@ -129,7 +121,7 @@ export class AuctionService {
       this.logger.warn('Suspicious bid detected', {
         auctionId,
         workerId,
-        fraudCheck
+        fraudCheck,
       });
       throw new ValidationError('Bid rejected due to suspicious activity');
     }
@@ -139,7 +131,7 @@ export class AuctionService {
       auctionId,
       workerId,
       amount,
-      fraudRiskLevel: fraudCheck.riskLevel
+      fraudRiskLevel: fraudCheck.riskLevel,
     });
 
     return true;
@@ -165,14 +157,11 @@ export class AuctionService {
     if (fraudCheck.hasSuspiciousActivity) {
       this.logger.warn('Suspicious activity detected in auction', {
         auctionId,
-        fraudCheck
+        fraudCheck,
       });
-      
+
       // Filter out suspicious bids
-      auction.bids = this.filterSuspiciousBids(
-        auction.bids,
-        fraudCheck
-      );
+      auction.bids = this.filterSuspiciousBids(auction.bids, fraudCheck);
     }
 
     auction.status = 'CLOSED';
@@ -187,8 +176,8 @@ export class AuctionService {
       metadata: {
         auctionId: auction.auctionId,
         winningBid: this.getWinningBid(auction, workerId),
-        fraudCheckResult: fraudCheck
-      }
+        fraudCheckResult: fraudCheck,
+      },
     }));
 
     // Create auction result and track metrics
@@ -197,7 +186,7 @@ export class AuctionService {
       taskId: auction.taskId,
       winners: auction.winners.map(workerId => ({
         workerId,
-        winningBid: this.getWinningBid(auction, workerId)
+        winningBid: this.getWinningBid(auction, workerId),
       })),
       totalBids: auction.bids.length,
       startTime: auction.startTime,
@@ -206,8 +195,8 @@ export class AuctionService {
         ...auction.metadata,
         eligibleWorkers: auction.metadata?.eligibleWorkers,
         requiredWinners: auction.metadata?.requiredWinners,
-        fraudDetection: fraudCheck
-      }
+        fraudDetection: fraudCheck,
+      },
     };
 
     await this.metricsService.trackAuctionResult(result);
@@ -216,7 +205,7 @@ export class AuctionService {
       auctionId,
       winners: auction.winners,
       totalBids: auction.bids.length,
-      fraudRiskLevel: fraudCheck.riskLevel
+      fraudRiskLevel: fraudCheck.riskLevel,
     });
 
     return assignments;
@@ -245,21 +234,18 @@ export class AuctionService {
     eligibleWorkers: WorkerProfile[]
   ): void {
     if (eligibleWorkers.length < task.requirements.minSubmissions) {
-      throw new ValidationError(
-        'Insufficient eligible workers for auction'
-      );
+      throw new ValidationError('Insufficient eligible workers for auction');
     }
   }
 
   private determineWinners(auction: Auction): string[] {
     // Sort bids by amount (descending) and timestamp
-    const sortedBids = [...auction.bids]
-      .sort((a, b) => {
-        if (b.amount !== a.amount) {
-          return b.amount - a.amount;
-        }
-        return a.timestamp - b.timestamp;
-      });
+    const sortedBids = [...auction.bids].sort((a, b) => {
+      if (b.amount !== a.amount) {
+        return b.amount - a.amount;
+      }
+      return a.timestamp - b.timestamp;
+    });
 
     // Get unique workers with highest bids
     const winners = new Set<string>();
@@ -277,7 +263,7 @@ export class AuctionService {
     const workerBids = auction.bids
       .filter(bid => bid.workerId === workerId)
       .sort((a, b) => b.amount - a.amount);
-    
+
     return workerBids[0]?.amount || 0;
   }
 
@@ -299,10 +285,10 @@ export class AuctionService {
     // Adjust for worker level requirement
     if (task.requirements.workerLevel) {
       const levelMultipliers = {
-        'BEGINNER': 1,
-        'INTERMEDIATE': 1.5,
-        'ADVANCED': 2,
-        'EXPERT': 3
+        BEGINNER: 1,
+        INTERMEDIATE: 1.5,
+        ADVANCED: 2,
+        EXPERT: 3,
       };
       minBid *= levelMultipliers[task.requirements.workerLevel] || 1;
     }
@@ -311,7 +297,7 @@ export class AuctionService {
     const priorityMultipliers = {
       [TaskPriority.LOW]: 1,
       [TaskPriority.MEDIUM]: 1.5,
-      [TaskPriority.HIGH]: 2
+      [TaskPriority.HIGH]: 2,
     };
     minBid *= priorityMultipliers[task.priority] || 1;
 
@@ -336,10 +322,10 @@ export class AuctionService {
     // Adjust for worker level requirement
     if (task.requirements.workerLevel) {
       const levelMultipliers = {
-        'BEGINNER': 1,
-        'INTERMEDIATE': 1.5,
-        'ADVANCED': 2.5,
-        'EXPERT': 4
+        BEGINNER: 1,
+        INTERMEDIATE: 1.5,
+        ADVANCED: 2.5,
+        EXPERT: 4,
       };
       maxBid *= levelMultipliers[task.requirements.workerLevel] || 1;
     }
@@ -348,16 +334,16 @@ export class AuctionService {
     const priorityMultipliers = {
       [TaskPriority.LOW]: 1,
       [TaskPriority.MEDIUM]: 2,
-      [TaskPriority.HIGH]: 3
+      [TaskPriority.HIGH]: 3,
     };
     maxBid *= priorityMultipliers[task.priority] || 1;
 
     // Adjust for task complexity if available
     if (task.metadata?.complexity) {
       const complexityMultipliers = {
-        'LOW': 1,
-        'MEDIUM': 1.5,
-        'HIGH': 2
+        LOW: 1,
+        MEDIUM: 1.5,
+        HIGH: 2,
       };
       maxBid *= complexityMultipliers[task.metadata.complexity] || 1;
     }
@@ -379,10 +365,7 @@ export class AuctionService {
     return 3; // Default minimum submissions
   }
 
-  private filterSuspiciousBids(
-    bids: Bid[],
-    fraudCheck: FraudDetectionResult
-  ): Bid[] {
+  private filterSuspiciousBids(bids: Bid[], fraudCheck: FraudDetectionResult): Bid[] {
     const suspiciousWorkers = new Set(
       fraudCheck.workerBehaviorAnalysis
         .filter(behavior => behavior.riskScore > 0.7)
@@ -391,4 +374,4 @@ export class AuctionService {
 
     return bids.filter(bid => !suspiciousWorkers.has(bid.workerId));
   }
-} 
+}

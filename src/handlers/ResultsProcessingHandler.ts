@@ -51,11 +51,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       }
 
       // Consolidate results
-      const consolidatedResult = await consolidateResults(
-        message,
-        verifications,
-        startTime
-      );
+      const consolidatedResult = await consolidateResults(message, verifications, startTime);
 
       // Save consolidated result
       await saveConsolidatedResult(consolidatedResult);
@@ -81,13 +77,15 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 async function getTaskVerifications(taskId: string): Promise<VerificationResult[]> {
   const dynamodb = new DynamoDB.DocumentClient();
 
-  const result = await dynamodb.query({
-    TableName: 'Results',
-    KeyConditionExpression: 'taskId = :taskId',
-    ExpressionAttributeValues: {
-      ':taskId': taskId
-    }
-  }).promise();
+  const result = await dynamodb
+    .query({
+      TableName: 'Results',
+      KeyConditionExpression: 'taskId = :taskId',
+      ExpressionAttributeValues: {
+        ':taskId': taskId,
+      },
+    })
+    .promise();
 
   return result.Items as VerificationResult[];
 }
@@ -124,7 +122,7 @@ async function consolidateResults(
     verifications,
     strategy: message.strategy,
     processingTime: Date.now() - startTime,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 }
 
@@ -145,20 +143,24 @@ function generateConsolidatedExplanation(
     .map(v => v.explanation)
     .join(' ');
 
-  return `Final decision: ${finalDecision} with ${(confidence * 100).toFixed(1)}% confidence. ` +
-         `Based on ${totalVerifiers} verifications using ${strategy} strategy. ` +
-         `${approvedCount} approved, ${rejectedCount} rejected. ` +
-         `Key observations: ${keyExplanations}`;
+  return (
+    `Final decision: ${finalDecision} with ${(confidence * 100).toFixed(1)}% confidence. ` +
+    `Based on ${totalVerifiers} verifications using ${strategy} strategy. ` +
+    `${approvedCount} approved, ${rejectedCount} rejected. ` +
+    `Key observations: ${keyExplanations}`
+  );
 }
 
 async function saveConsolidatedResult(result: ConsolidatedResult): Promise<void> {
   const dynamodb = new DynamoDB.DocumentClient();
 
   try {
-    await dynamodb.put({
-      TableName: 'ConsolidatedResults',
-      Item: result
-    }).promise();
+    await dynamodb
+      .put({
+        TableName: 'ConsolidatedResults',
+        Item: result,
+      })
+      .promise();
   } catch (error) {
     console.error('Error saving consolidated result:', error);
     throw error;
@@ -173,66 +175,67 @@ async function updateTaskStatus(
   const dynamodb = new DynamoDB.DocumentClient();
 
   try {
-    await dynamodb.update({
-      TableName: 'Tasks',
-      Key: { taskId },
-      UpdateExpression: 'SET #status = :status, confidence = :confidence, completedAt = :completedAt',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': decision === 'APPROVED' ? 'VERIFIED' : 'REJECTED',
-        ':confidence': confidence,
-        ':completedAt': Date.now()
-      }
-    }).promise();
+    await dynamodb
+      .update({
+        TableName: 'Tasks',
+        Key: { taskId },
+        UpdateExpression:
+          'SET #status = :status, confidence = :confidence, completedAt = :completedAt',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': decision === 'APPROVED' ? 'VERIFIED' : 'REJECTED',
+          ':confidence': confidence,
+          ':completedAt': Date.now(),
+        },
+      })
+      .promise();
   } catch (error) {
     console.error('Error updating task status:', error);
     throw error;
   }
 }
 
-async function notifyCompletion(
-  endpoint: string,
-  result: ConsolidatedResult
-): Promise<void> {
+async function notifyCompletion(endpoint: string, result: ConsolidatedResult): Promise<void> {
   const sns = new SNS();
 
   try {
-    await sns.publish({
-      TopicArn: endpoint,
-      Message: JSON.stringify({
-        type: 'VERIFICATION_COMPLETE',
-        data: {
-          taskId: result.taskId,
-          decision: result.finalDecision,
-          confidence: result.confidence,
-          explanation: result.explanation,
-          timestamp: result.timestamp
-        }
+    await sns
+      .publish({
+        TopicArn: endpoint,
+        Message: JSON.stringify({
+          type: 'VERIFICATION_COMPLETE',
+          data: {
+            taskId: result.taskId,
+            decision: result.finalDecision,
+            confidence: result.confidence,
+            explanation: result.explanation,
+            timestamp: result.timestamp,
+          },
+        }),
       })
-    }).promise();
+      .promise();
   } catch (error) {
     console.error('Error sending notification:', error);
     // Don't throw error for notification failure
   }
 }
 
-async function requeueMessage(
-  record: SQSRecord,
-  message: ResultProcessingMessage
-): Promise<void> {
+async function requeueMessage(record: SQSRecord, message: ResultProcessingMessage): Promise<void> {
   const sqs = new AWS.SQS();
   const visibilityTimeout = parseInt(record.attributes.ApproximateReceiveCount) * 60; // Exponential backoff
 
   try {
-    await sqs.changeMessageVisibility({
-      QueueUrl: process.env.RESULTS_QUEUE_URL!,
-      ReceiptHandle: record.receiptHandle,
-      VisibilityTimeout: visibilityTimeout
-    }).promise();
+    await sqs
+      .changeMessageVisibility({
+        QueueUrl: process.env.RESULTS_QUEUE_URL!,
+        ReceiptHandle: record.receiptHandle,
+        VisibilityTimeout: visibilityTimeout,
+      })
+      .promise();
   } catch (error) {
     console.error('Error requeuing message:', error);
     throw error;
   }
-} 
+}

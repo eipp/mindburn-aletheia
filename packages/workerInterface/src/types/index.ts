@@ -52,4 +52,4 @@ export enum TaskStatus {
 
 export interface BotContext extends TelegrafContext {
   session: UserSession;
-} 
+}

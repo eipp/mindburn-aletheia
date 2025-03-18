@@ -35,11 +35,11 @@ export class PaymentProcessor extends WorkflowHandler {
 
       // Calculate payments for each verifier
       const payments = await Promise.all(
-        verificationResults.map(result => 
+        verificationResults.map(result =>
           this.calculateAndProcessPayment(result, {
             consensusReached,
             finalVerdict,
-            taskStartTime: task.verificationStartTime
+            taskStartTime: task.verificationStartTime,
           })
         )
       );
@@ -49,13 +49,13 @@ export class PaymentProcessor extends WorkflowHandler {
       this.logger.info('Payments processed', {
         taskId,
         paymentCount: payments.length,
-        totalPaid
+        totalPaid,
       });
 
       return {
         taskId,
         payments,
-        totalPaid
+        totalPaid,
       };
     } catch (error) {
       this.logger.error('Payment processing failed', { error, input });
@@ -76,17 +76,19 @@ export class PaymentProcessor extends WorkflowHandler {
     status: 'pending' | 'processed' | 'failed';
   }> {
     const baseAmount = this.config.basePaymentAmount;
-    
-    // Calculate bonuses
-    const accuracyBonus = context.consensusReached && result.verdict === context.finalVerdict
-      ? baseAmount * this.config.bonusMultipliers.accuracy
-      : 0;
 
-    const responseTime = new Date(result.timestamp).getTime() - 
-      new Date(context.taskStartTime).getTime();
-    const speedBonus = responseTime < 300000 // 5 minutes
-      ? baseAmount * this.config.bonusMultipliers.speed
-      : 0;
+    // Calculate bonuses
+    const accuracyBonus =
+      context.consensusReached && result.verdict === context.finalVerdict
+        ? baseAmount * this.config.bonusMultipliers.accuracy
+        : 0;
+
+    const responseTime =
+      new Date(result.timestamp).getTime() - new Date(context.taskStartTime).getTime();
+    const speedBonus =
+      responseTime < 300000 // 5 minutes
+        ? baseAmount * this.config.bonusMultipliers.speed
+        : 0;
 
     const consensusBonus = context.consensusReached
       ? baseAmount * this.config.bonusMultipliers.consensus
@@ -96,35 +98,37 @@ export class PaymentProcessor extends WorkflowHandler {
 
     // Send payment message to queue
     try {
-      await this.sqs.sendMessage({
-        QueueUrl: this.config.paymentQueueUrl,
-        MessageBody: JSON.stringify({
-          workerId: result.workerId,
-          amount: totalAmount,
-          breakdown: {
-            base: baseAmount,
-            accuracyBonus,
-            speedBonus,
-            consensusBonus
-          },
-          timestamp: Date.now()
+      await this.sqs
+        .sendMessage({
+          QueueUrl: this.config.paymentQueueUrl,
+          MessageBody: JSON.stringify({
+            workerId: result.workerId,
+            amount: totalAmount,
+            breakdown: {
+              base: baseAmount,
+              accuracyBonus,
+              speedBonus,
+              consensusBonus,
+            },
+            timestamp: Date.now(),
+          }),
         })
-      }).promise();
+        .promise();
 
       return {
         workerId: result.workerId,
         amount: totalAmount,
-        status: 'processed'
+        status: 'processed',
       };
     } catch (error) {
       this.logger.error('Payment queue error', { error, workerId: result.workerId });
       return {
         workerId: result.workerId,
         amount: totalAmount,
-        status: 'failed'
+        status: 'failed',
       };
     }
   }
 }
 
-export const handler = new PaymentProcessor().handler.bind(new PaymentProcessor()); 
+export const handler = new PaymentProcessor().handler.bind(new PaymentProcessor());

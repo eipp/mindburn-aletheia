@@ -11,6 +11,6 @@ export function createMetricsAnalysisRule(
     schedule: events.Schedule.rate(cdk.Duration.hours(24)),
     targets: [new targets.LambdaFunction(metricsAnalysisFunction)],
     description: 'Triggers daily metrics analysis for the verification system',
-    enabled: true
+    enabled: true,
   });
-} 
+}

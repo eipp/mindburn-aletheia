@@ -4,7 +4,7 @@ import {
   WorkerStatus,
   TaskType,
   NotificationType,
-  NotificationService
+  NotificationService,
 } from '../types';
 import { WorkerOnboardingService } from './workerOnboardingService';
 import { WorkerSkillAssessmentService } from './workerSkillAssessmentService';
@@ -47,23 +47,17 @@ export class WorkerManagementService {
     this.workerRepository = workerRepository;
   }
 
-  async registerWorker(
-    telegramId: string,
-    language: string = 'en'
-  ): Promise<WorkerProfile> {
+  async registerWorker(telegramId: string, language: string = 'en'): Promise<WorkerProfile> {
     try {
       // Start onboarding process
-      const worker = await this.onboardingService.startOnboarding(
-        telegramId,
-        language
-      );
+      const worker = await this.onboardingService.startOnboarding(telegramId, language);
 
       // Create worker profile in database
       const createdWorker = await this.workerRepository.createWorker(worker);
 
       this.logger.info('Worker registration started', {
         workerId: worker.workerId,
-        telegramId
+        telegramId,
       });
 
       // Send welcome notification
@@ -72,16 +66,15 @@ export class WorkerManagementService {
         recipient: telegramId,
         data: {
           workerId: worker.workerId,
-          language
-        }
+          language,
+        },
       });
 
       return createdWorker;
-
     } catch (error) {
       this.logger.error('Worker registration failed', {
         error,
-        telegramId
+        telegramId,
       });
       throw error;
     }
@@ -137,9 +130,7 @@ export class WorkerManagementService {
       );
 
       // Perform initial skill assessment
-      const assessmentResults = await this.skillAssessmentService.assessAllSkills(
-        updatedWorker
-      );
+      const assessmentResults = await this.skillAssessmentService.assessAllSkills(updatedWorker);
 
       updatedWorker = await this.skillAssessmentService.updateWorkerSkills(
         updatedWorker,
@@ -158,7 +149,7 @@ export class WorkerManagementService {
       // Start monitoring wallet activity
       await this.walletVerificationService.monitorWalletActivity(
         onboardingData.walletAddress,
-        async (activity) => {
+        async activity => {
           await this.handleWalletActivity(updatedWorker.workerId, activity);
         }
       );
@@ -166,7 +157,7 @@ export class WorkerManagementService {
       this.logger.info('Worker onboarding completed', {
         workerId: worker.workerId,
         skills: updatedWorker.skills,
-        level: updatedWorker.level
+        level: updatedWorker.level,
       });
 
       // Send completion notification
@@ -176,16 +167,15 @@ export class WorkerManagementService {
         data: {
           workerId: updatedWorker.workerId,
           skills: updatedWorker.skills,
-          level: updatedWorker.level
-        }
+          level: updatedWorker.level,
+        },
       });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Worker onboarding completion failed', {
         error,
-        workerId: worker.workerId
+        workerId: worker.workerId,
       });
       throw error;
     }
@@ -210,17 +200,13 @@ export class WorkerManagementService {
       );
 
       // Update status in database
-      await this.workerRepository.updateWorkerStatus(
-        workerId,
-        newStatus,
-        reason
-      );
+      await this.workerRepository.updateWorkerStatus(workerId, newStatus, reason);
 
       this.logger.info('Worker status updated', {
         workerId: worker.workerId,
         oldStatus: worker.status,
         newStatus,
-        reason
+        reason,
       });
 
       // Send status update notification
@@ -231,26 +217,22 @@ export class WorkerManagementService {
           workerId,
           oldStatus: worker.status,
           newStatus,
-          reason
-        }
+          reason,
+        },
       });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Worker status update failed', {
         error,
         workerId,
-        newStatus
+        newStatus,
       });
       throw error;
     }
   }
 
-  async reassessWorkerSkills(
-    workerId: string,
-    taskTypes?: TaskType[]
-  ): Promise<WorkerProfile> {
+  async reassessWorkerSkills(workerId: string, taskTypes?: TaskType[]): Promise<WorkerProfile> {
     try {
       const worker = await this.getWorkerProfile(workerId);
       if (!worker) {
@@ -275,33 +257,26 @@ export class WorkerManagementService {
       );
 
       // Update skills in database
-      await this.workerRepository.updateWorkerSkills(
-        workerId,
-        assessmentResults
-      );
+      await this.workerRepository.updateWorkerSkills(workerId, assessmentResults);
 
       this.logger.info('Worker skills reassessed', {
         workerId: worker.workerId,
         assessedSkills: typesToAssess,
-        newLevel: updatedWorker.level
+        newLevel: updatedWorker.level,
       });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Worker skill reassessment failed', {
         error,
         workerId,
-        taskTypes
+        taskTypes,
       });
       throw error;
     }
   }
 
-  async updateWorkerReputation(
-    workerId: string,
-    taskResults: any[]
-  ): Promise<WorkerProfile> {
+  async updateWorkerReputation(workerId: string, taskResults: any[]): Promise<WorkerProfile> {
     try {
       const worker = await this.getWorkerProfile(workerId);
       if (!worker) {
@@ -319,15 +294,14 @@ export class WorkerManagementService {
 
       this.logger.info('Worker reputation updated', {
         workerId: worker.workerId,
-        newScore: updatedWorker.reputationScore
+        newScore: updatedWorker.reputationScore,
       });
 
       return updatedWorker;
-
     } catch (error) {
       this.logger.error('Worker reputation update failed', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -351,19 +325,18 @@ export class WorkerManagementService {
       const reputationStats = await this.reputationService.getWorkerStatistics(workerId);
 
       this.logger.info('Worker stats retrieved', {
-        workerId
+        workerId,
       });
 
       return {
         profile: worker,
         activityMetrics,
-        reputationStats
+        reputationStats,
       };
-
     } catch (error) {
       this.logger.error('Failed to get worker stats', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -382,7 +355,7 @@ export class WorkerManagementService {
       // Process wallet activity and update worker metrics if needed
       this.logger.info('Processing wallet activity', {
         workerId,
-        activityType: activity.type
+        activityType: activity.type,
       });
 
       // Update activity metrics
@@ -390,20 +363,16 @@ export class WorkerManagementService {
       const updatedMetrics = {
         ...worker.activityMetrics,
         lastWalletActivity: activity.timestamp,
-        totalTransactions: (worker.activityMetrics?.totalTransactions || 0) + 1
+        totalTransactions: (worker.activityMetrics?.totalTransactions || 0) + 1,
       };
 
-      await this.workerRepository.updateWorkerActivityMetrics(
-        workerId,
-        updatedMetrics
-      );
-
+      await this.workerRepository.updateWorkerActivityMetrics(workerId, updatedMetrics);
     } catch (error) {
       this.logger.error('Failed to handle wallet activity', {
         error,
         workerId,
-        activity
+        activity,
       });
     }
   }
-} 
+}

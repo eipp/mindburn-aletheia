@@ -26,21 +26,17 @@ class SumsubKYCProvider implements KYCProvider {
     details: any;
   }> {
     try {
-      const response = await axios.post(
-        `${this.apiUrl}/resources/applicants`,
-        data,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post(`${this.apiUrl}/resources/applicants`, data, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       return {
         verified: response.data.review.reviewStatus === 'completed',
         score: response.data.review.score || 0,
-        details: response.data
+        details: response.data,
       };
     } catch (error) {
       throw new Error(`Sumsub verification failed: ${error.message}`);
@@ -52,17 +48,16 @@ export class IdentityVerificationService {
   private readonly logger: Logger;
   private readonly kycProvider: KYCProvider;
   private readonly fraudDetectionEnabled: boolean;
-  private readonly verificationCache: Map<string, {
-    timestamp: number;
-    result: IdentityVerification;
-  }>;
+  private readonly verificationCache: Map<
+    string,
+    {
+      timestamp: number;
+      result: IdentityVerification;
+    }
+  >;
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-  constructor(
-    logger: Logger,
-    kycProvider: KYCProvider,
-    fraudDetectionEnabled: boolean = true
-  ) {
+  constructor(logger: Logger, kycProvider: KYCProvider, fraudDetectionEnabled: boolean = true) {
     this.logger = logger.child({ service: 'IdentityVerification' });
     this.kycProvider = kycProvider;
     this.fraudDetectionEnabled = fraudDetectionEnabled;
@@ -86,7 +81,7 @@ export class IdentityVerificationService {
       // Check cache first
       const cacheKey = this.generateCacheKey(workerId, identityData);
       const cachedResult = this.verificationCache.get(cacheKey);
-      
+
       if (cachedResult && Date.now() - cachedResult.timestamp < this.CACHE_TTL) {
         this.logger.info('Using cached identity verification result', { workerId });
         return cachedResult.result;
@@ -107,12 +102,12 @@ export class IdentityVerificationService {
           firstName: identityData.firstName,
           lastName: identityData.lastName,
           dateOfBirth: identityData.dateOfBirth,
-          nationality: identityData.nationality
+          nationality: identityData.nationality,
         },
         documents: {
           idCard: identityData.documentImages,
-          selfie: identityData.selfieImage
-        }
+          selfie: identityData.selfieImage,
+        },
       });
 
       const verificationResult: IdentityVerification = {
@@ -124,28 +119,27 @@ export class IdentityVerificationService {
           documentNumber: this.hashSensitiveData(identityData.documentNumber),
           verificationScore: kycResult.score,
           provider: 'sumsub',
-          details: kycResult.details
-        }
+          details: kycResult.details,
+        },
       };
 
       // Cache the result
       this.verificationCache.set(cacheKey, {
         timestamp: Date.now(),
-        result: verificationResult
+        result: verificationResult,
       });
 
       this.logger.info('Identity verification completed', {
         workerId,
         status: verificationResult.status,
-        score: kycResult.score
+        score: kycResult.score,
       });
 
       return verificationResult;
-
     } catch (error) {
       this.logger.error('Identity verification failed', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -161,7 +155,7 @@ export class IdentityVerificationService {
     try {
       const expiryDate = new Date(documentData.expiryDate);
       const currentDate = new Date();
-      
+
       // Add 3 months buffer for document expiry
       const bufferDate = new Date(currentDate);
       bufferDate.setMonth(currentDate.getMonth() + 3);
@@ -171,15 +165,14 @@ export class IdentityVerificationService {
       this.logger.info('Document expiry validation completed', {
         workerId,
         documentType: documentData.documentType,
-        isValid
+        isValid,
       });
 
       return isValid;
-
     } catch (error) {
       this.logger.error('Document expiry validation failed', {
         error,
-        workerId
+        workerId,
       });
       throw error;
     }
@@ -193,11 +186,11 @@ export class IdentityVerificationService {
       'lastName',
       'dateOfBirth',
       'nationality',
-      'documentImages'
+      'documentImages',
     ];
 
     const missingFields = requiredFields.filter(field => !data[field]);
-    
+
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
@@ -220,7 +213,7 @@ export class IdentityVerificationService {
     // 3. Check against fraud database
     // 4. Image manipulation detection
     // 5. Face recognition for selfie verification
-    
+
     // For now, this is a placeholder
     this.logger.info('Fraud detection check completed');
   }
@@ -229,7 +222,7 @@ export class IdentityVerificationService {
     const dataString = JSON.stringify({
       workerId,
       documentNumber: data.documentNumber,
-      dateOfBirth: data.dateOfBirth
+      dateOfBirth: data.dateOfBirth,
     });
     return createHash('sha256').update(dataString).digest('hex');
   }
@@ -242,4 +235,4 @@ export class IdentityVerificationService {
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
   }
-} 
+}

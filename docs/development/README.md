@@ -2,65 +2,86 @@
 
 ## Prerequisites
 
-- Node.js 20.x
-- pnpm 8.x
-- Docker & Docker Compose
-- AWS CLI configured with appropriate credentials
-- Telegram Bot Token (for local development)
+- Node.js v20+
+- pnpm v10.5+
+- Docker (for local development environment)
 
 ## Project Structure
 
 ```
-aletheia/
-├── infrastructure/        # AWS CDK infrastructure code
+mindburn-aletheia/
 ├── packages/
-│   ├── worker-interface/ # Telegram Bot & API backend
-│   └── worker-webapp/    # Telegram Mini App frontend
-├── docs/                 # Documentation
-├── scripts/              # Development and deployment scripts
-└── docker-compose.yml    # Local development services
+│   ├── core/             # Core functionality
+│   ├── shared/           # Shared utilities
+│   ├── developerPlatform/ # Developer API
+│   ├── workerInterface/ # Telegram Bot & API backend
+│   ├── workerWebapp/    # Telegram Mini App frontend
+│   ├── taskManagement/   # Task distribution 
+│   ├── verificationEngine/ # Verification logic
+│   ├── paymentSystem/    # Payment processing
+│   ├── tonContracts/     # Smart contracts
+│   └── tokenEconomy/     # Token economics
+├── infrastructure/       # IaC and deployment
+└── scripts/              # Utility scripts
 ```
 
-## Local Development Setup
+## Getting Started
 
-1. Clone the repository:
-```bash
-git clone https://github.com/mindburn/aletheia.git
-cd aletheia
-```
+### Install Dependencies
 
-2. Install dependencies:
 ```bash
 pnpm install
 ```
 
-3. Copy environment variables:
-```bash
-cp .env.example .env
-```
+### Start Development Servers
 
-4. Configure environment variables:
-```bash
-# .env
-TELEGRAM_BOT_TOKEN=your_bot_token
-AWS_REGION=us-east-1
-STAGE=local
-```
+#### Worker Interface (Telegram Bot & API)
 
-5. Start local services:
 ```bash
-docker-compose up -d
-```
-
-6. Start development servers:
-```bash
-# Terminal 1 - Worker Interface
-cd packages/worker-interface
+cd packages/workerInterface
 pnpm dev
+```
 
-# Terminal 2 - Worker WebApp
-cd packages/worker-webapp
+#### Worker WebApp (Telegram Mini App)
+
+```bash
+cd packages/workerWebapp
 pnpm dev
+```
+
+### Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run only unit tests
+pnpm test:unit
+
+# Run only integration tests
+pnpm test:integration
+
+# Run only e2e tests
+pnpm test:e2e
+```
+
+### Debugging
+
+#### VS Code Configuration
+
+```json
+{
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Worker Interface",
+      "cwd": "${workspaceFolder}/packages/workerInterface",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev"]
+    }
+  ]
+}
 ```
 
 ## Development Workflow
@@ -101,11 +122,13 @@ pnpm test:e2e
 ### Infrastructure Development
 
 1. Install AWS CDK CLI:
+
 ```bash
 npm install -g aws-cdk
 ```
 
 2. Deploy infrastructure locally:
+
 ```bash
 cd infrastructure
 pnpm synth  # Generate CloudFormation template
@@ -115,7 +138,7 @@ pnpm deploy # Deploy to AWS
 ### Database Migrations
 
 ```bash
-cd packages/worker-interface
+cd packages/workerInterface
 pnpm migrate:create name  # Create migration
 pnpm migrate:up          # Apply migrations
 pnpm migrate:down        # Rollback migrations
@@ -126,6 +149,7 @@ pnpm migrate:down        # Rollback migrations
 ### Worker Interface
 
 1. Configure VS Code launch.json:
+
 ```json
 {
   "version": "0.2.0",
@@ -136,7 +160,7 @@ pnpm migrate:down        # Rollback migrations
       "name": "Debug Worker Interface",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
-      "cwd": "${workspaceFolder}/packages/worker-interface",
+      "cwd": "${workspaceFolder}/packages/workerInterface",
       "console": "integratedTerminal"
     }
   ]
@@ -149,12 +173,13 @@ pnpm migrate:down        # Rollback migrations
 
 1. Use Chrome DevTools for debugging
 2. Enable source maps in vite.config.ts:
+
 ```typescript
 export default defineConfig({
   build: {
-    sourcemap: true
-  }
-})
+    sourcemap: true,
+  },
+});
 ```
 
 ## Performance Optimization
@@ -173,6 +198,7 @@ export default defineConfig({
 5. Validate and sanitize all user input
 6. Use prepared statements for database queries
 7. Keep dependencies updated:
+
 ```bash
 pnpm audit
 pnpm update
@@ -194,11 +220,13 @@ See [Deployment Guide](../deployment/README.md) for detailed instructions.
 ### Common Issues
 
 1. **API Connection Errors**
+
    - Check environment variables
    - Verify AWS credentials
    - Check VPC and security group settings
 
 2. **Build Failures**
+
    - Clear node_modules and reinstall
    - Check TypeScript errors
    - Verify dependency versions
@@ -212,4 +240,4 @@ See [Deployment Guide](../deployment/README.md) for detailed instructions.
 
 1. Check existing issues on GitHub
 2. Join our [Developer Discord](https://discord.gg/mindburn)
-3. Contact the team at dev@mindburn.org 
+3. Contact the team at dev@mindburn.org

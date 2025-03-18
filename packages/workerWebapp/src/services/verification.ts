@@ -1,4 +1,4 @@
-import { FraudDetector } from "@mindburn/verificationEngine/src/fraud-detection/fraudDetector";
+import { FraudDetector } from '@mindburn/verificationEngine/src/fraud-detection/fraudDetector';
 import logger from '../utils/logger';
 
 /**
@@ -7,12 +7,12 @@ import logger from '../utils/logger';
  */
 export class VerificationService {
   private fraudDetector: FraudDetector;
-  
+
   constructor() {
     this.fraudDetector = new FraudDetector();
     logger.info('Verification service initialized');
   }
-  
+
   /**
    * Verify a task submission
    */
@@ -26,27 +26,31 @@ export class VerificationService {
     processingTime: number;
   }) {
     logger.info('Verifying task submission', { taskId: params.taskId, workerId: params.workerId });
-    
+
     try {
       const result = await this.fraudDetector.detectFraud(params);
-      
+
       if (result.isFraudulent) {
-        logger.warn('Potential fraud detected', { 
-          taskId: params.taskId, 
+        logger.warn('Potential fraud detected', {
+          taskId: params.taskId,
           workerId: params.workerId,
           fraudLevel: result.fraudLevel,
           riskScore: result.riskScore,
-          reasons: result.reasons
+          reasons: result.reasons,
         });
       }
-      
+
       return result;
     } catch (error) {
-      logger.error('Error verifying submission', { error, taskId: params.taskId, workerId: params.workerId });
+      logger.error('Error verifying submission', {
+        error,
+        taskId: params.taskId,
+        workerId: params.workerId,
+      });
       throw error;
     }
   }
-  
+
   /**
    * Check if a worker is in good standing
    */
@@ -57,11 +61,11 @@ export class VerificationService {
       metrics: {
         accuracyScore: 0.95,
         completedTasks: 120,
-        rejectionRate: 0.03
-      }
+        rejectionRate: 0.03,
+      },
     };
   }
 }
 
 // Export a singleton instance
-export const verificationService = new VerificationService(); 
+export const verificationService = new VerificationService();

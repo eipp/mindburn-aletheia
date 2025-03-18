@@ -12,7 +12,11 @@ export class ModelRegistryWithErrorHandling {
     this.modelRegistry = modelRegistry;
   }
 
-  private createErrorContext(modelId: string, operation: string, metadata?: Record<string, any>): ErrorContext {
+  private createErrorContext(
+    modelId: string,
+    operation: string,
+    metadata?: Record<string, any>
+  ): ErrorContext {
     return {
       modelId,
       operation,

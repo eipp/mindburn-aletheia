@@ -11,17 +11,17 @@ const METRICS_NAMESPACE = 'WorkerBot';
 export const analyticsMiddleware = (): Middleware<BotContext> => {
   return async (ctx: BotContext, next: () => Promise<void>) => {
     const startTime = Date.now();
-    
+
     try {
       // Process request
       await next();
-      
+
       // Calculate response time
       const responseTime = Date.now() - startTime;
-      
+
       const userId = ctx.from?.id.toString();
       const command = ctx.message?.text?.split(' ')[0];
-      
+
       // Prepare metric data
       const metricData: CloudWatch.MetricData = [
         {
@@ -31,13 +31,13 @@ export const analyticsMiddleware = (): Middleware<BotContext> => {
           Dimensions: [
             {
               Name: 'UserId',
-              Value: userId || 'unknown'
+              Value: userId || 'unknown',
             },
             {
               Name: 'Command',
-              Value: command || 'unknown'
-            }
-          ]
+              Value: command || 'unknown',
+            },
+          ],
         },
         {
           MetricName: 'ResponseTime',
@@ -46,26 +46,28 @@ export const analyticsMiddleware = (): Middleware<BotContext> => {
           Dimensions: [
             {
               Name: 'UserId',
-              Value: userId || 'unknown'
+              Value: userId || 'unknown',
             },
             {
               Name: 'Command',
-              Value: command || 'unknown'
-            }
-          ]
-        }
+              Value: command || 'unknown',
+            },
+          ],
+        },
       ];
 
       // Publish metrics
-      await cloudwatch.putMetricData({
-        Namespace: METRICS_NAMESPACE,
-        MetricData: metricData
-      }).promise();
+      await cloudwatch
+        .putMetricData({
+          Namespace: METRICS_NAMESPACE,
+          MetricData: metricData,
+        })
+        .promise();
 
       logger.info('Analytics metrics published', {
         userId,
         command,
-        responseTime
+        responseTime,
       });
     } catch (error) {
       logger.error('Analytics middleware error:', error);
@@ -75,4 +77,4 @@ export const analyticsMiddleware = (): Middleware<BotContext> => {
       }
     }
   };
-}; 
+};

@@ -17,11 +17,11 @@ composer.command('start', async (ctx: BotContext) => {
 
   await ctx.reply(
     'Welcome to Aletheia! 🎉\n\n' +
-    'We help verify AI outputs through human verification.\n\n' +
-    'To get started, you need to:\n' +
-    '1. Complete registration (/register)\n' +
-    '2. Connect your TON wallet (/wallet)\n' +
-    '3. Start working on tasks (/tasks)'
+      'We help verify AI outputs through human verification.\n\n' +
+      'To get started, you need to:\n' +
+      '1. Complete registration (/register)\n' +
+      '2. Connect your TON wallet (/wallet)\n' +
+      '3. Start working on tasks (/tasks)'
   );
 });
 
@@ -33,13 +33,13 @@ composer.command('register', async (ctx: BotContext) => {
   }
 
   ctx.session.state = UserState.REGISTERING;
-  
+
   await ctx.reply(
     'Please provide your information:\n\n' +
-    '1. What is your preferred language for tasks? (e.g., "en" for English)\n' +
-    '2. Do you have experience in content moderation? (Yes/No)\n\n' +
-    'Reply with your answers in the format: "language, experience"\n' +
-    'Example: "en, Yes"'
+      '1. What is your preferred language for tasks? (e.g., "en" for English)\n' +
+      '2. Do you have experience in content moderation? (Yes/No)\n\n' +
+      'Reply with your answers in the format: "language, experience"\n' +
+      'Example: "en, Yes"'
   );
 });
 
@@ -51,10 +51,10 @@ composer.command('wallet', async (ctx: BotContext) => {
   }
 
   ctx.session.state = UserState.CONNECTING_WALLET;
-  
+
   await ctx.reply(
     'To receive payments, you need to connect your TON wallet.\n\n' +
-    'Please send your TON wallet address.'
+      'Please send your TON wallet address.'
   );
 });
 
@@ -66,36 +66,36 @@ composer.command('tasks', async (ctx: BotContext) => {
   }
 
   try {
-    const result = await docClient.send(new QueryCommand({
-      TableName: TableNames.TASKS,
-      IndexName: 'StatusIndex',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':status': TaskStatus.PENDING,
-      },
-      Limit: 5,
-    }));
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TableNames.TASKS,
+        IndexName: 'StatusIndex',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': TaskStatus.PENDING,
+        },
+        Limit: 5,
+      })
+    );
 
     if (!result.Items?.length) {
       await ctx.reply('No tasks available at the moment. Please check back later!');
       return;
     }
 
-    const taskMessages = result.Items.map((task: any) => 
-      `Task ID: ${task.id}\n` +
-      `Type: ${task.type}\n` +
-      `Reward: ${task.reward} TON\n` +
-      `Time limit: ${Math.round((task.deadline - Date.now()) / 60000)} minutes\n\n` +
-      `Use /accept ${task.id} to take this task`
+    const taskMessages = result.Items.map(
+      (task: any) =>
+        `Task ID: ${task.id}\n` +
+        `Type: ${task.type}\n` +
+        `Reward: ${task.reward} TON\n` +
+        `Time limit: ${Math.round((task.deadline - Date.now()) / 60000)} minutes\n\n` +
+        `Use /accept ${task.id} to take this task`
     );
 
-    await ctx.reply(
-      'Available Tasks:\n\n' +
-      taskMessages.join('\n---\n')
-    );
+    await ctx.reply('Available Tasks:\n\n' + taskMessages.join('\n---\n'));
   } catch (error) {
     logger.error('Error fetching tasks', { error });
     await ctx.reply('Error fetching tasks. Please try again later.');
@@ -116,10 +116,12 @@ composer.command('accept', async (ctx: BotContext) => {
   }
 
   try {
-    const result = await docClient.send(new GetCommand({
-      TableName: TableNames.TASKS,
-      Key: { id: taskId },
-    }));
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TableNames.TASKS,
+        Key: { id: taskId },
+      })
+    );
 
     if (!result.Item) {
       await ctx.reply('Task not found.');
@@ -131,29 +133,31 @@ composer.command('accept', async (ctx: BotContext) => {
       return;
     }
 
-    await docClient.send(new UpdateCommand({
-      TableName: TableNames.TASKS,
-      Key: { id: taskId },
-      UpdateExpression: 'SET #status = :status, assignedTo = :userId',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':status': TaskStatus.ASSIGNED,
-        ':userId': ctx.session.userId,
-        ':pendingStatus': TaskStatus.PENDING,
-      },
-      ConditionExpression: '#status = :pendingStatus',
-    }));
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TableNames.TASKS,
+        Key: { id: taskId },
+        UpdateExpression: 'SET #status = :status, assignedTo = :userId',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': TaskStatus.ASSIGNED,
+          ':userId': ctx.session.userId,
+          ':pendingStatus': TaskStatus.PENDING,
+        },
+        ConditionExpression: '#status = :pendingStatus',
+      })
+    );
 
     ctx.session.currentTask = taskId;
     ctx.session.state = UserState.WORKING;
 
     await ctx.reply(
       'Task accepted! Here are the details:\n\n' +
-      `Type: ${result.Item.type}\n` +
-      `Instructions: ${result.Item.data.instructions}\n\n` +
-      'When ready, submit your verification using /submit <your_answer>'
+        `Type: ${result.Item.type}\n` +
+        `Instructions: ${result.Item.data.instructions}\n\n` +
+        'When ready, submit your verification using /submit <your_answer>'
     );
   } catch (error) {
     logger.error('Error accepting task', { error, taskId });
@@ -180,37 +184,41 @@ composer.command('submit', async (ctx: BotContext) => {
   }
 
   try {
-    await docClient.send(new UpdateCommand({
-      TableName: TableNames.TASKS,
-      Key: { id: ctx.session.currentTask },
-      UpdateExpression: 'SET #status = :status, submittedAt = :now, result = :result',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':status': TaskStatus.SUBMITTED,
-        ':now': Date.now(),
-        ':result': { answer },
-      },
-    }));
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TableNames.TASKS,
+        Key: { id: ctx.session.currentTask },
+        UpdateExpression: 'SET #status = :status, submittedAt = :now, result = :result',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': TaskStatus.SUBMITTED,
+          ':now': Date.now(),
+          ':result': { answer },
+        },
+      })
+    );
 
     // Notify task queue about submission
-    await sqsClient.send(new SendMessageCommand({
-      QueueUrl: QueueUrls.TASKS,
-      MessageBody: JSON.stringify({
-        type: 'TASK_SUBMITTED',
-        taskId: ctx.session.currentTask,
-        userId: ctx.session.userId,
-      }),
-    }));
+    await sqsClient.send(
+      new SendMessageCommand({
+        QueueUrl: QueueUrls.TASKS,
+        MessageBody: JSON.stringify({
+          type: 'TASK_SUBMITTED',
+          taskId: ctx.session.currentTask,
+          userId: ctx.session.userId,
+        }),
+      })
+    );
 
     ctx.session.state = UserState.IDLE;
     ctx.session.currentTask = undefined;
 
     await ctx.reply(
       'Task submitted successfully! 🎉\n\n' +
-      'We will review your submission and process the payment soon.\n' +
-      'Use /tasks to find more tasks.'
+        'We will review your submission and process the payment soon.\n' +
+        'Use /tasks to find more tasks.'
     );
   } catch (error) {
     logger.error('Error submitting task', { error, taskId: ctx.session.currentTask });
@@ -222,11 +230,11 @@ composer.command('submit', async (ctx: BotContext) => {
 composer.command('stats', async (ctx: BotContext) => {
   await ctx.reply(
     'Your Statistics:\n\n' +
-    `Total Tasks: ${ctx.session.totalTasks}\n` +
-    `Completed Tasks: ${ctx.session.completedTasks}\n` +
-    `Success Rate: ${ctx.session.totalTasks ? Math.round((ctx.session.completedTasks / ctx.session.totalTasks) * 100) : 0}%\n` +
-    `Reputation Score: ${ctx.session.reputation}\n` +
-    `Total Earnings: ${ctx.session.earnings} TON`
+      `Total Tasks: ${ctx.session.totalTasks}\n` +
+      `Completed Tasks: ${ctx.session.completedTasks}\n` +
+      `Success Rate: ${ctx.session.totalTasks ? Math.round((ctx.session.completedTasks / ctx.session.totalTasks) * 100) : 0}%\n` +
+      `Reputation Score: ${ctx.session.reputation}\n` +
+      `Total Earnings: ${ctx.session.earnings} TON`
   );
 });
 
@@ -234,15 +242,15 @@ composer.command('stats', async (ctx: BotContext) => {
 composer.command('help', async (ctx: BotContext) => {
   await ctx.reply(
     'Available Commands:\n\n' +
-    '/start - Start the bot\n' +
-    '/register - Complete registration\n' +
-    '/wallet - Connect TON wallet\n' +
-    '/tasks - View available tasks\n' +
-    '/accept <task_id> - Accept a task\n' +
-    '/submit <answer> - Submit task result\n' +
-    '/stats - View your statistics\n' +
-    '/help - Show this help message'
+      '/start - Start the bot\n' +
+      '/register - Complete registration\n' +
+      '/wallet - Connect TON wallet\n' +
+      '/tasks - View available tasks\n' +
+      '/accept <task_id> - Accept a task\n' +
+      '/submit <answer> - Submit task result\n' +
+      '/stats - View your statistics\n' +
+      '/help - Show this help message'
   );
 });
 
-export default composer; 
+export default composer;

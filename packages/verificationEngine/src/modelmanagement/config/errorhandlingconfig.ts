@@ -3,7 +3,7 @@ import {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
-  createPerformanceValidator
+  createPerformanceValidator,
 } from '@mindburn/shared';
 
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -153,24 +153,22 @@ const envMap: Record<string, string> = {
   'globalConfig.monitoring.errorRateThreshold': 'ERROR_RATE_THRESHOLD',
   'globalConfig.monitoring.alertingEnabled': 'ERROR_ALERTING_ENABLED',
   'fallbackStrategy.enabled': 'FALLBACK_STRATEGY_ENABLED',
-  'fallbackStrategy.logFallback': 'LOG_FALLBACK'
+  'fallbackStrategy.logFallback': 'LOG_FALLBACK',
 };
 
 export const validateConfig = createConfigValidator<ErrorHandlingConfig>({
   schema: ErrorHandlingSchema,
   defaultConfig,
-  transformers: [
-    createEnvironmentTransformer(envMap)
-  ],
+  transformers: [createEnvironmentTransformer(envMap)],
   validators: [
     createSecurityValidator(['globalConfig.errorReporting.service']),
     createPerformanceValidator({
       'defaultHandler.retryConfig.maxAttempts': 5,
-      'defaultHandler.notificationConfig.throttlingPeriod': 7200
-    })
-  ]
+      'defaultHandler.notificationConfig.throttlingPeriod': 7200,
+    }),
+  ],
 });
 
 export function getConfig(): ErrorHandlingConfig {
   return validateConfig({});
-} 
+}

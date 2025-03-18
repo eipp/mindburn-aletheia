@@ -29,22 +29,26 @@ A Telegram Mini App for workers to participate in content verification tasks on 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/mindburn/aletheia.git
 cd aletheia/packages/worker-webapp
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Create a `.env` file:
+
 ```bash
 cp .env.example .env
 ```
 
 4. Update the environment variables in `.env`:
+
 ```
 VITE_API_ENDPOINT=http://localhost:4000
 ```
@@ -52,6 +56,7 @@ VITE_API_ENDPOINT=http://localhost:4000
 ### Development
 
 Start the development server:
+
 ```bash
 pnpm dev
 ```
@@ -61,11 +66,13 @@ The app will be available at `http://localhost:3000`.
 ### Building for Production
 
 Build the app:
+
 ```bash
 pnpm build
 ```
 
 Preview the production build:
+
 ```bash
 pnpm preview
 ```

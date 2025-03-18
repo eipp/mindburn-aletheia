@@ -1,5 +1,11 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument, GetCommandInput, PutCommandInput, QueryCommandInput, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocument,
+  GetCommandInput,
+  PutCommandInput,
+  QueryCommandInput,
+  UpdateCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { WorkerProfile, Task, Transaction } from '../types';
 
 export class DynamoDBService {
@@ -11,8 +17,8 @@ export class DynamoDBService {
       region: process.env.AWS_REGION,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-      }
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
     });
 
     this.client = DynamoDBDocument.from(client);
@@ -26,19 +32,21 @@ export class DynamoDBService {
   async getWorkerProfile(userId: string): Promise<WorkerProfile | null> {
     const params: GetCommandInput = {
       TableName: this.getTableName(process.env.DYNAMODB_USERS_TABLE!),
-      Key: { userId }
+      Key: { userId },
     };
 
     try {
       const result = await this.client.get(params);
-      return result.Item as WorkerProfile || null;
+      return (result.Item as WorkerProfile) || null;
     } catch (error) {
       console.error('Error getting worker profile:', error);
       return null;
     }
   }
 
-  async updateWorkerProfile(profile: Partial<WorkerProfile> & { userId: string }): Promise<boolean> {
+  async updateWorkerProfile(
+    profile: Partial<WorkerProfile> & { userId: string }
+  ): Promise<boolean> {
     const updateExpressions: string[] = [];
     const expressionAttributeNames: Record<string, string> = {};
     const expressionAttributeValues: Record<string, any> = {};
@@ -56,7 +64,7 @@ export class DynamoDBService {
       Key: { userId: profile.userId },
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: expressionAttributeValues,
     };
 
     try {
@@ -71,7 +79,7 @@ export class DynamoDBService {
   async createWorkerProfile(profile: WorkerProfile): Promise<boolean> {
     const params: PutCommandInput = {
       TableName: this.getTableName(process.env.DYNAMODB_USERS_TABLE!),
-      Item: profile
+      Item: profile,
     };
 
     try {
@@ -86,12 +94,12 @@ export class DynamoDBService {
   async getTask(taskId: string): Promise<Task | null> {
     const params: GetCommandInput = {
       TableName: this.getTableName(process.env.DYNAMODB_TASKS_TABLE!),
-      Key: { id: taskId }
+      Key: { id: taskId },
     };
 
     try {
       const result = await this.client.get(params);
-      return result.Item as Task || null;
+      return (result.Item as Task) || null;
     } catch (error) {
       console.error('Error getting task:', error);
       return null;
@@ -116,7 +124,7 @@ export class DynamoDBService {
       Key: { id: taskId },
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: expressionAttributeValues,
     };
 
     try {
@@ -133,15 +141,15 @@ export class DynamoDBService {
       TableName: this.getTableName(process.env.DYNAMODB_TRANSACTIONS_TABLE!),
       KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
-        ':userId': userId
+        ':userId': userId,
       },
       Limit: limit,
-      ScanIndexForward: false
+      ScanIndexForward: false,
     };
 
     try {
       const result = await this.client.query(params);
-      return result.Items as Transaction[] || [];
+      return (result.Items as Transaction[]) || [];
     } catch (error) {
       console.error('Error getting transactions:', error);
       return [];
@@ -151,7 +159,7 @@ export class DynamoDBService {
   async createTransaction(transaction: Transaction): Promise<boolean> {
     const params: PutCommandInput = {
       TableName: this.getTableName(process.env.DYNAMODB_TRANSACTIONS_TABLE!),
-      Item: transaction
+      Item: transaction,
     };
 
     try {
@@ -162,4 +170,4 @@ export class DynamoDBService {
       return false;
     }
   }
-} 
+}

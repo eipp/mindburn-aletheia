@@ -1,6 +1,6 @@
 /**
  * Core functionality for Mindburn Aletheia
- * 
+ *
  * This package contains core functionality shared across the application.
  */
 
@@ -14,6 +14,6 @@ export function healthCheck() {
   return {
     status: 'healthy',
     version: VERSION,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-} 
+}

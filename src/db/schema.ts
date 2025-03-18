@@ -6,23 +6,23 @@ export const TABLES = {
   FRAUD_EVENTS: 'fraud_events',
   QUALITY_METRICS: 'quality_metrics',
   GOLDEN_SET: 'golden_set',
-  IP_INTELLIGENCE: 'ip_intelligence'
+  IP_INTELLIGENCE: 'ip_intelligence',
 };
 
 export const INDEXES = {
   WORKER_ACTIVITY: {
     BY_WORKER: 'by_worker_index',
     BY_IP: 'by_ip_index',
-    BY_DEVICE: 'by_device_index'
+    BY_DEVICE: 'by_device_index',
   },
   FRAUD_EVENTS: {
     BY_SEVERITY: 'by_severity_index',
-    BY_TYPE: 'by_type_index'
+    BY_TYPE: 'by_type_index',
   },
   QUALITY_METRICS: {
     BY_SCORE: 'by_score_index',
-    BY_TASK_TYPE: 'by_task_type_index'
-  }
+    BY_TASK_TYPE: 'by_task_type_index',
+  },
 };
 
 export class SchemaManager {
@@ -38,7 +38,7 @@ export class SchemaManager {
       this.createFraudEventsTable(),
       this.createQualityMetricsTable(),
       this.createGoldenSetTable(),
-      this.createIpIntelligenceTable()
+      this.createIpIntelligenceTable(),
     ]);
   }
 
@@ -48,55 +48,55 @@ export class SchemaManager {
         IndexName: INDEXES.WORKER_ACTIVITY.BY_WORKER,
         KeySchema: [
           { AttributeName: 'workerId', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
+          WriteCapacityUnits: 5,
+        },
       },
       {
         IndexName: INDEXES.WORKER_ACTIVITY.BY_IP,
         KeySchema: [
           { AttributeName: 'ipAddress', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
+          WriteCapacityUnits: 5,
+        },
       },
       {
         IndexName: INDEXES.WORKER_ACTIVITY.BY_DEVICE,
         KeySchema: [
           { AttributeName: 'deviceFingerprint', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
-      }
+          WriteCapacityUnits: 5,
+        },
+      },
     ];
 
     const command = new CreateTableCommand({
       TableName: TABLES.WORKER_ACTIVITY,
       KeySchema: [
         { AttributeName: 'taskId', KeyType: 'HASH' },
-        { AttributeName: 'timestamp', KeyType: 'RANGE' }
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'taskId', AttributeType: 'S' },
         { AttributeName: 'timestamp', AttributeType: 'S' },
         { AttributeName: 'workerId', AttributeType: 'S' },
         { AttributeName: 'ipAddress', AttributeType: 'S' },
-        { AttributeName: 'deviceFingerprint', AttributeType: 'S' }
+        { AttributeName: 'deviceFingerprint', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: indexes,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     });
 
     await this.client.send(command);
@@ -108,42 +108,42 @@ export class SchemaManager {
         IndexName: INDEXES.FRAUD_EVENTS.BY_SEVERITY,
         KeySchema: [
           { AttributeName: 'severity', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
+          WriteCapacityUnits: 5,
+        },
       },
       {
         IndexName: INDEXES.FRAUD_EVENTS.BY_TYPE,
         KeySchema: [
           { AttributeName: 'fraudType', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
-      }
+          WriteCapacityUnits: 5,
+        },
+      },
     ];
 
     const command = new CreateTableCommand({
       TableName: TABLES.FRAUD_EVENTS,
       KeySchema: [
         { AttributeName: 'eventId', KeyType: 'HASH' },
-        { AttributeName: 'timestamp', KeyType: 'RANGE' }
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'eventId', AttributeType: 'S' },
         { AttributeName: 'timestamp', AttributeType: 'S' },
         { AttributeName: 'severity', AttributeType: 'S' },
-        { AttributeName: 'fraudType', AttributeType: 'S' }
+        { AttributeName: 'fraudType', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: indexes,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     });
 
     await this.client.send(command);
@@ -155,42 +155,42 @@ export class SchemaManager {
         IndexName: INDEXES.QUALITY_METRICS.BY_SCORE,
         KeySchema: [
           { AttributeName: 'qualityScore', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
+          WriteCapacityUnits: 5,
+        },
       },
       {
         IndexName: INDEXES.QUALITY_METRICS.BY_TASK_TYPE,
         KeySchema: [
           { AttributeName: 'taskType', KeyType: 'HASH' },
-          { AttributeName: 'timestamp', KeyType: 'RANGE' }
+          { AttributeName: 'timestamp', KeyType: 'RANGE' },
         ],
         Projection: { ProjectionType: 'ALL' },
         ProvisionedThroughput: {
           ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5
-        }
-      }
+          WriteCapacityUnits: 5,
+        },
+      },
     ];
 
     const command = new CreateTableCommand({
       TableName: TABLES.QUALITY_METRICS,
       KeySchema: [
         { AttributeName: 'workerId', KeyType: 'HASH' },
-        { AttributeName: 'timestamp', KeyType: 'RANGE' }
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'workerId', AttributeType: 'S' },
         { AttributeName: 'timestamp', AttributeType: 'S' },
         { AttributeName: 'qualityScore', AttributeType: 'N' },
-        { AttributeName: 'taskType', AttributeType: 'S' }
+        { AttributeName: 'taskType', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: indexes,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     });
 
     await this.client.send(command);
@@ -199,13 +199,9 @@ export class SchemaManager {
   private async createGoldenSetTable(): Promise<void> {
     const command = new CreateTableCommand({
       TableName: TABLES.GOLDEN_SET,
-      KeySchema: [
-        { AttributeName: 'taskId', KeyType: 'HASH' }
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'taskId', AttributeType: 'S' }
-      ],
-      BillingMode: 'PAY_PER_REQUEST'
+      KeySchema: [{ AttributeName: 'taskId', KeyType: 'HASH' }],
+      AttributeDefinitions: [{ AttributeName: 'taskId', AttributeType: 'S' }],
+      BillingMode: 'PAY_PER_REQUEST',
     });
 
     await this.client.send(command);
@@ -216,19 +212,19 @@ export class SchemaManager {
       TableName: TABLES.IP_INTELLIGENCE,
       KeySchema: [
         { AttributeName: 'ipAddress', KeyType: 'HASH' },
-        { AttributeName: 'timestamp', KeyType: 'RANGE' }
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'ipAddress', AttributeType: 'S' },
-        { AttributeName: 'timestamp', AttributeType: 'S' }
+        { AttributeName: 'timestamp', AttributeType: 'S' },
       ],
       BillingMode: 'PAY_PER_REQUEST',
       TimeToLiveSpecification: {
         Enabled: true,
-        AttributeName: 'ttl'
-      }
+        AttributeName: 'ttl',
+      },
     });
 
     await this.client.send(command);
   }
-} 
+}

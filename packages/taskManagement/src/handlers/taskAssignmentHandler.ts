@@ -21,19 +21,19 @@ interface AssignmentRequest {
 
 const findEligibleWorkers = async (task: Task): Promise<WorkerProfile[]> => {
   const { minWorkerLevel, requiredSkills } = task.requirements;
-  
+
   // Query available workers with sufficient level using AvailableWorkersIndex
   const { Items: availableWorkers = [] } = await dynamo.query({
     TableName: WORKERS_TABLE,
     IndexName: 'AvailableWorkersIndex',
     KeyConditionExpression: 'availabilityStatus = :status AND #level >= :minLevel',
     ExpressionAttributeNames: {
-      '#level': 'level'
+      '#level': 'level',
     },
     ExpressionAttributeValues: {
       ':status': 'AVAILABLE',
-      ':minLevel': minWorkerLevel
-    }
+      ':minLevel': minWorkerLevel,
+    },
   });
 
   // Filter workers by task count using WorkerLoadIndex
@@ -43,22 +43,25 @@ const findEligibleWorkers = async (task: Task): Promise<WorkerProfile[]> => {
     KeyConditionExpression: 'availabilityStatus = :status AND activeTaskCount < :maxTasks',
     ExpressionAttributeValues: {
       ':status': 'AVAILABLE',
-      ':maxTasks': MAX_ASSIGNMENTS_PER_WORKER
-    }
+      ':maxTasks': MAX_ASSIGNMENTS_PER_WORKER,
+    },
   });
 
   // Create a set of eligible worker IDs
   const eligibleWorkerIds = new Set(eligibleWorkers.map(w => w.workerId));
 
   // Filter available workers by task count and required skills
-  return (availableWorkers as WorkerProfile[])
-    .filter(worker => 
+  return (availableWorkers as WorkerProfile[]).filter(
+    worker =>
       eligibleWorkerIds.has(worker.workerId) &&
       requiredSkills.every(skill => worker.skills.includes(skill))
-    );
+  );
 };
 
-const assignTaskToWorkers = async (task: Task, eligibleWorkers: WorkerProfile[]): Promise<string[]> => {
+const assignTaskToWorkers = async (
+  task: Task,
+  eligibleWorkers: WorkerProfile[]
+): Promise<string[]> => {
   const assignedWorkers: string[] = [];
 
   switch (task.distributionStrategy) {
@@ -69,12 +72,12 @@ const assignTaskToWorkers = async (task: Task, eligibleWorkers: WorkerProfile[])
 
     case TaskDistributionStrategy.TARGETED:
       // Select best matching workers based on reputation and success rate
-      const sortedWorkers = [...eligibleWorkers].sort((a, b) => 
-        (b.reputation * b.successRate) - (a.reputation * a.successRate)
+      const sortedWorkers = [...eligibleWorkers].sort(
+        (a, b) => b.reputation * b.successRate - a.reputation * a.successRate
       );
-      assignedWorkers.push(...sortedWorkers
-        .slice(0, task.requirements.verificationThreshold * 2)
-        .map(w => w.workerId));
+      assignedWorkers.push(
+        ...sortedWorkers.slice(0, task.requirements.verificationThreshold * 2).map(w => w.workerId)
+      );
       break;
 
     case TaskDistributionStrategy.AUCTION:
@@ -96,28 +99,34 @@ const assignTaskToWorkers = async (task: Task, eligibleWorkers: WorkerProfile[])
       ExpressionAttributeValues: {
         ':workers': assignedWorkers,
         ':status': TaskStatus.PENDING,
-        ':now': Date.now()
-      }
+        ':now': Date.now(),
+      },
     });
 
     // Update worker task counts
-    await Promise.all(assignedWorkers.map(workerId =>
-      dynamo.update({
-        TableName: WORKERS_TABLE,
-        Key: { workerId },
-        UpdateExpression: 'SET activeTaskCount = activeTaskCount + :inc',
-        ExpressionAttributeValues: { ':inc': 1 }
-      })
-    ));
+    await Promise.all(
+      assignedWorkers.map(workerId =>
+        dynamo.update({
+          TableName: WORKERS_TABLE,
+          Key: { workerId },
+          UpdateExpression: 'SET activeTaskCount = activeTaskCount + :inc',
+          ExpressionAttributeValues: { ':inc': 1 },
+        })
+      )
+    );
   }
 
   return assignedWorkers;
 };
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandler = async event => {
   try {
     const request: AssignmentRequest = JSON.parse(event.body || '{}');
-    logger.info('Processing task assignment', { taskId: request.taskId, workerId: request.workerId, action: request.action });
+    logger.info('Processing task assignment', {
+      taskId: request.taskId,
+      workerId: request.workerId,
+      action: request.action,
+    });
 
     // Validate request
     if (!request.taskId || !request.workerId || !request.action) {
@@ -131,7 +140,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Get task from DynamoDB
     const task = await dynamo.get({
       TableName: TASKS_TABLE,
-      Key: { taskId: request.taskId }
+      Key: { taskId: request.taskId },
     });
 
     if (!task.Item) {
@@ -146,7 +155,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Get worker from DynamoDB
     const worker = await dynamo.get({
       TableName: WORKERS_TABLE,
-      Key: { workerId: request.workerId }
+      Key: { workerId: request.workerId },
     });
 
     if (!worker.Item) {
@@ -168,31 +177,32 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       await dynamo.update({
         TableName: TASKS_TABLE,
         Key: { taskId: request.taskId },
-        UpdateExpression: 'SET assignedWorkers = list_append(if_not_exists(assignedWorkers, :empty), :worker), ' +
-                         'assignmentCount = if_not_exists(assignmentCount, :zero) + :one',
+        UpdateExpression:
+          'SET assignedWorkers = list_append(if_not_exists(assignedWorkers, :empty), :worker), ' +
+          'assignmentCount = if_not_exists(assignmentCount, :zero) + :one',
         ExpressionAttributeValues: {
           ':worker': [request.workerId],
           ':empty': [],
           ':zero': 0,
-          ':one': 1
+          ':one': 1,
         },
-        ConditionExpression: 'attribute_exists(taskId)'
+        ConditionExpression: 'attribute_exists(taskId)',
       });
 
       // Update worker's active task count
       await dynamo.update({
         TableName: WORKERS_TABLE,
         Key: { workerId: request.workerId },
-        UpdateExpression: 'SET activeTaskCount = if_not_exists(activeTaskCount, :zero) + :one, ' +
-                         'activeTasks = list_append(if_not_exists(activeTasks, :empty), :task)',
+        UpdateExpression:
+          'SET activeTaskCount = if_not_exists(activeTaskCount, :zero) + :one, ' +
+          'activeTasks = list_append(if_not_exists(activeTasks, :empty), :task)',
         ExpressionAttributeValues: {
           ':task': [request.taskId],
           ':empty': [],
           ':zero': 0,
-          ':one': 1
-        }
+          ':one': 1,
+        },
       });
-
     } else {
       // Update task rejection count
       await dynamo.update({
@@ -201,39 +211,41 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         UpdateExpression: 'SET rejectionCount = if_not_exists(rejectionCount, :zero) + :one',
         ExpressionAttributeValues: {
           ':zero': 0,
-          ':one': 1
-        }
+          ':one': 1,
+        },
       });
     }
 
     // Emit assignment event
     await eventBridge.putEvents({
-      Entries: [{
-        EventBusName: process.env.EVENT_BUS_NAME,
-        Source: 'task-management',
-        DetailType: `TaskAssignment${request.action === 'accept' ? 'Accepted' : 'Rejected'}`,
-        Detail: JSON.stringify({
-          taskId: request.taskId,
-          workerId: request.workerId,
-          timestamp: new Date().toISOString()
-        })
-      }]
+      Entries: [
+        {
+          EventBusName: process.env.EVENT_BUS_NAME,
+          Source: 'task-management',
+          DetailType: `TaskAssignment${request.action === 'accept' ? 'Accepted' : 'Rejected'}`,
+          Detail: JSON.stringify({
+            taskId: request.taskId,
+            workerId: request.workerId,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
     });
 
-    logger.info('Task assignment processed successfully', { 
-      taskId: request.taskId, 
+    logger.info('Task assignment processed successfully', {
+      taskId: request.taskId,
       workerId: request.workerId,
-      action: request.action 
+      action: request.action,
     });
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        message: request.action === 'accept' ? 'Task assigned successfully' : 'Task rejected successfully' 
-      })
+      body: JSON.stringify({
+        message:
+          request.action === 'accept' ? 'Task assigned successfully' : 'Task rejected successfully',
+      }),
     };
-
   } catch (error) {
     logger.error('Error processing task assignment', { error });
 
@@ -241,7 +253,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
@@ -249,7 +261,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
@@ -257,14 +269,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 409,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: error.message })
+        body: JSON.stringify({ error: error.message }),
       };
     }
 
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-}; 
+};

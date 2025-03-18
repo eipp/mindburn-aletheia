@@ -33,7 +33,7 @@ class WebSocketService {
           this.handleDisconnect();
         };
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = error => {
           console.error('WebSocket error:', error);
           reject(error);
         };
@@ -83,7 +83,7 @@ class WebSocketService {
 
   private resubscribeToTasks() {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.subscribedTasks.forEach((taskId) => {
+      this.subscribedTasks.forEach(taskId => {
         this.sendMessage({
           type: 'subscribe_task',
           payload: { taskId },
@@ -129,4 +129,4 @@ class WebSocketService {
   }
 }
 
-export const wsService = new WebSocketService(); 
+export const wsService = new WebSocketService();

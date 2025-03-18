@@ -13,9 +13,9 @@ export interface ILogger {
 
 export interface PaymentContractInterface {
   sendReward(
-    workerAddress: Address, 
-    amount: string, 
-    taskId: string, 
+    workerAddress: Address,
+    amount: string,
+    taskId: string,
     signature: string
   ): Promise<{
     txId: string;
@@ -49,33 +49,33 @@ export class TonService {
   private networkConfig: NetworkConfig;
 
   constructor(
-    config: NetworkConfig, 
-    logger: ILogger, 
+    config: NetworkConfig,
+    logger: ILogger,
     PaymentContractClass?: new (address: Address, client: TonClient) => PaymentContractInterface
   ) {
     this.networkConfig = config;
     this.logger = logger;
-    
+
     this.client = ton.client.create({
       endpoint: config.endpoint,
       apiKey: config.apiKey,
-      network: config.network
+      network: config.network,
     });
   }
 
   /**
    * Initialize a payment contract for sending rewards
    */
-  async initPaymentContract(address: string, PaymentContractClass: new (address: Address, client: TonClient) => PaymentContractInterface): Promise<boolean> {
+  async initPaymentContract(
+    address: string,
+    PaymentContractClass: new (address: Address, client: TonClient) => PaymentContractInterface
+  ): Promise<boolean> {
     try {
       if (!ton.validation.address(address)) {
         throw new Error('Invalid payment contract address');
       }
-      
-      this.paymentContract = new PaymentContractClass(
-        Address.parse(address),
-        this.client
-      );
+
+      this.paymentContract = new PaymentContractClass(Address.parse(address), this.client);
       return true;
     } catch (error) {
       this.logger.error('Error initializing payment contract:', { error });
@@ -130,14 +130,14 @@ export class TonService {
   validateAddress(address: string): boolean {
     return ton.validation.address(address);
   }
-  
+
   /**
    * Format a TON amount for display
    */
   formatAmount(amount: number | string): string {
     return ton.format.amount(amount);
   }
-  
+
   /**
    * Get the balance of a TON address
    */
@@ -149,29 +149,33 @@ export class TonService {
       return BigInt(0);
     }
   }
-  
+
   /**
    * Get the explorer URL for a transaction
    */
   getTransactionUrl(txHash: string): string {
     return ton.explorer.getTransactionUrl(txHash, this.networkConfig.network);
   }
-  
+
   /**
    * Get the explorer URL for an address
    */
   getAddressUrl(address: string): string {
     return ton.explorer.getAddressUrl(address, this.networkConfig.network);
   }
-  
+
   /**
    * Validate a withdrawal
    */
-  validateWithdrawal(amount: number | string, balance: number | string, minWithdrawal?: number): boolean {
+  validateWithdrawal(
+    amount: number | string,
+    balance: number | string,
+    minWithdrawal?: number
+  ): boolean {
     const result = ton.validation.withdrawal(amount, balance, minWithdrawal);
     return result.isValid;
   }
-  
+
   /**
    * Calculate the fee for a transaction
    */
@@ -204,19 +208,16 @@ export class TonService {
       if (!ton.validation.address(address)) {
         throw new Error('Invalid TON address');
       }
-      
-      const history = await this.client.getTransactions(
-        Address.parse(address),
-        limit
-      );
-      
-      return history.map((tx) => ({
+
+      const history = await this.client.getTransactions(Address.parse(address), limit);
+
+      return history.map(tx => ({
         txId: tx.txId,
         timestamp: tx.timestamp,
         amount: tx.amount.toString(),
         fee: tx.totalFee.toString(),
         status: tx.status,
-        explorerUrl: this.getTransactionUrl(tx.txId)
+        explorerUrl: this.getTransactionUrl(tx.txId),
       }));
     } catch (error) {
       this.logger.error('Error getting transaction history:', { error });
@@ -234,4 +235,4 @@ export function createTonService(
   PaymentContractClass?: new (address: Address, client: TonClient) => PaymentContractInterface
 ): TonService {
   return new TonService(config, logger, PaymentContractClass);
-} 
+}

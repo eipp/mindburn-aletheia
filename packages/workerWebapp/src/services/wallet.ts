@@ -13,7 +13,7 @@ export class WalletService {
     this.client = ton.client.create({
       endpoint: import.meta.env.VITE_TON_ENDPOINT,
       apiKey: import.meta.env.VITE_TON_API_KEY,
-      network: import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet' || 'mainnet'
+      network: (import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet',
     });
   }
 
@@ -29,7 +29,7 @@ export class WalletService {
       return {
         available: Number(balance) / 1e9,
         pending: Number(pendingBalance) / 1e9,
-        total: Number(balance + pendingBalance) / 1e9
+        total: Number(balance + pendingBalance) / 1e9,
       };
     } catch (error) {
       console.error('Error fetching balance:', error);
@@ -44,7 +44,7 @@ export class WalletService {
       }
 
       const transactions = await this.client.getTransactions(address, limit);
-      
+
       return transactions.map(tx => ({
         id: tx.hash,
         userId: address,
@@ -53,7 +53,7 @@ export class WalletService {
         status: TransactionStatus.COMPLETED,
         createdAt: tx.time * 1000,
         updatedAt: tx.time * 1000,
-        hash: tx.hash
+        hash: tx.hash,
       }));
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -76,7 +76,7 @@ export class WalletService {
       amount: params.amount,
       address: params.toAddress,
       balance: params.balance,
-      minWithdrawal: 1
+      minWithdrawal: 1,
     });
 
     if (!validation.isValid) {
@@ -89,8 +89,8 @@ export class WalletService {
 
   getExplorerUrl(txHash: string): string {
     return ton.explorer.getTransactionUrl(
-      txHash, 
-      import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet' || 'mainnet'
+      txHash,
+      (import.meta.env.VITE_TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet'
     );
   }
-} 
+}

@@ -1,10 +1,10 @@
 import { CloudWatch, DynamoDB } from 'aws-sdk';
-import { 
+import {
   DashboardMetrics,
   FraudMetrics,
   QualityMetrics,
   WorkerStats,
-  TrendAnalysis
+  TrendAnalysis,
 } from './types';
 
 export class QualityMonitoringDashboard {
@@ -17,28 +17,23 @@ export class QualityMonitoringDashboard {
       alertThresholds: {
         fraudRateIncrease: 0.2,
         qualityScoreDecrease: 0.15,
-        suspiciousActivitySpike: 0.3
-      }
+        suspiciousActivitySpike: 0.3,
+      },
     }
   ) {}
 
   async getDashboardMetrics(params: {
-    startTime: Date,
-    endTime: Date,
-    granularity: 'MINUTE' | 'HOUR' | 'DAY'
+    startTime: Date;
+    endTime: Date;
+    granularity: 'MINUTE' | 'HOUR' | 'DAY';
   }): Promise<DashboardMetrics> {
     const { startTime, endTime, granularity } = params;
 
-    const [
-      fraudMetrics,
-      qualityMetrics,
-      workerStats,
-      trends
-    ] = await Promise.all([
+    const [fraudMetrics, qualityMetrics, workerStats, trends] = await Promise.all([
       this.getFraudMetrics(startTime, endTime, granularity),
       this.getQualityMetrics(startTime, endTime, granularity),
       this.getWorkerStats(startTime, endTime),
-      this.analyzeTrends(startTime, endTime, granularity)
+      this.analyzeTrends(startTime, endTime, granularity),
     ]);
 
     return {
@@ -46,7 +41,7 @@ export class QualityMonitoringDashboard {
       qualityMetrics,
       workerStats,
       trends,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -55,55 +50,57 @@ export class QualityMonitoringDashboard {
     endTime: Date,
     granularity: string
   ): Promise<FraudMetrics> {
-    const metrics = await this.cloudwatch.getMetricData({
-      MetricDataQueries: [
-        {
-          Id: 'totalFraudAttempts',
-          MetricStat: {
-            Metric: {
-              Namespace: 'FraudDetection',
-              MetricName: 'FraudulentAttempts'
+    const metrics = await this.cloudwatch
+      .getMetricData({
+        MetricDataQueries: [
+          {
+            Id: 'totalFraudAttempts',
+            MetricStat: {
+              Metric: {
+                Namespace: 'FraudDetection',
+                MetricName: 'FraudulentAttempts',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Sum',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Sum'
-          }
-        },
-        {
-          Id: 'averageRiskScore',
-          MetricStat: {
-            Metric: {
-              Namespace: 'FraudDetection',
-              MetricName: 'RiskScore'
+          },
+          {
+            Id: 'averageRiskScore',
+            MetricStat: {
+              Metric: {
+                Namespace: 'FraudDetection',
+                MetricName: 'RiskScore',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Average',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'suspiciousAccounts',
-          MetricStat: {
-            Metric: {
-              Namespace: 'FraudDetection',
-              MetricName: 'SuspiciousAccounts'
+          },
+          {
+            Id: 'suspiciousAccounts',
+            MetricStat: {
+              Metric: {
+                Namespace: 'FraudDetection',
+                MetricName: 'SuspiciousAccounts',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Sum',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Sum'
-          }
-        }
-      ],
-      StartTime: startTime,
-      EndTime: endTime
-    }).promise();
+          },
+        ],
+        StartTime: startTime,
+        EndTime: endTime,
+      })
+      .promise();
 
     const fraudEvents = await this.getFraudEvents(startTime, endTime);
-    
+
     return {
       totalFraudAttempts: this.sumMetricValues(metrics.MetricDataResults[0]),
       averageRiskScore: this.averageMetricValues(metrics.MetricDataResults[1]),
       suspiciousAccounts: this.sumMetricValues(metrics.MetricDataResults[2]),
       fraudPatterns: this.analyzeFraudPatterns(fraudEvents),
       riskDistribution: this.calculateRiskDistribution(fraudEvents),
-      temporalAnalysis: this.analyzeTemporalPatterns(fraudEvents)
+      temporalAnalysis: this.analyzeTemporalPatterns(fraudEvents),
     };
   }
 
@@ -112,70 +109,69 @@ export class QualityMonitoringDashboard {
     endTime: Date,
     granularity: string
   ): Promise<QualityMetrics> {
-    const metrics = await this.cloudwatch.getMetricData({
-      MetricDataQueries: [
-        {
-          Id: 'averageQualityScore',
-          MetricStat: {
-            Metric: {
-              Namespace: 'QualityControl',
-              MetricName: 'QualityScore'
+    const metrics = await this.cloudwatch
+      .getMetricData({
+        MetricDataQueries: [
+          {
+            Id: 'averageQualityScore',
+            MetricStat: {
+              Metric: {
+                Namespace: 'QualityControl',
+                MetricName: 'QualityScore',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Average',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'goldenSetAccuracy',
-          MetricStat: {
-            Metric: {
-              Namespace: 'QualityControl',
-              MetricName: 'GoldenSetAccuracy'
+          },
+          {
+            Id: 'goldenSetAccuracy',
+            MetricStat: {
+              Metric: {
+                Namespace: 'QualityControl',
+                MetricName: 'GoldenSetAccuracy',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Average',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'peerReviewAgreement',
-          MetricStat: {
-            Metric: {
-              Namespace: 'QualityControl',
-              MetricName: 'PeerReviewAgreement'
+          },
+          {
+            Id: 'peerReviewAgreement',
+            MetricStat: {
+              Metric: {
+                Namespace: 'QualityControl',
+                MetricName: 'PeerReviewAgreement',
+              },
+              Period: this.getPeriod(granularity),
+              Stat: 'Average',
             },
-            Period: this.getPeriod(granularity),
-            Stat: 'Average'
-          }
-        }
-      ],
-      StartTime: startTime,
-      EndTime: endTime
-    }).promise();
+          },
+        ],
+        StartTime: startTime,
+        EndTime: endTime,
+      })
+      .promise();
 
     const qualityEvents = await this.getQualityEvents(startTime, endTime);
-    
+
     return {
       averageQualityScore: this.averageMetricValues(metrics.MetricDataResults[0]),
       goldenSetAccuracy: this.averageMetricValues(metrics.MetricDataResults[1]),
       peerReviewAgreement: this.averageMetricValues(metrics.MetricDataResults[2]),
       qualityDistribution: this.calculateQualityDistribution(qualityEvents),
       taskTypeAnalysis: this.analyzeTaskTypeQuality(qualityEvents),
-      timeBasedAnalysis: this.analyzeTimeBasedQuality(qualityEvents)
+      timeBasedAnalysis: this.analyzeTimeBasedQuality(qualityEvents),
     };
   }
 
-  private async getWorkerStats(
-    startTime: Date,
-    endTime: Date
-  ): Promise<WorkerStats> {
+  private async getWorkerStats(startTime: Date, endTime: Date): Promise<WorkerStats> {
     const workers = await this.getActiveWorkers(startTime, endTime);
-    
+
     return {
       totalActiveWorkers: workers.length,
       expertiseDistribution: this.calculateExpertiseDistribution(workers),
       performanceQuartiles: this.calculatePerformanceQuartiles(workers),
       taskCompletionStats: this.calculateTaskCompletionStats(workers),
-      qualityProgression: this.analyzeQualityProgression(workers)
+      qualityProgression: this.analyzeQualityProgression(workers),
     };
   }
 
@@ -186,7 +182,7 @@ export class QualityMonitoringDashboard {
   ): Promise<TrendAnalysis> {
     const [fraudTrends, qualityTrends] = await Promise.all([
       this.analyzeFraudTrends(startTime, endTime, granularity),
-      this.analyzeQualityTrends(startTime, endTime, granularity)
+      this.analyzeQualityTrends(startTime, endTime, granularity),
     ]);
 
     return {
@@ -194,16 +190,20 @@ export class QualityMonitoringDashboard {
       qualityTrends,
       correlations: this.analyzeMetricCorrelations(fraudTrends, qualityTrends),
       anomalies: this.detectAnomalies(fraudTrends, qualityTrends),
-      predictions: await this.generatePredictions(fraudTrends, qualityTrends)
+      predictions: await this.generatePredictions(fraudTrends, qualityTrends),
     };
   }
 
   private getPeriod(granularity: string): number {
     switch (granularity) {
-      case 'MINUTE': return 60;
-      case 'HOUR': return 3600;
-      case 'DAY': return 86400;
-      default: return 3600;
+      case 'MINUTE':
+        return 60;
+      case 'HOUR':
+        return 3600;
+      case 'DAY':
+        return 86400;
+      default:
+        return 3600;
     }
   }
 
@@ -217,46 +217,52 @@ export class QualityMonitoringDashboard {
   }
 
   private async getFraudEvents(startTime: Date, endTime: Date): Promise<any[]> {
-    const result = await this.dynamodb.query({
-      TableName: 'FraudDetectionEvents',
-      KeyConditionExpression: '#ts BETWEEN :start AND :end',
-      ExpressionAttributeNames: {
-        '#ts': 'timestamp'
-      },
-      ExpressionAttributeValues: {
-        ':start': startTime.getTime(),
-        ':end': endTime.getTime()
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: 'FraudDetectionEvents',
+        KeyConditionExpression: '#ts BETWEEN :start AND :end',
+        ExpressionAttributeNames: {
+          '#ts': 'timestamp',
+        },
+        ExpressionAttributeValues: {
+          ':start': startTime.getTime(),
+          ':end': endTime.getTime(),
+        },
+      })
+      .promise();
 
     return result.Items || [];
   }
 
   private async getQualityEvents(startTime: Date, endTime: Date): Promise<any[]> {
-    const result = await this.dynamodb.query({
-      TableName: 'QualityControlEvents',
-      KeyConditionExpression: '#ts BETWEEN :start AND :end',
-      ExpressionAttributeNames: {
-        '#ts': 'timestamp'
-      },
-      ExpressionAttributeValues: {
-        ':start': startTime.getTime(),
-        ':end': endTime.getTime()
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: 'QualityControlEvents',
+        KeyConditionExpression: '#ts BETWEEN :start AND :end',
+        ExpressionAttributeNames: {
+          '#ts': 'timestamp',
+        },
+        ExpressionAttributeValues: {
+          ':start': startTime.getTime(),
+          ':end': endTime.getTime(),
+        },
+      })
+      .promise();
 
     return result.Items || [];
   }
 
   private async getActiveWorkers(startTime: Date, endTime: Date): Promise<any[]> {
-    const result = await this.dynamodb.query({
-      TableName: 'WorkerProfiles',
-      FilterExpression: 'lastActiveTime BETWEEN :start AND :end',
-      ExpressionAttributeValues: {
-        ':start': startTime.getTime(),
-        ':end': endTime.getTime()
-      }
-    }).promise();
+    const result = await this.dynamodb
+      .query({
+        TableName: 'WorkerProfiles',
+        FilterExpression: 'lastActiveTime BETWEEN :start AND :end',
+        ExpressionAttributeValues: {
+          ':start': startTime.getTime(),
+          ':end': endTime.getTime(),
+        },
+      })
+      .promise();
 
     return result.Items || [];
   }
@@ -343,4 +349,4 @@ export class QualityMonitoringDashboard {
     // Implement prediction generation
     return {};
   }
-} 
+}

@@ -122,7 +122,7 @@ export interface FraudDetectionResult {
 export enum ConsensusStrategy {
   MAJORITY = 'MAJORITY',
   WEIGHTED = 'WEIGHTED',
-  UNANIMOUS = 'UNANIMOUS'
+  UNANIMOUS = 'UNANIMOUS',
 }
 
 export enum VerificationStatus {
@@ -130,20 +130,20 @@ export enum VerificationStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  NEEDS_REVIEW = 'NEEDS_REVIEW'
+  NEEDS_REVIEW = 'NEEDS_REVIEW',
 }
 
 export enum ConfidenceLevel {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH'
+  HIGH = 'HIGH',
 }
 
 export enum WorkerLevel {
   BEGINNER = 'BEGINNER',
   INTERMEDIATE = 'INTERMEDIATE',
   ADVANCED = 'ADVANCED',
-  EXPERT = 'EXPERT'
+  EXPERT = 'EXPERT',
 }
 
 export interface WorkerProfile {
@@ -232,30 +232,30 @@ export interface WorkerMatch {
 export enum TaskDistributionStrategy {
   BROADCAST = 'BROADCAST',
   TARGETED = 'TARGETED',
-  AUCTION = 'AUCTION'
+  AUCTION = 'AUCTION',
 }
 
 export enum MatchingStrategy {
   BALANCED = 'BALANCED',
   SKILL_FOCUSED = 'SKILL_FOCUSED',
   REPUTATION_FOCUSED = 'REPUTATION_FOCUSED',
-  PERFORMANCE_FOCUSED = 'PERFORMANCE_FOCUSED'
+  PERFORMANCE_FOCUSED = 'PERFORMANCE_FOCUSED',
 }
 
 export enum TaskPriority {
   HIGH = 'HIGH',
   MEDIUM = 'MEDIUM',
-  LOW = 'LOW'
+  LOW = 'LOW',
 }
 
 export enum WorkerStatus {
   AVAILABLE = 'AVAILABLE',
   BUSY = 'BUSY',
   OFFLINE = 'OFFLINE',
-  SUSPENDED = 'SUSPENDED'
+  SUSPENDED = 'SUSPENDED',
 }
 
-export type TaskType = 
+export type TaskType =
   | 'TEXT_CLASSIFICATION'
   | 'IMAGE_CLASSIFICATION'
   | 'SENTIMENT_ANALYSIS'
@@ -299,7 +299,7 @@ export interface AuctionResult {
 export enum AuctionStatus {
   OPEN = 'OPEN',
   CLOSED = 'CLOSED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export type TaskStatus =
@@ -345,16 +345,9 @@ export type NotificationTemplate =
   | 'WORKLOAD_WARNING'
   | 'PERFORMANCE_ALERT';
 
-export type NotificationChannel =
-  | 'TELEGRAM'
-  | 'SNS'
-  | 'EMAIL'
-  | 'SMS';
+export type NotificationChannel = 'TELEGRAM' | 'SNS' | 'EMAIL' | 'SMS';
 
-export type NotificationPriority =
-  | 'HIGH'
-  | 'MEDIUM'
-  | 'LOW';
+export type NotificationPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface VerificationTask {
   taskId: string;
@@ -439,4 +432,4 @@ export interface WalletVerification {
   verified: boolean;
   balance: number;
   lastChecked: string;
-} 
+}

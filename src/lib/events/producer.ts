@@ -12,11 +12,13 @@ export class EventProducer {
   private readonly environment: string;
   private readonly alertTopicArn?: string;
 
-  constructor(config: {
-    eventBusName?: string;
-    environment?: string;
-    alertTopicArn?: string;
-  } = {}) {
+  constructor(
+    config: {
+      eventBusName?: string;
+      environment?: string;
+      alertTopicArn?: string;
+    } = {}
+  ) {
     this.eventBridge = new EventBridge({
       maxAttempts: 3,
       retryMode: 'adaptive',
@@ -46,13 +48,15 @@ export class EventProducer {
 
     try {
       const result = await this.eventBridge.putEvents({
-        Entries: [{
-          EventBusName: this.eventBusName,
-          Source: enrichedEvent.source,
-          DetailType: enrichedEvent.type,
-          Detail: JSON.stringify(enrichedEvent),
-          Time: new Date(enrichedEvent.timestamp),
-        }],
+        Entries: [
+          {
+            EventBusName: this.eventBusName,
+            Source: enrichedEvent.source,
+            DetailType: enrichedEvent.type,
+            Detail: JSON.stringify(enrichedEvent),
+            Time: new Date(enrichedEvent.timestamp),
+          },
+        ],
       });
 
       await this.recordMetrics({
@@ -63,7 +67,11 @@ export class EventProducer {
 
       if (result.FailedEntryCount && result.FailedEntryCount > 0) {
         const failedEntries = result.Entries?.filter(entry => entry.ErrorCode);
-        await this.handlePublishError(enrichedEvent, new Error('Partial publish failure'), failedEntries);
+        await this.handlePublishError(
+          enrichedEvent,
+          new Error('Partial publish failure'),
+          failedEntries
+        );
         throw new Error(`Failed to publish event: ${failedEntries?.[0]?.ErrorMessage}`);
       }
 
@@ -101,7 +109,11 @@ export class EventProducer {
     return this.publishEvent(retryEvent);
   }
 
-  private async handlePublishError(event: AletheiaEvent, error: Error, failedEntries?: any[]): Promise<void> {
+  private async handlePublishError(
+    event: AletheiaEvent,
+    error: Error,
+    failedEntries?: any[]
+  ): Promise<void> {
     console.error('Event publish error:', {
       eventId: event.id,
       type: event.type,
@@ -179,17 +191,23 @@ export class EventProducer {
       await this.sns.publish({
         TopicArn: this.alertTopicArn,
         Subject: alert.subject,
-        Message: JSON.stringify({
-          message: alert.message,
-          severity: alert.severity,
-          timestamp: new Date().toISOString(),
-          environment: this.environment,
-          event: alert.event,
-          error: alert.error ? {
-            message: alert.error.message,
-            stack: alert.error.stack,
-          } : undefined,
-        }, null, 2),
+        Message: JSON.stringify(
+          {
+            message: alert.message,
+            severity: alert.severity,
+            timestamp: new Date().toISOString(),
+            environment: this.environment,
+            event: alert.event,
+            error: alert.error
+              ? {
+                  message: alert.error.message,
+                  stack: alert.error.stack,
+                }
+              : undefined,
+          },
+          null,
+          2
+        ),
         MessageAttributes: {
           Severity: {
             DataType: 'String',
@@ -201,4 +219,4 @@ export class EventProducer {
       console.error('Failed to send alert:', error);
     }
   }
-} 
+}

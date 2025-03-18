@@ -44,7 +44,7 @@ describe('VerificationEngine', () => {
       };
 
       const result = await verificationEngine.verify(task, VerificationStrategy.AI);
-      
+
       expect(result).toEqual({
         taskId: 'task3',
         decision: 'APPROVED',
@@ -60,9 +60,9 @@ describe('VerificationEngine', () => {
         content: 'Invalid content',
       };
 
-      await expect(
-        verificationEngine.verify(task, VerificationStrategy.AI)
-      ).rejects.toThrow('Unsupported verification type');
+      await expect(verificationEngine.verify(task, VerificationStrategy.AI)).rejects.toThrow(
+        'Unsupported verification type'
+      );
     });
   });
 
@@ -76,10 +76,10 @@ describe('VerificationEngine', () => {
 
       // First verification
       const result1 = await verificationEngine.verify(task, VerificationStrategy.AI);
-      
+
       // Second verification should use cache
       const result2 = await verificationEngine.verify(task, VerificationStrategy.AI);
-      
+
       expect(result1).toEqual(result2);
       // Verify cache was used
       expect(dynamoMock).toHaveReceivedCommandTimes('GetItem', 1);
@@ -99,10 +99,13 @@ describe('VerificationEngine', () => {
         },
       };
 
-      const result = await verificationEngine.verify(suspiciousTask, VerificationStrategy.HUMAN_CONSENSUS);
-      
+      const result = await verificationEngine.verify(
+        suspiciousTask,
+        VerificationStrategy.HUMAN_CONSENSUS
+      );
+
       expect(result.riskScore).toBeGreaterThan(0.7);
       expect(result.flags).toContain('SUSPICIOUS_COMPLETION_TIME');
     });
   });
-}); 
+});

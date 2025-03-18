@@ -10,11 +10,8 @@ Scripts for deploying the project
 node scripts/deployment/deploy-scaling.ts
 ```
 
-
 ### deploy-scaling.ts
 
 ```
 node scripts/deployment/deploy-scaling.ts
 ```
-
-

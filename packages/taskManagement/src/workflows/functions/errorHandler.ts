@@ -33,14 +33,16 @@ export const handler = async (event: ErrorHandlerInput): Promise<ErrorHandlerOut
     logger.error('Handling workflow error', {
       taskId: event.taskId,
       error: event.error,
-      previousState: event.previousState
+      previousState: event.previousState,
     });
 
     // Get task from DynamoDB
-    const result = await dynamodb.get({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId }
-    }).promise();
+    const result = await dynamodb
+      .get({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+      })
+      .promise();
 
     const task = result.Item as Task;
     if (!task) {
@@ -53,7 +55,7 @@ export const handler = async (event: ErrorHandlerInput): Promise<ErrorHandlerOut
       cause: event.error.Cause,
       state: event.previousState,
       executionArn: event.executionArn,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Update task with error information
@@ -68,50 +70,58 @@ export const handler = async (event: ErrorHandlerInput): Promise<ErrorHandlerOut
     return {
       taskId: task.taskId,
       status: recoveryAttempted ? TaskStatus.IN_PROGRESS : TaskStatus.FAILED,
-      error: errorRecord
+      error: errorRecord,
     };
-
   } catch (error) {
     logger.error('Error handler failed', { error, taskId: event.taskId });
     throw error;
   }
 };
 
-async function updateTaskWithError(taskId: string, error: ErrorHandlerOutput['error']): Promise<void> {
-  await dynamodb.update({
-    TableName: process.env.TASKS_TABLE!,
-    Key: { taskId },
-    UpdateExpression: `
+async function updateTaskWithError(
+  taskId: string,
+  error: ErrorHandlerOutput['error']
+): Promise<void> {
+  await dynamodb
+    .update({
+      TableName: process.env.TASKS_TABLE!,
+      Key: { taskId },
+      UpdateExpression: `
       SET #status = :status,
           lastError = :error,
           statusReason = :reason,
           updatedAt = :now
     `,
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': TaskStatus.FAILED,
-      ':error': error,
-      ':reason': error.message,
-      ':now': new Date().toISOString()
-    }
-  }).promise();
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': TaskStatus.FAILED,
+        ':error': error,
+        ':reason': error.message,
+        ':now': new Date().toISOString(),
+      },
+    })
+    .promise();
 }
 
 async function emitErrorEvent(taskId: string, error: ErrorHandlerOutput['error']): Promise<void> {
-  await eventBridge.putEvents({
-    Entries: [{
-      Source: 'aletheia.task-management',
-      DetailType: 'TaskError',
-      Detail: JSON.stringify({
-        taskId,
-        error,
-        timestamp: new Date().toISOString()
-      }),
-      EventBusName: process.env.EVENT_BUS_NAME
-    }]
-  }).promise();
+  await eventBridge
+    .putEvents({
+      Entries: [
+        {
+          Source: 'aletheia.task-management',
+          DetailType: 'TaskError',
+          Detail: JSON.stringify({
+            taskId,
+            error,
+            timestamp: new Date().toISOString(),
+          }),
+          EventBusName: process.env.EVENT_BUS_NAME,
+        },
+      ],
+    })
+    .promise();
 }
 
 async function attemptRecovery(task: Task, error: ErrorHandlerOutput['error']): Promise<boolean> {
@@ -129,7 +139,7 @@ async function attemptRecovery(task: Task, error: ErrorHandlerOutput['error']): 
     VerificationError: async () => {
       // Retry verification with different workers
       return false; // Not implemented yet
-    }
+    },
   };
 
   // Extract error type from error message
@@ -143,10 +153,10 @@ async function attemptRecovery(task: Task, error: ErrorHandlerOutput['error']): 
       logger.error('Recovery attempt failed', {
         taskId: task.taskId,
         error: recoveryError,
-        originalError: error
+        originalError: error,
       });
     }
   }
 
   return false;
-} 
+}

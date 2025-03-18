@@ -13,14 +13,14 @@ export class TonService {
   validateAddress(address: string): boolean {
     return ton.validation.address(address);
   }
-  
+
   /**
    * Format a TON amount for display
    */
   formatAmount(amount: number | string): string {
     return ton.format.amount(amount);
   }
-  
+
   /**
    * Get the balance of a TON address
    */
@@ -32,21 +32,21 @@ export class TonService {
       return BigInt(0);
     }
   }
-  
+
   /**
    * Get the explorer URL for a transaction
    */
   getTransactionUrl(txHash: string): string {
     return ton.explorer.getTransactionUrl(txHash);
   }
-  
+
   /**
    * Get the explorer URL for an address
    */
   getAddressUrl(address: string): string {
     return ton.explorer.getAddressUrl(address);
   }
-  
+
   /**
    * Validate a withdrawal
    */
@@ -54,7 +54,7 @@ export class TonService {
     const result = ton.validation.withdrawal(amount, balance);
     return result.isValid;
   }
-  
+
   /**
    * Calculate the fee for a transaction
    */
@@ -68,7 +68,7 @@ const loggerAdapter: TonServiceLogger = {
   info: (message, meta) => logger.info(message, meta),
   error: (message, meta) => logger.error(message, meta),
   warn: (message, meta) => logger.warn(message, meta),
-  debug: (message, meta) => logger.debug(message, meta)
+  debug: (message, meta) => logger.debug(message, meta),
 };
 
 // Create a TonService instance with worker-bot specific configuration
@@ -76,7 +76,7 @@ const tonService = createTonService(
   {
     endpoint: process.env.TON_ENDPOINT || 'https://toncenter.com/api/v2/jsonRPC',
     apiKey: process.env.TON_API_KEY,
-    network: (process.env.TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet'
+    network: (process.env.TON_NETWORK as 'mainnet' | 'testnet') || 'mainnet',
   },
   loggerAdapter
 );
@@ -85,4 +85,4 @@ const tonService = createTonService(
 export { tonService };
 
 // Re-export the TonService class for extension if needed
-export { TonService }; 
+export { TonService };

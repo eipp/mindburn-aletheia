@@ -42,11 +42,13 @@ packages/package-name/
 ### Naming Conventions
 
 1. **Files**:
+
    - Use camelCase for general files (e.g., `tonService.ts`)
    - Use PascalCase for React components (e.g., `UserProfile.tsx`)
    - Use lowercase with dashes for configuration files (e.g., `tsconfig-base.json`)
 
 2. **Directories**:
+
    - Use camelCase for directories (e.g., `utils/`)
    - Keep `__tests__` directories adjacent to tested code
 
@@ -69,6 +71,7 @@ npm run format
 ### Imports
 
 1. Organize imports in the following order:
+
    - Node.js built-in modules
    - External dependencies
    - Internal shared modules (@mindburn/shared)
@@ -76,10 +79,11 @@ npm run format
    - Relative imports (parent, sibling, child)
 
 2. Use aliases for imports from other packages:
+
    ```typescript
    // Good
    import { createLogger } from '@mindburn/shared';
-   
+
    // Avoid
    import { createLogger } from '../../../packages/shared/src';
    ```
@@ -89,26 +93,29 @@ npm run format
 ### Using Shared Components
 
 1. **Configuration**: Use the shared configuration factories:
+
    ```typescript
    import { createConfigValidator } from '@mindburn/shared/config';
-   
+
    export const config = createConfigValidator({
      required: ['API_KEY'],
-     optional: ['DEBUG']
+     optional: ['DEBUG'],
    });
    ```
 
 2. **Logging**: Use the shared logger:
+
    ```typescript
    import { createLogger } from '@mindburn/shared/logger';
-   
+
    const logger = createLogger('component-name');
    ```
 
 3. **Validation**: Use the shared validation utilities:
+
    ```typescript
    import { validateAddress } from '@mindburn/shared/verification';
-   
+
    if (!validateAddress(address)) {
      throw new Error('Invalid address');
    }
@@ -126,10 +133,12 @@ When creating new functionality:
 ## Testing Standards
 
 1. **Test Placement**:
+
    - Place tests in `__tests__` directories adjacent to the code being tested
    - Name test files with the same name as the file being tested, with `.test.ts` suffix
 
 2. **Test Coverage**:
+
    - Maintain at least 80% test coverage for all code
    - 100% coverage for critical path components (payment, verification)
 
@@ -141,11 +150,13 @@ When creating new functionality:
 ## Documentation
 
 1. **Code Documentation**:
+
    - Use JSDoc comments for all public APIs
    - Explain parameters, return values, and exceptions
    - Include examples for complex functionality
 
 2. **Package Documentation**:
+
    - Each package should have a README.md explaining its purpose and usage
    - Document any package-specific configuration
 
@@ -156,12 +167,14 @@ When creating new functionality:
 ## Pull Request Process
 
 1. **Before Submitting**:
+
    - Ensure all tests pass
    - Run linting and formatting
    - Verify import paths are correct
    - Check that shared utilities are properly used
 
 2. **PR Description**:
+
    - Clearly describe the changes made
    - Reference any related issues
    - Include steps to test/validate
@@ -175,11 +188,13 @@ When creating new functionality:
 To ensure the codebase remains well-structured:
 
 1. Run the validation script regularly:
+
    ```bash
    npm run refactor:validate
    ```
 
 2. Periodically check for duplicated code:
+
    ```bash
    npm run analyze:duplication
    ```
@@ -189,4 +204,4 @@ To ensure the codebase remains well-structured:
    npm run refactor:circular
    ```
 
-Following these guidelines will help maintain the quality and structure of the codebase established during the refactoring process. 
+Following these guidelines will help maintain the quality and structure of the codebase established during the refactoring process.

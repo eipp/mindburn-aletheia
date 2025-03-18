@@ -49,4 +49,4 @@ export interface IIntegrationPlugin extends IPlugin {
   connect(credentials: Record<string, any>): Promise<void>;
   disconnect(): Promise<void>;
   execute(action: string, params: Record<string, any>): Promise<unknown>;
-} 
+}

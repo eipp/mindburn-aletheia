@@ -14,7 +14,7 @@ const logger = createLogger('workerRoutes');
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
+  message: 'Too many requests from this IP, please try again later',
 });
 
 // Request validation schemas
@@ -23,27 +23,27 @@ const registerWorkerSchema = z.object({
     walletAddress: z.string().min(1),
     identityData: z.object({
       name: z.string().min(1),
-      documentId: z.string().min(1)
-    })
-  })
+      documentId: z.string().min(1),
+    }),
+  }),
 });
 
 const updateStatusSchema = z.object({
   params: z.object({
-    workerId: z.string().min(1)
+    workerId: z.string().min(1),
   }),
   body: z.object({
-    status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'INACTIVE'])
-  })
+    status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'INACTIVE']),
+  }),
 });
 
 const reassessSkillsSchema = z.object({
   params: z.object({
-    workerId: z.string().min(1)
+    workerId: z.string().min(1),
   }),
   body: z.object({
-    taskType: z.string().min(1)
-  })
+    taskType: z.string().min(1),
+  }),
 });
 
 export function createWorkerRoutes(controller: WorkerController): Router {
@@ -73,35 +73,27 @@ export function createWorkerRoutes(controller: WorkerController): Router {
     }
   );
 
-  router.get(
-    '/workers/:workerId',
-    authenticateJwt,
-    async (req, res, next) => {
-      try {
-        const result = await controller.getWorker(req.params.workerId);
-        if (!result) {
-          res.status(404).json({ message: 'Worker not found' });
-          return;
-        }
-        res.status(200).json(result);
-      } catch (error) {
-        next(error);
+  router.get('/workers/:workerId', authenticateJwt, async (req, res, next) => {
+    try {
+      const result = await controller.getWorker(req.params.workerId);
+      if (!result) {
+        res.status(404).json({ message: 'Worker not found' });
+        return;
       }
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
     }
-  );
+  });
 
-  router.post(
-    '/workers/:workerId/onboarding/complete',
-    authenticateJwt,
-    async (req, res, next) => {
-      try {
-        const result = await controller.completeOnboarding(req.params.workerId);
-        res.status(200).json(result);
-      } catch (error) {
-        next(error);
-      }
+  router.post('/workers/:workerId/onboarding/complete', authenticateJwt, async (req, res, next) => {
+    try {
+      const result = await controller.completeOnboarding(req.params.workerId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
     }
-  );
+  });
 
   router.put(
     '/workers/:workerId/status',
@@ -109,10 +101,7 @@ export function createWorkerRoutes(controller: WorkerController): Router {
     validateRequest(updateStatusSchema),
     async (req, res, next) => {
       try {
-        const result = await controller.updateWorkerStatus(
-          req.params.workerId,
-          req.body.status
-        );
+        const result = await controller.updateWorkerStatus(req.params.workerId, req.body.status);
         res.status(200).json(result);
       } catch (error) {
         next(error);
@@ -141,4 +130,4 @@ export function createWorkerRoutes(controller: WorkerController): Router {
   router.use(errorHandler);
 
   return router;
-} 
+}

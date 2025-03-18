@@ -25,6 +25,7 @@ These have been consolidated into a single, more powerful implementation at:
 ### 1. Update Import Statements
 
 Replace:
+
 ```typescript
 import { FraudDetector } from '../verification/FraudDetector';
 // or
@@ -32,6 +33,7 @@ import { AdvancedFraudDetector } from '../verification/AdvancedFraudDetector';
 ```
 
 With:
+
 ```typescript
 import { FraudDetector } from '@mindburn/verification-engine/fraud-detection';
 ```
@@ -47,7 +49,7 @@ const fraudDetector = new FraudDetector(
   {
     // Optional configuration overrides (all fields optional)
     timeWindowMinutes: 90, // Override default 60
-    maxTasksPerHour: 50 // Override default 100
+    maxTasksPerHour: 50, // Override default 100
     // ... other config options
   }
 );
@@ -110,18 +112,18 @@ const detector = new FraudDetector();
 
 The new implementation supports the following configuration options:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `timeWindowMinutes` | 60 | Time window for activity analysis (in minutes) |
-| `maxTasksPerHour` | 100 | Maximum allowed tasks per hour before flagging |
-| `minProcessingTimeMs` | 3000 | Minimum acceptable task processing time (ms) |
-| `maxSimilarityScore` | 0.95 | Threshold for content similarity detection |
-| `maxIpTaskCount` | 50 | Maximum tasks from the same IP address |
-| `deviceFingerprintTTL` | 86400 | Time-to-live for device fingerprint cache (seconds) |
-| `workerReputationWeight` | 0.3 | Weight for worker reputation in risk calculation |
-| `activityPatternWeight` | 0.3 | Weight for activity patterns in risk calculation |
-| `networkSignalsWeight` | 0.2 | Weight for network signals in risk calculation |
-| `qualityMetricsWeight` | 0.2 | Weight for quality metrics in risk calculation |
+| Option                   | Default | Description                                         |
+| ------------------------ | ------- | --------------------------------------------------- |
+| `timeWindowMinutes`      | 60      | Time window for activity analysis (in minutes)      |
+| `maxTasksPerHour`        | 100     | Maximum allowed tasks per hour before flagging      |
+| `minProcessingTimeMs`    | 3000    | Minimum acceptable task processing time (ms)        |
+| `maxSimilarityScore`     | 0.95    | Threshold for content similarity detection          |
+| `maxIpTaskCount`         | 50      | Maximum tasks from the same IP address              |
+| `deviceFingerprintTTL`   | 86400   | Time-to-live for device fingerprint cache (seconds) |
+| `workerReputationWeight` | 0.3     | Weight for worker reputation in risk calculation    |
+| `activityPatternWeight`  | 0.3     | Weight for activity patterns in risk calculation    |
+| `networkSignalsWeight`   | 0.2     | Weight for network signals in risk calculation      |
+| `qualityMetricsWeight`   | 0.2     | Weight for quality metrics in risk calculation      |
 
 ## Troubleshooting
 
@@ -133,4 +135,4 @@ The new implementation supports the following configuration options:
 
 ## Need Help?
 
-If you encounter any issues during migration, please contact the Verification Engine team. 
+If you encounter any issues during migration, please contact the Verification Engine team.

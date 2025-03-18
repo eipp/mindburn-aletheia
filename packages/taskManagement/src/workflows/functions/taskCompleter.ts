@@ -35,10 +35,12 @@ export const handler = async (event: TaskCompleterInput): Promise<TaskCompleterO
     logger.info('Completing task', { taskId: event.taskId });
 
     // Get task from DynamoDB
-    const result = await dynamodb.get({
-      TableName: process.env.TASKS_TABLE!,
-      Key: { taskId: event.taskId }
-    }).promise();
+    const result = await dynamodb
+      .get({
+        TableName: process.env.TASKS_TABLE!,
+        Key: { taskId: event.taskId },
+      })
+      .promise();
 
     const task = result.Item as Task;
     if (!task) {
@@ -47,7 +49,7 @@ export const handler = async (event: TaskCompleterInput): Promise<TaskCompleterO
 
     const completionDetails = {
       completedAt: new Date().toISOString(),
-      ...event.consolidatedResult
+      ...event.consolidatedResult,
     };
 
     // Update task as completed
@@ -59,9 +61,8 @@ export const handler = async (event: TaskCompleterInput): Promise<TaskCompleterO
     return {
       taskId: task.taskId,
       status: TaskStatus.COMPLETED,
-      completionDetails
+      completionDetails,
     };
-
   } catch (error) {
     logger.error('Failed to complete task', { error, taskId: event.taskId });
     throw error;
@@ -72,39 +73,45 @@ async function updateTaskAsCompleted(
   taskId: string,
   completionDetails: TaskCompleterOutput['completionDetails']
 ): Promise<void> {
-  await dynamodb.update({
-    TableName: process.env.TASKS_TABLE!,
-    Key: { taskId },
-    UpdateExpression: `
+  await dynamodb
+    .update({
+      TableName: process.env.TASKS_TABLE!,
+      Key: { taskId },
+      UpdateExpression: `
       SET #status = :status,
           completionDetails = :details,
           updatedAt = :now
     `,
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': TaskStatus.COMPLETED,
-      ':details': completionDetails,
-      ':now': new Date().toISOString()
-    }
-  }).promise();
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': TaskStatus.COMPLETED,
+        ':details': completionDetails,
+        ':now': new Date().toISOString(),
+      },
+    })
+    .promise();
 }
 
 async function emitCompletionEvent(
   taskId: string,
   completionDetails: TaskCompleterOutput['completionDetails']
 ): Promise<void> {
-  await eventBridge.putEvents({
-    Entries: [{
-      Source: 'aletheia.task-management',
-      DetailType: 'TaskCompleted',
-      Detail: JSON.stringify({
-        taskId,
-        completionDetails,
-        timestamp: new Date().toISOString()
-      }),
-      EventBusName: process.env.EVENT_BUS_NAME
-    }]
-  }).promise();
-} 
+  await eventBridge
+    .putEvents({
+      Entries: [
+        {
+          Source: 'aletheia.task-management',
+          DetailType: 'TaskCompleted',
+          Detail: JSON.stringify({
+            taskId,
+            completionDetails,
+            timestamp: new Date().toISOString(),
+          }),
+          EventBusName: process.env.EVENT_BUS_NAME,
+        },
+      ],
+    })
+    .promise();
+}

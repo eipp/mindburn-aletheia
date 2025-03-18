@@ -94,4 +94,4 @@ export const ethicsPolicy = {
   ],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-}; 
+};

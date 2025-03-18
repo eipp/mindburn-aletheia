@@ -1,8 +1,45 @@
-# Code Refactoring PR
+# Refactoring Pull Request
 
 ## Description
 
-<!-- Describe the refactoring you've performed -->
+Briefly describe the refactoring changes in this PR.
+
+## Packages Modified
+
+- [ ] `shared`
+- [ ] `core`
+- [ ] `developerPlatform`
+- [ ] `taskManagement`
+- [ ] `verificationEngine`
+- [ ] `workerBot`
+- [ ] `workerWebapp`
+- [ ] `workerInterface`
+- [ ] `workerCore`
+- [ ] `paymentSystem`
+- [ ] `tonContracts`
+- [ ] `tokenEconomy`
+- [ ] `pluginSystem`
+
+## Refactoring Type
+
+- [ ] Code reorganization (moving files)
+- [ ] Function/method extraction
+- [ ] Class extraction/consolidation
+- [ ] Interface redesign
+- [ ] Performance optimization
+- [ ] Duplication elimination
+- [ ] Other (please describe)
+
+## Validation
+
+- [ ] All tests pass
+- [ ] No functionality changes
+- [ ] Added new tests for refactored code
+- [ ] Updated documentation
+
+## Notes
+
+Any additional context or notes about the refactoring.
 
 ## Type of Refactoring
 
@@ -21,26 +58,16 @@
 <!-- Run and include results from the duplication analysis tool before and after your changes -->
 
 **Before:**
+
 ```
 <output from analysis before refactoring>
 ```
 
 **After:**
+
 ```
 <output from analysis after refactoring>
 ```
-
-## Packages Affected
-
-<!-- List all packages affected by this refactoring -->
-
-- [ ] `shared`
-- [ ] `verification-engine`
-- [ ] `worker-bot`
-- [ ] `worker-webapp`
-- [ ] `payment-system`
-- [ ] Legacy code in `src/`
-- [ ] Other: <!-- Please specify -->
 
 ## Testing Strategy
 
@@ -66,4 +93,4 @@
 - [ ] Updated documentation (including inline comments)
 - [ ] Performed duplication analysis
 - [ ] No unused code or dependencies introduced
-- [ ] No circular dependencies introduced 
+- [ ] No circular dependencies introduced

@@ -3,7 +3,7 @@ import {
   ApprovalStage,
   MetricConfig,
   StorageItem,
-  StorageService
+  StorageService,
 } from '@mindburn/shared';
 
 export function createMockModelMetadata(overrides: Partial<ModelMetadata> = {}): ModelMetadata {
@@ -78,7 +78,7 @@ export function createMockStorageItem<T extends object>(data: T): StorageItem<T>
     data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    version: 1
+    version: 1,
   };
 }
 
@@ -89,7 +89,7 @@ export function mockStorageService(): jest.Mocked<StorageService> {
     update: jest.fn(),
     delete: jest.fn(),
     list: jest.fn(),
-    query: jest.fn()
+    query: jest.fn(),
   };
 }
 
@@ -105,4 +105,4 @@ export function mockPromiseResponse<T>(data: T): Promise<T> {
 
 export function mockPromiseError(error: Error): Promise<never> {
   return Promise.reject(error);
-} 
+}

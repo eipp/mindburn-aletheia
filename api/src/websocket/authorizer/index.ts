@@ -5,7 +5,7 @@ import { verify } from 'jsonwebtoken';
 const dynamodb = new DynamoDB.DocumentClient();
 const AUTH_TABLE = process.env.AUTH_TABLE!;
 
-export const handler: APIGatewayRequestAuthorizerHandler = async (event) => {
+export const handler: APIGatewayRequestAuthorizerHandler = async event => {
   try {
     const token = event.queryStringParameters?.token;
     if (!token) {
@@ -17,10 +17,12 @@ export const handler: APIGatewayRequestAuthorizerHandler = async (event) => {
     const userId = typeof decoded === 'string' ? decoded : decoded.sub;
 
     // Check if token is revoked
-    const { Item: auth } = await dynamodb.get({
-      TableName: AUTH_TABLE,
-      Key: { userId }
-    }).promise();
+    const { Item: auth } = await dynamodb
+      .get({
+        TableName: AUTH_TABLE,
+        Key: { userId },
+      })
+      .promise();
 
     if (!auth || auth.tokenRevoked) {
       throw new Error('Invalid or revoked token');
@@ -34,17 +36,17 @@ export const handler: APIGatewayRequestAuthorizerHandler = async (event) => {
           {
             Action: 'execute-api:Invoke',
             Effect: 'Allow',
-            Resource: event.methodArn
-          }
-        ]
+            Resource: event.methodArn,
+          },
+        ],
       },
       context: {
         userId,
-        scope: auth.scope
-      }
+        scope: auth.scope,
+      },
     };
   } catch (error) {
     console.error('Authorization failed:', error);
     throw new Error('Unauthorized');
   }
-}; 
+};

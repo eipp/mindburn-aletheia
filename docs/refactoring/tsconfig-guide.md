@@ -151,4 +151,4 @@ This configuration structure provides several benefits:
 1. **Consistency**: All packages use the same base settings
 2. **Maintainability**: Changes to common settings only need to be made in one place
 3. **Flexibility**: Packages can override settings as needed
-4. **Type Safety**: Strict type checking is enforced across the codebase 
+4. **Type Safety**: Strict type checking is enforced across the codebase

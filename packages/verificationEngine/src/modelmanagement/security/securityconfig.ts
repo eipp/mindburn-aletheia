@@ -1,10 +1,10 @@
-import { 
-  SecurityService, 
-  KMSService, 
+import {
+  SecurityService,
+  KMSService,
   STSService,
   SecurityConfig,
   createConfigValidator,
-  z
+  z,
 } from '@mindburn/shared';
 
 const SecurityConfigSchema = z.object({
@@ -74,4 +74,4 @@ export class ModelSecurityService {
       DurationSeconds: this.config.sessionDuration,
     });
   }
-} 
+}

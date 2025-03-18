@@ -19,16 +19,18 @@ export class ScalingDashboard {
         ...this.createLambdaWidgets(regions),
         ...this.createDynamoDBWidgets(regions),
         ...this.createApiGatewayWidgets(regions),
-        ...this.createCloudFrontWidgets()
+        ...this.createCloudFrontWidgets(),
       ];
 
-      await this.cloudWatch.send(new PutDashboardCommand({
-        DashboardName: 'MindBurn-Scaling-Metrics',
-        DashboardBody: JSON.stringify({
-          widgets,
-          periodOverride: 'auto'
+      await this.cloudWatch.send(
+        new PutDashboardCommand({
+          DashboardName: 'MindBurn-Scaling-Metrics',
+          DashboardBody: JSON.stringify({
+            widgets,
+            periodOverride: 'auto',
+          }),
         })
-      }));
+      );
 
       this.logger.info('Scaling dashboard created');
     } catch (error) {
@@ -47,13 +49,34 @@ export class ScalingDashboard {
           view: 'timeSeries',
           stacked: false,
           metrics: regions.flatMap(region => [
-            ['AWS/Lambda', 'ConcurrentExecutions', 'FunctionName', 'verification-engine', 'Region', region],
-            ['AWS/Lambda', 'ConcurrentExecutions', 'FunctionName', 'fraud-detector', 'Region', region],
-            ['AWS/Lambda', 'ConcurrentExecutions', 'FunctionName', 'quality-control', 'Region', region]
+            [
+              'AWS/Lambda',
+              'ConcurrentExecutions',
+              'FunctionName',
+              'verification-engine',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/Lambda',
+              'ConcurrentExecutions',
+              'FunctionName',
+              'fraud-detector',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/Lambda',
+              'ConcurrentExecutions',
+              'FunctionName',
+              'quality-control',
+              'Region',
+              region,
+            ],
           ]),
           region: regions[0],
-          title: 'Lambda Concurrent Executions by Region'
-        }
+          title: 'Lambda Concurrent Executions by Region',
+        },
       },
       {
         type: 'metric',
@@ -65,12 +88,12 @@ export class ScalingDashboard {
           metrics: regions.flatMap(region => [
             ['AWS/Lambda', 'Duration', 'FunctionName', 'verification-engine', 'Region', region],
             ['AWS/Lambda', 'Duration', 'FunctionName', 'fraud-detector', 'Region', region],
-            ['AWS/Lambda', 'Duration', 'FunctionName', 'quality-control', 'Region', region]
+            ['AWS/Lambda', 'Duration', 'FunctionName', 'quality-control', 'Region', region],
           ]),
           region: regions[0],
-          title: 'Lambda Duration by Function and Region'
-        }
-      }
+          title: 'Lambda Duration by Function and Region',
+        },
+      },
     ];
   }
 
@@ -84,14 +107,42 @@ export class ScalingDashboard {
           view: 'timeSeries',
           stacked: false,
           metrics: regions.flatMap(region => [
-            ['AWS/DynamoDB', 'ConsumedReadCapacityUnits', 'TableName', 'worker_activity', 'Region', region],
-            ['AWS/DynamoDB', 'ConsumedWriteCapacityUnits', 'TableName', 'worker_activity', 'Region', region],
-            ['AWS/DynamoDB', 'ConsumedReadCapacityUnits', 'TableName', 'fraud_events', 'Region', region],
-            ['AWS/DynamoDB', 'ConsumedWriteCapacityUnits', 'TableName', 'fraud_events', 'Region', region]
+            [
+              'AWS/DynamoDB',
+              'ConsumedReadCapacityUnits',
+              'TableName',
+              'worker_activity',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/DynamoDB',
+              'ConsumedWriteCapacityUnits',
+              'TableName',
+              'worker_activity',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/DynamoDB',
+              'ConsumedReadCapacityUnits',
+              'TableName',
+              'fraud_events',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/DynamoDB',
+              'ConsumedWriteCapacityUnits',
+              'TableName',
+              'fraud_events',
+              'Region',
+              region,
+            ],
           ]),
           region: regions[0],
-          title: 'DynamoDB Capacity Units by Region'
-        }
+          title: 'DynamoDB Capacity Units by Region',
+        },
       },
       {
         type: 'metric',
@@ -102,12 +153,12 @@ export class ScalingDashboard {
           stacked: false,
           metrics: regions.flatMap(region => [
             ['AWS/DAX', 'CPUUtilization', 'ClusterID', 'worker-activity-dax', 'Region', region],
-            ['AWS/DAX', 'CacheHitRate', 'ClusterID', 'worker-activity-dax', 'Region', region]
+            ['AWS/DAX', 'CacheHitRate', 'ClusterID', 'worker-activity-dax', 'Region', region],
           ]),
           region: regions[0],
-          title: 'DAX Performance by Region'
-        }
-      }
+          title: 'DAX Performance by Region',
+        },
+      },
     ];
   }
 
@@ -121,15 +172,51 @@ export class ScalingDashboard {
           view: 'timeSeries',
           stacked: false,
           metrics: regions.flatMap(region => [
-            ['AWS/ApiGateway', 'Count', 'ApiId', 'mindburn-api', 'Stage', 'production', 'Region', region],
-            ['AWS/ApiGateway', 'Latency', 'ApiId', 'mindburn-api', 'Stage', 'production', 'Region', region],
-            ['AWS/ApiGateway', 'CacheHitCount', 'ApiId', 'mindburn-api', 'Stage', 'production', 'Region', region],
-            ['AWS/ApiGateway', 'CacheMissCount', 'ApiId', 'mindburn-api', 'Stage', 'production', 'Region', region]
+            [
+              'AWS/ApiGateway',
+              'Count',
+              'ApiId',
+              'mindburn-api',
+              'Stage',
+              'production',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/ApiGateway',
+              'Latency',
+              'ApiId',
+              'mindburn-api',
+              'Stage',
+              'production',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/ApiGateway',
+              'CacheHitCount',
+              'ApiId',
+              'mindburn-api',
+              'Stage',
+              'production',
+              'Region',
+              region,
+            ],
+            [
+              'AWS/ApiGateway',
+              'CacheMissCount',
+              'ApiId',
+              'mindburn-api',
+              'Stage',
+              'production',
+              'Region',
+              region,
+            ],
           ]),
           region: regions[0],
-          title: 'API Gateway Performance by Region'
-        }
-      }
+          title: 'API Gateway Performance by Region',
+        },
+      },
     ];
   }
 
@@ -146,12 +233,12 @@ export class ScalingDashboard {
             ['AWS/CloudFront', 'Requests', 'DistributionId', 'mindburn-distribution'],
             ['AWS/CloudFront', 'TotalErrorRate', 'DistributionId', 'mindburn-distribution'],
             ['AWS/CloudFront', 'BytesDownloaded', 'DistributionId', 'mindburn-distribution'],
-            ['AWS/CloudFront', 'BytesUploaded', 'DistributionId', 'mindburn-distribution']
+            ['AWS/CloudFront', 'BytesUploaded', 'DistributionId', 'mindburn-distribution'],
           ],
           region: 'us-east-1',
-          title: 'CloudFront Performance'
-        }
-      }
+          title: 'CloudFront Performance',
+        },
+      },
     ];
   }
 
@@ -164,4 +251,4 @@ export class ScalingDashboard {
       throw error;
     }
   }
-} 
+}

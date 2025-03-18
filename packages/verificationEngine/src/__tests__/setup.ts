@@ -25,11 +25,8 @@ process.env.MIN_WALLET_BALANCE = '0.1';
 // Mock console.error to catch unhandled errors
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  if (
-    args[0] instanceof Error &&
-    args[0].message.includes('Unhandled error in test')
-  ) {
+  if (args[0] instanceof Error && args[0].message.includes('Unhandled error in test')) {
     throw args[0];
   }
   originalConsoleError.apply(console, args);
-}; 
+};

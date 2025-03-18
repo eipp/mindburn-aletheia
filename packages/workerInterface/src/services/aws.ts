@@ -23,4 +23,4 @@ export const TableNames = {
 
 export const QueueUrls = {
   TASKS: process.env.TASK_QUEUE_URL!,
-} as const; 
+} as const;

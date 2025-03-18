@@ -1,4 +1,12 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, SendMode } from '@ton/core';
+import {
+  Address,
+  beginCell,
+  Cell,
+  Contract,
+  contractAddress,
+  ContractProvider,
+  SendMode,
+} from '@ton/core';
 import { toNano } from '@ton/core';
 
 export type ReputationConfig = {
@@ -28,20 +36,14 @@ export class MindBurnReputation implements Contract {
     return new MindBurnReputation(address, init);
   }
 
-  async getWorkerReputation(
-    provider: ContractProvider,
-    worker: Address
-  ): Promise<number> {
+  async getWorkerReputation(provider: ContractProvider, worker: Address): Promise<number> {
     const result = await provider.get('get_worker_reputation', [
       { type: 'slice', cell: beginCell().storeAddress(worker).endCell() },
     ]);
     return result.stack.readNumber();
   }
 
-  async getWorkerLevel(
-    provider: ContractProvider,
-    worker: Address
-  ): Promise<number> {
+  async getWorkerLevel(provider: ContractProvider, worker: Address): Promise<number> {
     const reputation = await this.getWorkerReputation(provider, worker);
     return this.calculateLevel(reputation);
   }
@@ -103,21 +105,15 @@ export class MindBurnReputation implements Contract {
     return result.stack.readNumber();
   }
 
-  async getVerificationHistory(
-    provider: ContractProvider,
-    worker: Address
-  ): Promise<Cell> {
+  async getVerificationHistory(provider: ContractProvider, worker: Address): Promise<Cell> {
     const result = await provider.get('get_verification_history', [
       { type: 'slice', cell: beginCell().storeAddress(worker).endCell() },
     ]);
     return result.stack.readCell();
   }
 
-  async getReputationMultiplier(
-    provider: ContractProvider,
-    worker: Address
-  ): Promise<number> {
+  async getReputationMultiplier(provider: ContractProvider, worker: Address): Promise<number> {
     const level = await this.getWorkerLevel(provider, worker);
     return level; // Multiplier is equal to level (1x-5x)
   }
-} 
+}

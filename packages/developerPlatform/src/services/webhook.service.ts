@@ -30,12 +30,12 @@ export class WebhookService {
       updatedAt: now,
       lastDeliveryAt: null,
       failureCount: 0,
-      description: data.description || null
+      description: data.description || null,
     };
 
     await ddb.put({
       TableName: WEBHOOKS_TABLE,
-      Item: webhook
+      Item: webhook,
     });
 
     logger.info('Webhook created successfully', { webhookId });
@@ -46,14 +46,14 @@ export class WebhookService {
       events: webhook.events,
       secret,
       status: webhook.status,
-      createdAt: webhook.createdAt
+      createdAt: webhook.createdAt,
     };
   }
 
   async getWebhook(developerId: string, webhookId: string) {
     const result = await ddb.get({
       TableName: WEBHOOKS_TABLE,
-      Key: { webhookId }
+      Key: { webhookId },
     });
 
     if (!result.Item) {
@@ -75,7 +75,7 @@ export class WebhookService {
       description: webhook.description,
       createdAt: webhook.createdAt,
       lastDeliveryAt: webhook.lastDeliveryAt,
-      failureCount: webhook.failureCount
+      failureCount: webhook.failureCount,
     };
   }
 
@@ -85,28 +85,29 @@ export class WebhookService {
       IndexName: 'DeveloperIdIndex',
       KeyConditionExpression: 'developerId = :developerId',
       ExpressionAttributeValues: {
-        ':developerId': developerId
-      }
+        ':developerId': developerId,
+      },
     });
 
     return {
-      webhooks: result.Items?.map(webhook => ({
-        webhookId: webhook.webhookId,
-        url: webhook.url,
-        events: webhook.events,
-        status: webhook.status,
-        description: webhook.description,
-        createdAt: webhook.createdAt,
-        lastDeliveryAt: webhook.lastDeliveryAt,
-        failureCount: webhook.failureCount
-      })) || []
+      webhooks:
+        result.Items?.map(webhook => ({
+          webhookId: webhook.webhookId,
+          url: webhook.url,
+          events: webhook.events,
+          status: webhook.status,
+          description: webhook.description,
+          createdAt: webhook.createdAt,
+          lastDeliveryAt: webhook.lastDeliveryAt,
+          failureCount: webhook.failureCount,
+        })) || [],
     };
   }
 
   async updateWebhook(developerId: string, webhookId: string, data: Partial<WebhookRequestType>) {
     const result = await ddb.get({
       TableName: WEBHOOKS_TABLE,
-      Key: { webhookId }
+      Key: { webhookId },
     });
 
     if (!result.Item) {
@@ -122,7 +123,7 @@ export class WebhookService {
 
     const updates = [];
     const expressionAttributeValues: any = {
-      ':now': new Date().toISOString()
+      ':now': new Date().toISOString(),
     };
     const expressionAttributeNames: any = {};
 
@@ -151,7 +152,7 @@ export class WebhookService {
       Key: { webhookId },
       UpdateExpression: `SET ${updates.join(', ')}`,
       ExpressionAttributeValues: expressionAttributeValues,
-      ExpressionAttributeNames: expressionAttributeNames
+      ExpressionAttributeNames: expressionAttributeNames,
     });
 
     logger.info('Webhook updated', { webhookId });
@@ -162,7 +163,7 @@ export class WebhookService {
   async deleteWebhook(developerId: string, webhookId: string) {
     const result = await ddb.get({
       TableName: WEBHOOKS_TABLE,
-      Key: { webhookId }
+      Key: { webhookId },
     });
 
     if (!result.Item) {
@@ -178,7 +179,7 @@ export class WebhookService {
 
     await ddb.delete({
       TableName: WEBHOOKS_TABLE,
-      Key: { webhookId }
+      Key: { webhookId },
     });
 
     logger.info('Webhook deleted', { webhookId });
@@ -186,7 +187,13 @@ export class WebhookService {
     return true;
   }
 
-  async recordDelivery(webhookId: string, event: string, payload: any, success: boolean, error?: string) {
+  async recordDelivery(
+    webhookId: string,
+    event: string,
+    payload: any,
+    success: boolean,
+    error?: string
+  ) {
     const deliveryId = uuidv4();
     const now = new Date().toISOString();
 
@@ -197,12 +204,12 @@ export class WebhookService {
       payload,
       success,
       error: error || null,
-      timestamp: now
+      timestamp: now,
     };
 
     await ddb.put({
       TableName: WEBHOOK_DELIVERIES_TABLE,
-      Item: delivery
+      Item: delivery,
     });
 
     // Update webhook stats
@@ -216,15 +223,15 @@ export class WebhookService {
       UpdateExpression: updateExpression,
       ExpressionAttributeValues: {
         ':now': now,
-        ...(success ? {} : { ':inc': 1 })
-      }
+        ...(success ? {} : { ':inc': 1 }),
+      },
     });
 
-    logger.info('Webhook delivery recorded', { 
-      deliveryId, 
+    logger.info('Webhook delivery recorded', {
+      deliveryId,
       webhookId,
       success,
-      error: error || undefined
+      error: error || undefined,
     });
 
     return deliveryId;
@@ -239,20 +246,21 @@ export class WebhookService {
       IndexName: 'WebhookIdIndex',
       KeyConditionExpression: 'webhookId = :webhookId',
       ExpressionAttributeValues: {
-        ':webhookId': webhookId
+        ':webhookId': webhookId,
       },
       Limit: limit,
-      ScanIndexForward: false // Get most recent first
+      ScanIndexForward: false, // Get most recent first
     });
 
     return {
-      deliveries: result.Items?.map(delivery => ({
-        deliveryId: delivery.deliveryId,
-        event: delivery.event,
-        success: delivery.success,
-        error: delivery.error,
-        timestamp: delivery.timestamp
-      })) || []
+      deliveries:
+        result.Items?.map(delivery => ({
+          deliveryId: delivery.deliveryId,
+          event: delivery.event,
+          success: delivery.success,
+          error: delivery.error,
+          timestamp: delivery.timestamp,
+        })) || [],
     };
   }
 
@@ -261,4 +269,4 @@ export class WebhookService {
     hmac.update(JSON.stringify(payload));
     return hmac.digest('hex');
   }
-} 
+}

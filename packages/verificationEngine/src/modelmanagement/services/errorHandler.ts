@@ -1,9 +1,4 @@
-import { 
-  ErrorHandler, 
-  MetricsService, 
-  NotificationService, 
-  LoggerService 
-} from '@mindburn/shared';
+import { ErrorHandler, MetricsService, NotificationService, LoggerService } from '@mindburn/shared';
 import { ErrorHandlingConfig } from '../config/error-handling-config';
 
 export class ModelErrorHandler {
@@ -25,19 +20,19 @@ export class ModelErrorHandler {
       this.logger.error('Model error occurred', {
         error: error.message,
         stack: error.stack,
-        ...context
+        ...context,
       });
 
       // Record error metric
       await this.metrics.incrementCounter('model_errors', {
         type: error.name,
-        ...context
+        ...context,
       });
 
       // Handle error based on configuration
       await this.errorHandler.handle(error, {
         source: 'verification-engine',
-        ...context
+        ...context,
       });
 
       // Send notifications if configured
@@ -45,7 +40,7 @@ export class ModelErrorHandler {
         await this.notifications.sendAlert({
           title: 'Critical Model Error',
           message: error.message,
-          metadata: context
+          metadata: context,
         });
       }
     } catch (handlingError) {
@@ -59,4 +54,4 @@ export class ModelErrorHandler {
     await this.logger.warn(message, context);
     await this.metrics.incrementCounter('model_warnings', context);
   }
-} 
+}

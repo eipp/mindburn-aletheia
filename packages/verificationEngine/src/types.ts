@@ -3,7 +3,7 @@ export enum ExpertiseLevel {
   INTERMEDIATE = 'INTERMEDIATE',
   ADVANCED = 'ADVANCED',
   EXPERT = 'EXPERT',
-  MASTER = 'MASTER'
+  MASTER = 'MASTER',
 }
 
 export enum VerificationType {
@@ -11,7 +11,7 @@ export enum VerificationType {
   AI = 'AI',
   HYBRID = 'HYBRID',
   GOLDEN_SET = 'GOLDEN_SET',
-  EXPERT = 'EXPERT'
+  EXPERT = 'EXPERT',
 }
 
 export enum TaskStatus {
@@ -21,14 +21,14 @@ export enum TaskStatus {
   COMPLETED = 'COMPLETED',
   EXPIRED = 'EXPIRED',
   CANCELLED = 'CANCELLED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export enum TaskPriority {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export interface VerificationResult {
@@ -40,4 +40,4 @@ export interface VerificationResult {
   processingTime: number;
   metadata: Record<string, any>;
   timestamp: number;
-} 
+}

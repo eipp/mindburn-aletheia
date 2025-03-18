@@ -40,15 +40,19 @@ export const handler = async (event: ScheduledEvent): Promise<void> => {
 
     // Analyze strategy performance
     const strategyInsights = await analyzeStrategyPerformance(cloudwatch, startTime, endTime);
-    
+
     // Analyze worker performance
     const workerInsights = await analyzeWorkerPerformance(cloudwatch, dynamodb, startTime, endTime);
-    
+
     // Analyze system health
     const systemInsights = await analyzeSystemHealth(cloudwatch, startTime, endTime);
 
     // Generate recommendations
-    const recommendations = generateRecommendations(strategyInsights, workerInsights, systemInsights);
+    const recommendations = generateRecommendations(
+      strategyInsights,
+      workerInsights,
+      systemInsights
+    );
 
     // Save insights to DynamoDB
     await saveInsights(dynamodb, {
@@ -56,14 +60,13 @@ export const handler = async (event: ScheduledEvent): Promise<void> => {
       strategyInsights,
       workerInsights,
       systemInsights,
-      recommendations
+      recommendations,
     });
 
     // Send notification if there are critical insights
     if (hasCriticalInsights(systemInsights, workerInsights)) {
       await notifyStakeholders(sns, recommendations);
     }
-
   } catch (error) {
     console.error('Error analyzing metrics:', error);
     throw error;
@@ -79,55 +82,57 @@ async function analyzeStrategyPerformance(
   const insights: StrategyInsights[] = [];
 
   for (const strategy of strategies) {
-    const metrics = await cloudwatch.getMetricData({
-      MetricDataQueries: [
-        {
-          Id: 'successRate',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'SuccessRate',
-              Dimensions: [{ Name: 'Strategy', Value: strategy }]
+    const metrics = await cloudwatch
+      .getMetricData({
+        MetricDataQueries: [
+          {
+            Id: 'successRate',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'SuccessRate',
+                Dimensions: [{ Name: 'Strategy', Value: strategy }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'confidence',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'Confidence',
-              Dimensions: [{ Name: 'Strategy', Value: strategy }]
+          },
+          {
+            Id: 'confidence',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'Confidence',
+                Dimensions: [{ Name: 'Strategy', Value: strategy }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'processingTime',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'ProcessingTime',
-              Dimensions: [{ Name: 'Strategy', Value: strategy }]
+          },
+          {
+            Id: 'processingTime',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'ProcessingTime',
+                Dimensions: [{ Name: 'Strategy', Value: strategy }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        }
-      ],
-      StartTime: startTime,
-      EndTime: endTime
-    }).promise();
+          },
+        ],
+        StartTime: startTime,
+        EndTime: endTime,
+      })
+      .promise();
 
     insights.push({
       strategy,
       successRate: calculateAverage(metrics.MetricDataResults[0].Values),
       averageConfidence: calculateAverage(metrics.MetricDataResults[1].Values),
       averageProcessingTime: calculateAverage(metrics.MetricDataResults[2].Values),
-      totalTasks: metrics.MetricDataResults[0].Values.length
+      totalTasks: metrics.MetricDataResults[0].Values.length,
     });
   }
 
@@ -141,58 +146,62 @@ async function analyzeWorkerPerformance(
   endTime: Date
 ): Promise<WorkerInsights[]> {
   // Get all active workers
-  const workers = await dynamodb.scan({
-    TableName: process.env.WORKERS_TABLE!,
-    FilterExpression: '#status = :status',
-    ExpressionAttributeNames: { '#status': 'status' },
-    ExpressionAttributeValues: { ':status': 'ACTIVE' }
-  }).promise();
+  const workers = await dynamodb
+    .scan({
+      TableName: process.env.WORKERS_TABLE!,
+      FilterExpression: '#status = :status',
+      ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: { ':status': 'ACTIVE' },
+    })
+    .promise();
 
   const insights: WorkerInsights[] = [];
 
   for (const worker of workers.Items || []) {
-    const metrics = await cloudwatch.getMetricData({
-      MetricDataQueries: [
-        {
-          Id: 'accuracyScore',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'AccuracyScore',
-              Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }]
+    const metrics = await cloudwatch
+      .getMetricData({
+        MetricDataQueries: [
+          {
+            Id: 'accuracyScore',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'AccuracyScore',
+                Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'processingTime',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'ProcessingTime',
-              Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }]
+          },
+          {
+            Id: 'processingTime',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'ProcessingTime',
+                Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        },
-        {
-          Id: 'riskScore',
-          MetricStat: {
-            Metric: {
-              Namespace: 'Verification/Metrics',
-              MetricName: 'RiskScore',
-              Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }]
+          },
+          {
+            Id: 'riskScore',
+            MetricStat: {
+              Metric: {
+                Namespace: 'Verification/Metrics',
+                MetricName: 'RiskScore',
+                Dimensions: [{ Name: 'WorkerId', Value: worker.workerId }],
+              },
+              Period: 3600,
+              Stat: 'Average',
             },
-            Period: 3600,
-            Stat: 'Average'
-          }
-        }
-      ],
-      StartTime: startTime,
-      EndTime: endTime
-    }).promise();
+          },
+        ],
+        StartTime: startTime,
+        EndTime: endTime,
+      })
+      .promise();
 
     const accuracyScore = calculateAverage(metrics.MetricDataResults[0].Values);
     const processingTime = calculateAverage(metrics.MetricDataResults[1].Values);
@@ -204,7 +213,7 @@ async function analyzeWorkerPerformance(
       averageProcessingTime: processingTime,
       taskCount: metrics.MetricDataResults[0].Values.length,
       riskScore,
-      recommendations: generateWorkerRecommendations(accuracyScore, processingTime, riskScore)
+      recommendations: generateWorkerRecommendations(accuracyScore, processingTime, riskScore),
     });
   }
 
@@ -216,56 +225,58 @@ async function analyzeSystemHealth(
   startTime: Date,
   endTime: Date
 ): Promise<SystemInsights> {
-  const metrics = await cloudwatch.getMetricData({
-    MetricDataQueries: [
-      {
-        Id: 'queueSize',
-        MetricStat: {
-          Metric: {
-            Namespace: 'Verification/Metrics',
-            MetricName: 'QueueSize'
+  const metrics = await cloudwatch
+    .getMetricData({
+      MetricDataQueries: [
+        {
+          Id: 'queueSize',
+          MetricStat: {
+            Metric: {
+              Namespace: 'Verification/Metrics',
+              MetricName: 'QueueSize',
+            },
+            Period: 3600,
+            Stat: 'Average',
           },
-          Period: 3600,
-          Stat: 'Average'
-        }
-      },
-      {
-        Id: 'peakQueueSize',
-        MetricStat: {
-          Metric: {
-            Namespace: 'Verification/Metrics',
-            MetricName: 'QueueSize'
+        },
+        {
+          Id: 'peakQueueSize',
+          MetricStat: {
+            Metric: {
+              Namespace: 'Verification/Metrics',
+              MetricName: 'QueueSize',
+            },
+            Period: 3600,
+            Stat: 'Maximum',
           },
-          Period: 3600,
-          Stat: 'Maximum'
-        }
-      },
-      {
-        Id: 'errorRate',
-        MetricStat: {
-          Metric: {
-            Namespace: 'Verification/Metrics',
-            MetricName: 'ErrorRate'
+        },
+        {
+          Id: 'errorRate',
+          MetricStat: {
+            Metric: {
+              Namespace: 'Verification/Metrics',
+              MetricName: 'ErrorRate',
+            },
+            Period: 3600,
+            Stat: 'Average',
           },
-          Period: 3600,
-          Stat: 'Average'
-        }
-      },
-      {
-        Id: 'activeWorkers',
-        MetricStat: {
-          Metric: {
-            Namespace: 'Verification/Metrics',
-            MetricName: 'ActiveWorkers'
+        },
+        {
+          Id: 'activeWorkers',
+          MetricStat: {
+            Metric: {
+              Namespace: 'Verification/Metrics',
+              MetricName: 'ActiveWorkers',
+            },
+            Period: 3600,
+            Stat: 'Average',
           },
-          Period: 3600,
-          Stat: 'Average'
-        }
-      }
-    ],
-    StartTime: startTime,
-    EndTime: endTime
-  }).promise();
+        },
+      ],
+      StartTime: startTime,
+      EndTime: endTime,
+    })
+    .promise();
 
   const averageQueueSize = calculateAverage(metrics.MetricDataResults[0].Values);
   const peakQueueSize = Math.max(...metrics.MetricDataResults[1].Values);
@@ -278,7 +289,7 @@ async function analyzeSystemHealth(
     peakQueueSize,
     errorRate,
     activeWorkers,
-    recommendations: generateSystemRecommendations(averageQueueSize, errorRate, activeWorkers)
+    recommendations: generateSystemRecommendations(averageQueueSize, errorRate, activeWorkers),
   };
 }
 
@@ -292,7 +303,8 @@ function generateWorkerRecommendations(
   if (accuracyScore < 0.8) {
     recommendations.push('Consider additional training to improve accuracy');
   }
-  if (processingTime > 300000) { // 5 minutes
+  if (processingTime > 300000) {
+    // 5 minutes
     recommendations.push('Review task processing workflow to improve efficiency');
   }
   if (riskScore > 0.7) {
@@ -349,14 +361,13 @@ function generateRecommendations(
   return recommendations;
 }
 
-async function saveInsights(
-  dynamodb: DynamoDB.DocumentClient,
-  insights: any
-): Promise<void> {
-  await dynamodb.put({
-    TableName: process.env.INSIGHTS_TABLE!,
-    Item: insights
-  }).promise();
+async function saveInsights(dynamodb: DynamoDB.DocumentClient, insights: any): Promise<void> {
+  await dynamodb
+    .put({
+      TableName: process.env.INSIGHTS_TABLE!,
+      Item: insights,
+    })
+    .promise();
 }
 
 function hasCriticalInsights(
@@ -370,25 +381,22 @@ function hasCriticalInsights(
   );
 }
 
-async function notifyStakeholders(
-  sns: SNS,
-  recommendations: string[]
-): Promise<void> {
-  await sns.publish({
-    TopicArn: process.env.ALERTS_TOPIC_ARN,
-    Subject: 'Critical Verification System Insights',
-    Message: `
+async function notifyStakeholders(sns: SNS, recommendations: string[]): Promise<void> {
+  await sns
+    .publish({
+      TopicArn: process.env.ALERTS_TOPIC_ARN,
+      Subject: 'Critical Verification System Insights',
+      Message: `
 Critical insights detected in the verification system:
 
 ${recommendations.join('\n')}
 
 Please review the metrics dashboard for more details.
-    `.trim()
-  }).promise();
+    `.trim(),
+    })
+    .promise();
 }
 
 function calculateAverage(values: number[]): number {
-  return values.length > 0
-    ? values.reduce((a, b) => a + b, 0) / values.length
-    : 0;
-} 
+  return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+}

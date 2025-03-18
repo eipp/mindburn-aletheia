@@ -36,4 +36,4 @@ const config: PlaywrightTestConfig = {
   updateSnapshots: process.env.UPDATE_SNAPSHOTS ? 'all' : 'none',
 };
 
-export default config; 
+export default config;

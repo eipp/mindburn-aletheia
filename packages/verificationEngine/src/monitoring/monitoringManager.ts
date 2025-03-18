@@ -32,10 +32,10 @@ export class MonitoringManager {
             Timestamp: new Date(),
             Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({
               Name,
-              Value
-            }))
-          }
-        ]
+              Value,
+            })),
+          },
+        ],
       });
     } catch (error) {
       logger.error('Failed to put metric', { error, name, value });
@@ -66,7 +66,7 @@ export class MonitoringManager {
         Statistic: 'Average',
         Dimensions: Object.entries(params.dimensions).map(([Name, Value]) => ({
           Name,
-          Value
+          Value,
         })),
         Period: 300, // 5 minutes
         EvaluationPeriods: params.evaluationPeriods,
@@ -79,13 +79,13 @@ export class MonitoringManager {
         Tags: [
           {
             Key: 'Environment',
-            Value: this.config.environment
+            Value: this.config.environment,
           },
           {
             Key: 'Service',
-            Value: 'verification-engine'
-          }
-        ]
+            Value: 'verification-engine',
+          },
+        ],
       });
     } catch (error) {
       logger.error('Failed to create alarm', { error, ...params });
@@ -105,7 +105,7 @@ export class MonitoringManager {
         evaluationPeriods: 3,
         datapointsToAlarm: 2,
         comparisonOperator: 'GreaterThanThreshold',
-        dimensions: { Service: 'verification-engine' }
+        dimensions: { Service: 'verification-engine' },
       }),
 
       // Error Rate
@@ -117,7 +117,7 @@ export class MonitoringManager {
         evaluationPeriods: 3,
         datapointsToAlarm: 2,
         comparisonOperator: 'GreaterThanThreshold',
-        dimensions: { Service: 'verification-engine' }
+        dimensions: { Service: 'verification-engine' },
       }),
 
       // Worker Registration Rate
@@ -129,7 +129,7 @@ export class MonitoringManager {
         evaluationPeriods: 12, // 1 hour
         datapointsToAlarm: 12,
         comparisonOperator: 'LessThanThreshold',
-        dimensions: { Service: 'verification-engine' }
+        dimensions: { Service: 'verification-engine' },
       }),
 
       // Verification Success Rate
@@ -141,8 +141,8 @@ export class MonitoringManager {
         evaluationPeriods: 3,
         datapointsToAlarm: 2,
         comparisonOperator: 'LessThanThreshold',
-        dimensions: { Service: 'verification-engine' }
-      })
+        dimensions: { Service: 'verification-engine' },
+      }),
     ]);
   }
 
@@ -150,40 +150,40 @@ export class MonitoringManager {
   async recordApiLatency(endpoint: string, latency: number) {
     await this.putMetric('ApiLatency', latency, 'Milliseconds', {
       Service: 'verification-engine',
-      Endpoint: endpoint
+      Endpoint: endpoint,
     });
   }
 
   async recordError(component: string) {
     await this.putMetric('ErrorCount', 1, 'Count', {
       Service: 'verification-engine',
-      Component: component
+      Component: component,
     });
   }
 
   async recordWorkerRegistration() {
     await this.putMetric('WorkerRegistrationCount', 1, 'Count', {
-      Service: 'verification-engine'
+      Service: 'verification-engine',
     });
   }
 
   async recordVerificationResult(success: boolean) {
     await this.putMetric('VerificationSuccessRate', success ? 100 : 0, 'Percent', {
-      Service: 'verification-engine'
+      Service: 'verification-engine',
     });
   }
 
   async recordDatabaseLatency(operation: string, latency: number) {
     await this.putMetric('DatabaseLatency', latency, 'Milliseconds', {
       Service: 'verification-engine',
-      Operation: operation
+      Operation: operation,
     });
   }
 
   async recordQueueSize(queueName: string, size: number) {
     await this.putMetric('QueueSize', size, 'Count', {
       Service: 'verification-engine',
-      Queue: queueName
+      Queue: queueName,
     });
   }
-} 
+}

@@ -5,12 +5,14 @@ A robust task management system for Mindburn Aletheia that handles task creation
 ## Features
 
 - **Task Lifecycle Management**
+
   - Task creation with validation
   - Status transitions with state machine validation
   - Task expiration handling
   - Task cancellation with refund support
 
 - **Worker Matching**
+
   - Skill-based matching with level consideration
   - Language proficiency matching
   - Performance history analysis
@@ -34,7 +36,7 @@ import { WorkerMatcher } from '@mindburn/task-management';
 const matcher = new WorkerMatcher({
   minMatchScore: 0.7,
   workersTableName: 'workers-table-name',
-  maxTasksPerWorker: 5
+  maxTasksPerWorker: 5,
 });
 
 const eligibleWorkers = await matcher.findEligibleWorkers(task, {
@@ -42,7 +44,7 @@ const eligibleWorkers = await matcher.findEligibleWorkers(task, {
   requiredSkills: ['image-analysis', 'text-verification'],
   minLevel: 2,
   languageCodes: ['en', 'es'],
-  urgency: 'high'
+  urgency: 'high',
 });
 ```
 

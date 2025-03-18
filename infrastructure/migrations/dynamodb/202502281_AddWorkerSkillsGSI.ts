@@ -7,29 +7,31 @@ export class AddWorkerSkillsGSI extends Migration {
 
   async up(): Promise<void> {
     // Update table with new GSI
-    await this.context.dynamodb.updateTable({
-      TableName: this.tableName,
-      AttributeDefinitions: [
-        { AttributeName: 'skillId', AttributeType: 'S' },
-        { AttributeName: 'expertiseLevel', AttributeType: 'N' }
-      ],
-      GlobalSecondaryIndexUpdates: [
-        {
-          Create: {
-            IndexName: this.gsiName,
-            KeySchema: [
-              { AttributeName: 'skillId', KeyType: 'HASH' },
-              { AttributeName: 'expertiseLevel', KeyType: 'RANGE' }
-            ],
-            Projection: { ProjectionType: 'ALL' },
-            ProvisionedThroughput: {
-              ReadCapacityUnits: 5,
-              WriteCapacityUnits: 5
-            }
-          }
-        }
-      ]
-    }).promise();
+    await this.context.dynamodb
+      .updateTable({
+        TableName: this.tableName,
+        AttributeDefinitions: [
+          { AttributeName: 'skillId', AttributeType: 'S' },
+          { AttributeName: 'expertiseLevel', AttributeType: 'N' },
+        ],
+        GlobalSecondaryIndexUpdates: [
+          {
+            Create: {
+              IndexName: this.gsiName,
+              KeySchema: [
+                { AttributeName: 'skillId', KeyType: 'HASH' },
+                { AttributeName: 'expertiseLevel', KeyType: 'RANGE' },
+              ],
+              Projection: { ProjectionType: 'ALL' },
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 5,
+                WriteCapacityUnits: 5,
+              },
+            },
+          },
+        ],
+      })
+      .promise();
 
     // Wait for GSI to become active
     await this.waitForGSIActive();
@@ -39,24 +41,28 @@ export class AddWorkerSkillsGSI extends Migration {
   }
 
   async down(): Promise<void> {
-    await this.context.dynamodb.updateTable({
-      TableName: this.tableName,
-      GlobalSecondaryIndexUpdates: [
-        {
-          Delete: {
-            IndexName: this.gsiName
-          }
-        }
-      ]
-    }).promise();
+    await this.context.dynamodb
+      .updateTable({
+        TableName: this.tableName,
+        GlobalSecondaryIndexUpdates: [
+          {
+            Delete: {
+              IndexName: this.gsiName,
+            },
+          },
+        ],
+      })
+      .promise();
   }
 
   async validate(): Promise<boolean> {
     try {
       // Check if GSI exists and is active
-      const table = await this.context.dynamodb.describeTable({
-        TableName: this.tableName
-      }).promise();
+      const table = await this.context.dynamodb
+        .describeTable({
+          TableName: this.tableName,
+        })
+        .promise();
 
       const gsi = table.Table.GlobalSecondaryIndexes?.find(
         index => index.IndexName === this.gsiName
@@ -67,14 +73,16 @@ export class AddWorkerSkillsGSI extends Migration {
       }
 
       // Verify sample queries work
-      const testQuery = await this.context.dynamodb.query({
-        TableName: this.tableName,
-        IndexName: this.gsiName,
-        KeyConditionExpression: 'skillId = :skillId',
-        ExpressionAttributeValues: {
-          ':skillId': 'TEST_SKILL'
-        }
-      }).promise();
+      const testQuery = await this.context.dynamodb
+        .query({
+          TableName: this.tableName,
+          IndexName: this.gsiName,
+          KeyConditionExpression: 'skillId = :skillId',
+          ExpressionAttributeValues: {
+            ':skillId': 'TEST_SKILL',
+          },
+        })
+        .promise();
 
       return true;
     } catch (error) {
@@ -97,9 +105,11 @@ export class AddWorkerSkillsGSI extends Migration {
   private async waitForGSIActive(): Promise<void> {
     let isActive = false;
     while (!isActive) {
-      const table = await this.context.dynamodb.describeTable({
-        TableName: this.tableName
-      }).promise();
+      const table = await this.context.dynamodb
+        .describeTable({
+          TableName: this.tableName,
+        })
+        .promise();
 
       const gsi = table.Table.GlobalSecondaryIndexes?.find(
         index => index.IndexName === this.gsiName
@@ -116,30 +126,34 @@ export class AddWorkerSkillsGSI extends Migration {
   private async updateExistingItems(): Promise<void> {
     let lastEvaluatedKey;
     do {
-      const scanResult = await this.context.dynamodb.scan({
-        TableName: this.tableName,
-        ExclusiveStartKey: lastEvaluatedKey
-      }).promise();
+      const scanResult = await this.context.dynamodb
+        .scan({
+          TableName: this.tableName,
+          ExclusiveStartKey: lastEvaluatedKey,
+        })
+        .promise();
 
       const updates = scanResult.Items.map(item => ({
         PutRequest: {
           Item: {
             ...item,
             skillId: item.primarySkill || 'UNKNOWN',
-            expertiseLevel: item.yearsOfExperience || 0
-          }
-        }
+            expertiseLevel: item.yearsOfExperience || 0,
+          },
+        },
       }));
 
       if (updates.length > 0) {
-        await this.context.dynamodb.batchWrite({
-          RequestItems: {
-            [this.tableName]: updates
-          }
-        }).promise();
+        await this.context.dynamodb
+          .batchWrite({
+            RequestItems: {
+              [this.tableName]: updates,
+            },
+          })
+          .promise();
       }
 
       lastEvaluatedKey = scanResult.LastEvaluatedKey;
     } while (lastEvaluatedKey);
   }
-} 
+}

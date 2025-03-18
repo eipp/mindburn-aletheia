@@ -6,7 +6,7 @@ export const {
   validation: { address: validateTonAddress },
   format: { amount: formatTonAmount, transactionStatus: formatTransactionStatus },
   parse: { amount: parseTonAmount },
-  calculation: { fee: calculateFee }
+  calculation: { fee: calculateFee },
 } = ton;
 
 // Extended wallet-specific utilities
@@ -47,10 +47,11 @@ export const validateWithdrawal = (
   return { isValid: true };
 };
 
-export const getTransactionExplorerUrl = (txHash: string, network: 'mainnet' | 'testnet' = 'mainnet'): string => {
-  const baseUrl = network === 'mainnet'
-    ? 'https://tonscan.org'
-    : 'https://testnet.tonscan.org';
+export const getTransactionExplorerUrl = (
+  txHash: string,
+  network: 'mainnet' | 'testnet' = 'mainnet'
+): string => {
+  const baseUrl = network === 'mainnet' ? 'https://tonscan.org' : 'https://testnet.tonscan.org';
   return `${baseUrl}/tx/${txHash}`;
 };
 
@@ -88,7 +89,9 @@ export const validateTransactionData = (data: {
   const fee = calculateFee(data.amount);
   const totalAmount = data.amount + fee;
   if (totalAmount > data.balance) {
-    errors.push(`Insufficient balance. Total required: ${formatTonAmount(totalAmount)} TON (including fee)`);
+    errors.push(
+      `Insufficient balance. Total required: ${formatTonAmount(totalAmount)} TON (including fee)`
+    );
   }
 
   // Validate minimum withdrawal
@@ -98,7 +101,7 @@ export const validateTransactionData = (data: {
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -108,7 +111,7 @@ export const formatTransactionType = (type: string): string => {
     withdrawal: 'Withdrawal',
     deposit: 'Deposit',
     referral: 'Referral Bonus',
-    training: 'Training Reward'
+    training: 'Training Reward',
   };
   return typeMap[type] || type;
 };
@@ -119,7 +122,7 @@ export const getTransactionIcon = (type: string): string => {
     withdrawal: '↗️',
     deposit: '↙️',
     referral: '👥',
-    training: '📚'
+    training: '📚',
   };
   return iconMap[type] || '💰';
 };
@@ -157,4 +160,4 @@ export const calculateReward = (
 
   // Round to 2 decimal places
   return Math.round(finalReward * 100) / 100;
-}; 
+};

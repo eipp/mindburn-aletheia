@@ -5,20 +5,20 @@ export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL,
-    prepareHeaders: (headers) => {
+    prepareHeaders: headers => {
       const telegram = window.Telegram.WebApp;
       headers.set('X-Telegram-Init-Data', telegram.initData);
       return headers;
     },
   }),
   tagTypes: ['Tasks', 'User'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     getTasks: builder.query<Task[], void>({
       query: () => '/tasks',
       providesTags: ['Tasks'],
     }),
     getTask: builder.query<Task, string>({
-      query: (id) => `/tasks/${id}`,
+      query: id => `/tasks/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Tasks', id }],
     }),
     submitTask: builder.mutation<void, TaskSubmission>({
@@ -27,17 +27,14 @@ export const apiSlice = createApi({
         method: 'POST',
         body: { answer },
       }),
-      invalidatesTags: (_result, _error, { taskId }) => [
-        { type: 'Tasks', id: taskId },
-        'Tasks',
-      ],
+      invalidatesTags: (_result, _error, { taskId }) => [{ type: 'Tasks', id: taskId }, 'Tasks'],
     }),
     getUserProfile: builder.query<UserProfile, void>({
       query: () => '/user/profile',
       providesTags: ['User'],
     }),
     updateUserProfile: builder.mutation<void, Partial<UserProfile>>({
-      query: (profile) => ({
+      query: profile => ({
         url: '/user/profile',
         method: 'PATCH',
         body: profile,
@@ -45,4 +42,4 @@ export const apiSlice = createApi({
       invalidatesTags: ['User'],
     }),
   }),
-}); 
+});

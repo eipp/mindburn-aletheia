@@ -106,4 +106,4 @@ export default new MyVerificationPlugin(manifest);
   };
 
   return templates[type] || '';
-}; 
+};

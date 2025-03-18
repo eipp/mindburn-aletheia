@@ -8,14 +8,14 @@ export const loadTest = {
       { duration: 120, arrivalRate: 10, rampTo: 50, name: 'Ramp up load' },
       { duration: 300, arrivalRate: 50, name: 'Sustained load' },
       { duration: 120, arrivalRate: 50, rampTo: 100, name: 'Peak load' },
-      { duration: 60, arrivalRate: 5, name: 'Scale down' }
+      { duration: 60, arrivalRate: 5, name: 'Scale down' },
     ],
     defaults: {
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '${API_KEY}'
-      }
-    }
+        'x-api-key': '${API_KEY}',
+      },
+    },
   },
   scenarios: [
     {
@@ -45,25 +45,25 @@ export const loadTest = {
                 canvas: '{{ $randomString(32) }}',
                 webgl: '{{ $randomString(32) }}',
                 fonts: [],
-                audio: '{{ $randomString(32) }}'
-              }
+                audio: '{{ $randomString(32) }}',
+              },
             },
             capture: {
               json: '$.data.fraudResult.riskScore',
-              as: 'riskScore'
-            }
-          }
+              as: 'riskScore',
+            },
+          },
         },
         {
           get: {
             url: '/metrics',
             qs: {
               startTime: '{{ $timestamp }}',
-              endTime: '{{ $timestamp }}'
-            }
-          }
-        }
-      ]
+              endTime: '{{ $timestamp }}',
+            },
+          },
+        },
+      ],
     },
     {
       name: 'Process golden set submissions',
@@ -83,14 +83,14 @@ export const loadTest = {
               timestamp: '{{ $timestamp }}',
               ipAddress: '{{ $randomIp }}',
               deviceFingerprint: {
-                userAgent: '{{ $userAgent }}'
+                userAgent: '{{ $userAgent }}',
               },
               isGoldenSet: true,
-              expectedResult: { label: 'approved' }
-            }
-          }
-        }
-      ]
+              expectedResult: { label: 'approved' },
+            },
+          },
+        },
+      ],
     },
     {
       name: 'Simulate suspicious activity',
@@ -110,49 +110,49 @@ export const loadTest = {
               timestamp: '{{ $timestamp }}',
               ipAddress: '{{ $randomIp }}',
               deviceFingerprint: {
-                userAgent: '{{ $randomItem("bot1", "bot2", "bot3") }}'
-              }
-            }
-          }
-        }
-      ]
-    }
+                userAgent: '{{ $randomItem("bot1", "bot2", "bot3") }}',
+              },
+            },
+          },
+        },
+      ],
+    },
   ],
   environments: {
     development: {
       target: 'http://localhost:3000/api',
       variables: {
-        API_KEY: 'dev-api-key'
-      }
+        API_KEY: 'dev-api-key',
+      },
     },
     staging: {
       target: 'https://staging-api.example.com/api',
       variables: {
-        API_KEY: '{{ $processEnvironment.STAGING_API_KEY }}'
-      }
+        API_KEY: '{{ $processEnvironment.STAGING_API_KEY }}',
+      },
     },
     production: {
       target: 'https://api.example.com/api',
       variables: {
-        API_KEY: '{{ $processEnvironment.PRODUCTION_API_KEY }}'
-      }
-    }
+        API_KEY: '{{ $processEnvironment.PRODUCTION_API_KEY }}',
+      },
+    },
   },
   plugins: {
     metrics: {
       statsd: {
         host: 'localhost',
         port: 8125,
-        prefix: 'load_test'
-      }
+        prefix: 'load_test',
+      },
     },
     expect: {
       thresholds: [
         'p95 < 500', // 95th percentile response time under 500ms
         'median < 200', // Median response time under 200ms
-        'error < 1' // Error rate under 1%
-      ]
-    }
+        'error < 1', // Error rate under 1%
+      ],
+    },
   },
-  processor: './load-test-functions.js'
-}; 
+  processor: './load-test-functions.js',
+};

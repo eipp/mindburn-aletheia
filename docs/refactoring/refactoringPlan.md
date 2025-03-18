@@ -1,175 +1,99 @@
-# Mindburn Aletheia Refactoring Plan
+# Refactoring Plan
 
-Based on the codebase analysis, this document outlines a comprehensive refactoring plan to improve code organization, maintainability, and consistency.
+## Overview
 
-## 1. Standardize Naming Conventions
+This document outlines the comprehensive refactoring plan for the Mindburn Aletheia platform, focusing on improving code organization, reducing duplication, and establishing clear package boundaries.
 
-### Current State
-- Mixed naming conventions across the codebase:
-  - camelCase: 203 files (dominant)
-  - PascalCase: 109 files
-  - kebab-case: 75 files
-  - snake_case: 8 files
+## Goals
 
-### Action Plan
-1. **Create a naming convention guide**:
-   - Use camelCase for variables, functions, and file names (except React components)
-   - Use PascalCase for React components, classes, and interfaces
-   - Use kebab-case for directory names
-   - Use UPPER_SNAKE_CASE for constants
+1. Create a clear, maintainable package structure
+2. Eliminate code duplication across the codebase
+3. Establish consistent patterns for common operations
+4. Improve type safety and API definitions
+5. Ensure all code is properly tested
+6. Document architecture and package interactions
 
-2. **Implement a batch renaming script**:
-   ```javascript
-   // scripts/refactoring/rename-files.js
-   // This script will rename files according to the naming convention
-   ```
+## Package Structure
 
-3. **Update imports after renaming**:
-   - Use the refactoring script to update all imports after renaming files
+The refactored codebase will be organized into the following packages:
 
-## 2. Consolidate Duplicate Directories
+1. **Core Packages**
+   - `core` - Core functionality and system-wide utilities
+   - `shared` - Shared types, interfaces, and utilities
 
-### Current State
-- Multiple test directories (5 locations)
-- Multiple verification directories (4 locations)
-- Multiple config directories (7 locations)
-- Multiple utils directories (7 locations)
-- Multiple tests directories (4 locations)
-- Multiple __tests__ directories (8 locations)
-
-### Action Plan
-1. **Consolidate test directories**:
-   - Move all test files to a standardized location within each package
-   - Use `__tests__` directories adjacent to the files they test
-   - Eliminate standalone test directories
-
-2. **Consolidate verification logic**:
-   - Move all verification code to `packages/verification-engine`
-   - Create clear interfaces for other packages to use
-
-3. **Centralize configuration**:
-   - Move shared configuration to `packages/shared/src/config`
-   - Keep package-specific configuration within each package
-   - Use a consistent pattern for configuration management
-
-4. **Consolidate utilities**:
-   - Move common utilities to `packages/shared/src/utils`
-   - Organize utilities by domain (e.g., `ton`, `validation`, `formatting`)
-   - Use the refactor-module.js script to assist with migration
-
-## 3. Centralize Configuration Files
-
-### Current State
-- 45 configuration files scattered across the codebase
-- Multiple tsconfig.json files with potential duplication
-
-### Action Plan
-1. **Create a base tsconfig.json**:
-   - Define common TypeScript settings in the root tsconfig.json
-   - Use extends in package-specific tsconfig.json files
-
-2. **Standardize ESLint and Prettier configuration**:
-   - Use a single .eslintrc.js and .prettierrc at the root
-   - Add package-specific overrides where necessary
-
-3. **Centralize build configuration**:
-   - Standardize build scripts in package.json files
-   - Use turbo.json for build dependencies
-
-## 4. Organize Scripts
-
-### Current State
-- 6 scripts with various purposes
-- No clear organization
-
-### Action Plan
-1. **Create script directories by purpose**:
-   - `scripts/analysis/` - For codebase analysis scripts
-   - `scripts/deployment/` - For deployment scripts
-   - `scripts/refactoring/` - For refactoring tools
-   - `scripts/build/` - For build scripts
-   - `scripts/utils/` - For utility scripts
-
-2. **Document each script**:
-   - Add a README.md in each script directory
-   - Include usage examples and purpose
-
-## 5. Update .gitignore
-
-### Current State
-- 4 unnecessary files tracked in version control
-
-### Action Plan
-1. **Update .gitignore to exclude**:
-   - .DS_Store
-   - pnpm-lock.yaml (use only yarn.lock)
-   - Generated files (build artifacts, coverage reports)
-
-## 6. Improve Monorepo Structure
-
-### Current State
-- Inconsistent package organization
-- Unclear boundaries between packages
-
-### Action Plan
-1. **Define clear package boundaries**:
-   - `packages/shared` - Common utilities, types, and services
-   - `packages/verification-engine` - Core verification logic
-   - `packages/worker-bot` - Telegram bot interface
-   - `packages/worker-webapp` - Web interface
-   - `packages/payment-system` - Payment processing
-   - `packages/developer-platform` - Developer APIs and dashboard
-
-2. **Standardize package structure**:
-   - src/ - Source code
-   - __tests__/ - Tests adjacent to source files
-   - docs/ - Package-specific documentation
+2. **Domain Packages**
+   - `developerPlatform` - Developer API and dashboard
+   - `taskManagement` - Task distribution and management
+   - `verificationEngine` - Core verification logic
+   - `workerInterface` - API for workers
+   - `workerBot` - Telegram bot implementation
+   - `workerWebapp` - Web interface for workers
+   - `workerCore` - Shared worker functionality
+   - `paymentSystem` - Payment processing
+   - `tonContracts` - TON blockchain contracts
+   - `tokenEconomy` - Token economics
+   - `pluginSystem` - Plugin system for verification methods
 
 ## Implementation Plan
 
-### Phase 1: Preparation (Week 1)
-- [x] Create analysis scripts
-- [ ] Create naming convention guide
-- [ ] Update .gitignore
-- [ ] Create batch renaming script
+### Phase 1: Code Analysis and Preparation
 
-### Phase 2: Configuration Standardization (Week 2)
-- [ ] Centralize and standardize TypeScript configuration
-- [ ] Standardize ESLint and Prettier configuration
-- [ ] Organize scripts into directories
+1. Analyze code duplication using jscpd
+2. Document current architecture and dependencies
+3. Set up linting and formatting rules
+4. Create package templates with consistent structure
 
-### Phase 3: Directory Consolidation (Weeks 3-4)
-- [ ] Consolidate test directories
-- [ ] Consolidate verification logic
-- [ ] Centralize shared configuration
-- [ ] Consolidate utilities
+### Phase 2: Package Migration
 
-### Phase 4: File Renaming (Week 5)
-- [ ] Rename files according to naming convention
-- [ ] Update imports after renaming
+1. Create baseline packages with minimal functionality
+2. Move all verification code to `verificationEngine`
+3. Separate worker interfaces into appropriate packages
+4. Consolidate payment processing code
+5. Extract shared utilities to `shared` package
+6. Implement core functionality in `core` package
 
-### Phase 5: Documentation and Validation (Week 6)
-- [ ] Update documentation to reflect new structure
-- [ ] Run tests to ensure functionality is preserved
-- [ ] Create developer guidelines for future contributions
+### Phase 3: Dependency Management
 
-## Success Metrics
+1. Define clear package interfaces
+2. Update all import paths
+3. Establish versioning strategy
+4. Create comprehensive type definitions
 
-- Reduced duplication (target: 100% reduction in duplicate directories)
-- Consistent naming conventions (target: 100% compliance)
-- Centralized configuration (target: 50% reduction in config files)
-- Improved test organization (target: 100% of tests in __tests__ directories)
-- Maintained or improved test coverage (target: 100% coverage)
+### Phase 4: Testing and Validation
 
-## Risks and Mitigations
+1. Implement test suites for all packages
+2. Set up CI/CD for automated testing
+3. Validate refactored code against requirements
+4. Perform integration testing
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Breaking changes | High | Medium | Comprehensive testing after each phase |
-| Developer resistance | Medium | Low | Clear documentation and training |
-| Time constraints | Medium | Medium | Prioritize high-impact changes first |
-| Integration issues | High | Medium | Incremental changes with validation |
+### Phase 5: Documentation and Cleanup
 
-## Conclusion
+1. Document all package APIs
+2. Create architecture diagrams
+3. Remove deprecated code
+4. Update all READMEs
 
-This refactoring plan addresses the key issues identified in the codebase analysis. By implementing these changes, we will improve code organization, reduce duplication, and establish clear patterns for future development. The phased approach ensures that we can make progress while minimizing disruption to ongoing development. 
+## Package Responsibilities
+
+- `core`: System-wide utilities, configuration, logging
+- `shared`: Common types, interfaces, error handling
+- `developerPlatform`: API for developers, dashboard, analytics
+- `taskManagement`: Task scheduling, distribution, monitoring
+- `verificationEngine`: Verification algorithms, consensus mechanisms, fraud detection
+- `workerInterface`: Worker API, request handling, authentication
+- `workerBot`: Telegram bot commands, workflows, user management
+- `workerWebapp`: Mini App UI, state management, user experience
+- `workerCore`: Shared worker functionality, profile management
+- `paymentSystem`: Payment processing, wallet management, transaction handling
+- `tonContracts`: Smart contract interfaces, deployment, interaction
+- `tokenEconomy`: Token distribution, staking, rewards
+- `pluginSystem`: Plugin architecture, extensibility framework
+
+## Success Criteria
+
+1. No code duplication across packages
+2. All functionality accessible through well-defined APIs
+3. 80%+ test coverage across all packages
+4. Clear documentation for all package interfaces
+5. Consistent error handling and logging patterns
+6. Type safety throughout the codebase

@@ -11,9 +11,9 @@ interface EventPayload {
   filter?: Record<string, any>;
 }
 
-export const handler: SQSHandler = async (event) => {
+export const handler: SQSHandler = async event => {
   const apiGateway = new ApiGatewayManagementApi({
-    endpoint: WEBSOCKET_ENDPOINT
+    endpoint: WEBSOCKET_ENDPOINT,
   });
 
   const failedConnections: string[] = [];
@@ -23,14 +23,16 @@ export const handler: SQSHandler = async (event) => {
       const payload: EventPayload = JSON.parse(record.body);
 
       // Get all connections subscribed to this event type
-      const { Items: subscriptions } = await dynamodb.query({
-        TableName: CONNECTIONS_TABLE,
-        IndexName: 'SubscriptionTypeIndex',
-        KeyConditionExpression: 'subscriptionType = :type',
-        ExpressionAttributeValues: {
-          ':type': payload.type
-        }
-      }).promise();
+      const { Items: subscriptions } = await dynamodb
+        .query({
+          TableName: CONNECTIONS_TABLE,
+          IndexName: 'SubscriptionTypeIndex',
+          KeyConditionExpression: 'subscriptionType = :type',
+          ExpressionAttributeValues: {
+            ':type': payload.type,
+          },
+        })
+        .promise();
 
       if (!subscriptions?.length) {
         continue;
@@ -46,15 +48,17 @@ export const handler: SQSHandler = async (event) => {
 
       // Broadcast to all eligible connections
       await Promise.all(
-        eligibleConnections.map(async (sub) => {
+        eligibleConnections.map(async sub => {
           try {
-            await apiGateway.postToConnection({
-              ConnectionId: sub.connectionId,
-              Data: JSON.stringify({
-                type: payload.type,
-                data: payload.data
+            await apiGateway
+              .postToConnection({
+                ConnectionId: sub.connectionId,
+                Data: JSON.stringify({
+                  type: payload.type,
+                  data: payload.data,
+                }),
               })
-            }).promise();
+              .promise();
           } catch (error: any) {
             if (error.statusCode === 410) {
               // Connection is stale
@@ -70,10 +74,12 @@ export const handler: SQSHandler = async (event) => {
       if (failedConnections.length > 0) {
         await Promise.all(
           failedConnections.map(connectionId =>
-            dynamodb.delete({
-              TableName: CONNECTIONS_TABLE,
-              Key: { connectionId }
-            }).promise()
+            dynamodb
+              .delete({
+                TableName: CONNECTIONS_TABLE,
+                Key: { connectionId },
+              })
+              .promise()
           )
         );
       }
@@ -92,4 +98,4 @@ function matchesFilter(data: any, filter: Record<string, any>): boolean {
     }
     return dataValue === value;
   });
-} 
+}

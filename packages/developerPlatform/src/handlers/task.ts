@@ -13,14 +13,14 @@ export async function submitTask(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -29,7 +29,7 @@ export async function submitTask(event: APIGatewayProxyEvent): Promise<APIGatewa
 
     return {
       statusCode: 201,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Task submission failed', { error });
@@ -37,16 +37,16 @@ export async function submitTask(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid request data',
-          details: error.errors
-        })
+          details: error.errors,
+        }),
       };
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -57,7 +57,7 @@ export async function getTask(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -65,7 +65,7 @@ export async function getTask(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!taskId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing task ID' })
+        body: JSON.stringify({ error: 'Missing task ID' }),
       };
     }
 
@@ -73,7 +73,7 @@ export async function getTask(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to get task', { error });
@@ -82,20 +82,20 @@ export async function getTask(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       if (error.message === 'Task not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to task') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -106,7 +106,7 @@ export async function listTasks(event: APIGatewayProxyEvent): Promise<APIGateway
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -117,21 +117,21 @@ export async function listTasks(event: APIGatewayProxyEvent): Promise<APIGateway
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
       limit: queryParams.limit ? parseInt(queryParams.limit) : undefined,
-      nextToken: queryParams.nextToken
+      nextToken: queryParams.nextToken,
     };
 
     const result = await taskService.listTasks(developerId, params);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
   } catch (error) {
     logger.error('Failed to list tasks', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
@@ -142,7 +142,7 @@ export async function cancelTask(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!developerId) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Unauthorized' })
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
@@ -150,7 +150,7 @@ export async function cancelTask(event: APIGatewayProxyEvent): Promise<APIGatewa
     if (!taskId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing task ID' })
+        body: JSON.stringify({ error: 'Missing task ID' }),
       };
     }
 
@@ -158,7 +158,7 @@ export async function cancelTask(event: APIGatewayProxyEvent): Promise<APIGatewa
 
     return {
       statusCode: 204,
-      body: ''
+      body: '',
     };
   } catch (error) {
     logger.error('Failed to cancel task', { error });
@@ -167,38 +167,40 @@ export async function cancelTask(event: APIGatewayProxyEvent): Promise<APIGatewa
       if (error.message === 'Task not found') {
         return {
           statusCode: 404,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Unauthorized access to task') {
         return {
           statusCode: 403,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
       if (error.message === 'Cannot cancel completed or failed tasks') {
         return {
           statusCode: 400,
-          body: JSON.stringify({ error: error.message })
+          body: JSON.stringify({ error: error.message }),
         };
       }
     }
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 }
 
-export async function updateTaskStatus(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+export async function updateTaskStatus(
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
   try {
     // This endpoint should only be accessible internally
     const sourceIp = event.requestContext.identity?.sourceIp;
     if (!process.env.ALLOWED_INTERNAL_IPS?.split(',').includes(sourceIp)) {
       return {
         statusCode: 403,
-        body: JSON.stringify({ error: 'Access denied' })
+        body: JSON.stringify({ error: 'Access denied' }),
       };
     }
 
@@ -206,14 +208,14 @@ export async function updateTaskStatus(event: APIGatewayProxyEvent): Promise<API
     if (!taskId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing task ID' })
+        body: JSON.stringify({ error: 'Missing task ID' }),
       };
     }
 
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing request body' })
+        body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
 
@@ -221,7 +223,7 @@ export async function updateTaskStatus(event: APIGatewayProxyEvent): Promise<API
     if (!status) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing status' })
+        body: JSON.stringify({ error: 'Missing status' }),
       };
     }
 
@@ -229,14 +231,14 @@ export async function updateTaskStatus(event: APIGatewayProxyEvent): Promise<API
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Task status updated successfully' })
+      body: JSON.stringify({ message: 'Task status updated successfully' }),
     };
   } catch (error) {
     logger.error('Failed to update task status', { error });
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
-} 
+}

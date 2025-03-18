@@ -5,7 +5,7 @@ import {
   ModelAccess,
   AccessLevel,
   createConfigValidator,
-  z
+  z,
 } from '@mindburn/shared';
 
 const SecureAccessConfigSchema = z.object({
@@ -49,11 +49,7 @@ export class SecureModelAccess {
     this.eventBus = new EventBus();
   }
 
-  async grantAccess(
-    modelId: string,
-    userId: string,
-    level: AccessLevel
-  ): Promise<ModelAccess> {
+  async grantAccess(modelId: string, userId: string, level: AccessLevel): Promise<ModelAccess> {
     try {
       this.logger.info('Granting model access', { modelId, userId, level });
 
@@ -69,7 +65,7 @@ export class SecureModelAccess {
         modelId,
         userId,
         level,
-        expiration: Date.now() + (this.config.accessTimeout * 1000),
+        expiration: Date.now() + this.config.accessTimeout * 1000,
       });
 
       const access: ModelAccess = {
@@ -78,7 +74,7 @@ export class SecureModelAccess {
         userId,
         level,
         grantedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + (this.config.accessTimeout * 1000)).toISOString(),
+        expiresAt: new Date(Date.now() + this.config.accessTimeout * 1000).toISOString(),
       };
 
       this.activeAccess.set(accessToken, access);
@@ -151,8 +147,9 @@ export class SecureModelAccess {
     try {
       this.logger.info('Listing active model access', { modelId });
 
-      const activeAccess = Array.from(this.activeAccess.values())
-        .filter(access => access.modelId === modelId);
+      const activeAccess = Array.from(this.activeAccess.values()).filter(
+        access => access.modelId === modelId
+      );
 
       this.logger.info('Active model access retrieved', {
         modelId,
@@ -165,4 +162,4 @@ export class SecureModelAccess {
       throw error;
     }
   }
-} 
+}

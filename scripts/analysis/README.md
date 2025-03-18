@@ -9,5 +9,3 @@ Scripts for analyzing the codebase
 ```
 node scripts/analysis/analyze-duplication.js
 ```
-
-

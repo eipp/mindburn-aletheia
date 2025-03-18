@@ -5,37 +5,45 @@ This document outlines the setup process and tools required for the Mindburn Ale
 ## Required Tools
 
 ### Code Analysis Tools
+
 - **jscpd**: Detects code duplication in the codebase
+
   ```bash
   npm install -g jscpd
   ```
 
 - **depcheck**: Finds unused dependencies in package.json files
+
   ```bash
   npm install -g depcheck
   ```
 
 - **tree**: Visualizes directory structures
+
   ```bash
   # macOS
   brew install tree
-  
+
   # Linux (Debian/Ubuntu)
   apt-get install tree
   ```
 
 ### Refactoring Scripts
+
 The repository contains several refactoring scripts located in `scripts/`:
+
 - `refactor-module.js`: Helps move modules between packages
 
 ## Setup Process
 
 1. Install the required global tools:
+
    ```bash
    npm install -g jscpd depcheck
    ```
 
 2. Make all refactoring scripts executable:
+
    ```bash
    chmod +x scripts/*.js
    ```
@@ -48,20 +56,23 @@ The repository contains several refactoring scripts located in `scripts/`:
 ## Running Analysis
 
 1. Generate directory tree:
+
    ```bash
    tree -a -I "node_modules|.git" > docs/analysis/tree.txt
    ```
 
 2. Find code duplication:
+
    ```bash
    jscpd . --ignore "node_modules/**" --reporters "html,json" --output docs/analysis
    ```
 
 3. Check for unused dependencies:
+
    ```bash
    # Run for root package
    depcheck . > docs/analysis/depcheck-root.txt
-   
+
    # Run for each sub-package
    for pkg in packages/*; do
      if [ -f "$pkg/package.json" ]; then
@@ -81,6 +92,6 @@ The repository contains several refactoring scripts located in `scripts/`:
 ## Important Guidelines
 
 - **Make backups** before significant changes
-- **Commit often** with descriptive messages 
+- **Commit often** with descriptive messages
 - **Run tests** after each refactoring step
-- **Keep the team informed** about changes affecting multiple components 
+- **Keep the team informed** about changes affecting multiple components

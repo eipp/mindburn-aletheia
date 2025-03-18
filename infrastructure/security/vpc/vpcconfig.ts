@@ -19,19 +19,19 @@ export class SecureVpcStack extends cdk.Stack {
       ],
       gatewayEndpoints: {
         S3: {
-          service: ec2.GatewayVpcEndpointAwsService.S3
+          service: ec2.GatewayVpcEndpointAwsService.S3,
         },
         DYNAMODB: {
-          service: ec2.GatewayVpcEndpointAwsService.DYNAMODB
-        }
-      }
+          service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+        },
+      },
     });
 
     // Create security group for Lambda functions
     const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'LambdaSecurityGroup', {
       vpc,
       description: 'Security group for Lambda functions',
-      allowAllOutbound: false
+      allowAllOutbound: false,
     });
 
     // Allow HTTPS outbound
@@ -45,19 +45,19 @@ export class SecureVpcStack extends cdk.Stack {
     new ec2.InterfaceVpcEndpoint(this, 'KMSEndpoint', {
       vpc,
       service: ec2.InterfaceVpcEndpointAwsService.KMS,
-      securityGroups: [lambdaSecurityGroup]
+      securityGroups: [lambdaSecurityGroup],
     });
 
     new ec2.InterfaceVpcEndpoint(this, 'SecretsManagerEndpoint', {
       vpc,
       service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-      securityGroups: [lambdaSecurityGroup]
+      securityGroups: [lambdaSecurityGroup],
     });
 
     // Output VPC ID and Security Group ID
     new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
-    new cdk.CfnOutput(this, 'LambdaSecurityGroupId', { 
-      value: lambdaSecurityGroup.securityGroupId 
+    new cdk.CfnOutput(this, 'LambdaSecurityGroupId', {
+      value: lambdaSecurityGroup.securityGroupId,
     });
   }
-} 
+}

@@ -48,7 +48,6 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
       // Notify task completion
       await notifyTaskCompletion(taskId, consolidatedResult);
-
     } catch (error) {
       console.error('Error consolidating results:', error);
       throw error;
@@ -57,30 +56,38 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 };
 
 async function getTaskResults(taskId: string): Promise<VerificationResult[]> {
-  const result = await dynamodb.query({
-    TableName: 'Results',
-    KeyConditionExpression: 'taskId = :taskId',
-    ExpressionAttributeValues: {
-      ':taskId': taskId
-    }
-  }).promise();
+  const result = await dynamodb
+    .query({
+      TableName: 'Results',
+      KeyConditionExpression: 'taskId = :taskId',
+      ExpressionAttributeValues: {
+        ':taskId': taskId,
+      },
+    })
+    .promise();
 
   return result.Items as VerificationResult[];
 }
 
 async function getTaskDetails(taskId: string): Promise<any> {
-  const result = await dynamodb.get({
-    TableName: 'Tasks',
-    Key: { taskId }
-  }).promise();
+  const result = await dynamodb
+    .get({
+      TableName: 'Tasks',
+      Key: { taskId },
+    })
+    .promise();
 
   return result.Item;
 }
 
-async function consolidateResults(taskId: string, results: VerificationResult[], task: any): Promise<any> {
+async function consolidateResults(
+  taskId: string,
+  results: VerificationResult[],
+  task: any
+): Promise<any> {
   // Weight results by worker confidence and historical accuracy
   const weightedResults = await Promise.all(
-    results.map(async (result) => {
+    results.map(async result => {
       const workerMetrics = await getWorkerMetrics(result.workerId);
       const weight = calculateResultWeight(result, workerMetrics);
       return { result: result.result, weight };
@@ -110,55 +117,59 @@ async function consolidateResults(taskId: string, results: VerificationResult[],
     result: aggregatedResult,
     confidence: confidenceScore,
     verificationCount: results.length,
-    consensusReached: confidenceScore >= task.verificationCriteria.accuracy
+    consensusReached: confidenceScore >= task.verificationCriteria.accuracy,
   };
 }
 
 async function getWorkerMetrics(workerId: string): Promise<any> {
-  const result = await dynamodb.query({
-    TableName: 'WorkerMetrics',
-    KeyConditionExpression: 'workerId = :workerId',
-    ExpressionAttributeValues: {
-      ':workerId': workerId
-    }
-  }).promise();
+  const result = await dynamodb
+    .query({
+      TableName: 'WorkerMetrics',
+      KeyConditionExpression: 'workerId = :workerId',
+      ExpressionAttributeValues: {
+        ':workerId': workerId,
+      },
+    })
+    .promise();
 
   return result.Items;
 }
 
 function calculateResultWeight(result: VerificationResult, metrics: any[]): number {
   const accuracyMetric = metrics.find(m => m.metricType === 'ACCURACY')?.value || 0.5;
-  return (result.confidence * 0.4 + accuracyMetric * 0.6);
+  return result.confidence * 0.4 + accuracyMetric * 0.6;
 }
 
 function aggregateTextResults(weightedResults: any[]): any {
   // Implement text-specific aggregation logic
   // Example: weighted voting for text verification
   const votes: { [key: string]: number } = {};
-  
+
   weightedResults.forEach(({ result, weight }) => {
     if (!votes[result]) votes[result] = 0;
     votes[result] += weight;
   });
 
-  return Object.entries(votes)
-    .sort(([, a], [, b]) => b - a)[0][0];
+  return Object.entries(votes).sort(([, a], [, b]) => b - a)[0][0];
 }
 
 function aggregateImageResults(weightedResults: any[]): any {
   // Implement image-specific aggregation logic
   // Example: bounding box averaging for image verification
-  return weightedResults.reduce((acc, { result, weight }) => {
-    return {
-      boundingBox: {
-        x: acc.boundingBox.x + result.boundingBox.x * weight,
-        y: acc.boundingBox.y + result.boundingBox.y * weight,
-        width: acc.boundingBox.width + result.boundingBox.width * weight,
-        height: acc.boundingBox.height + result.boundingBox.height * weight
-      },
-      labels: result.labels // Use majority voting for labels
-    };
-  }, { boundingBox: { x: 0, y: 0, width: 0, height: 0 }, labels: [] });
+  return weightedResults.reduce(
+    (acc, { result, weight }) => {
+      return {
+        boundingBox: {
+          x: acc.boundingBox.x + result.boundingBox.x * weight,
+          y: acc.boundingBox.y + result.boundingBox.y * weight,
+          width: acc.boundingBox.width + result.boundingBox.width * weight,
+          height: acc.boundingBox.height + result.boundingBox.height * weight,
+        },
+        labels: result.labels, // Use majority voting for labels
+      };
+    },
+    { boundingBox: { x: 0, y: 0, width: 0, height: 0 }, labels: [] }
+  );
 }
 
 function aggregateCodeResults(weightedResults: any[]): any {
@@ -171,7 +182,7 @@ function aggregateCodeResults(weightedResults: any[]): any {
 
   return {
     isCorrect: weightedSum / totalWeight > 0.7,
-    confidence: weightedSum / totalWeight
+    confidence: weightedSum / totalWeight,
   };
 }
 
@@ -186,23 +197,29 @@ function calculateConfidenceScore(weightedResults: any[], aggregatedResult: any)
 }
 
 async function updateTaskResult(taskId: string, consolidatedResult: any): Promise<void> {
-  await dynamodb.update({
-    TableName: 'Tasks',
-    Key: { taskId },
-    UpdateExpression: 'SET #status = :status, aggregatedResult = :result, confidence = :confidence, completedAt = :completedAt',
-    ExpressionAttributeNames: {
-      '#status': 'status'
-    },
-    ExpressionAttributeValues: {
-      ':status': consolidatedResult.consensusReached ? 'COMPLETED' : 'FAILED',
-      ':result': consolidatedResult.result,
-      ':confidence': consolidatedResult.confidence,
-      ':completedAt': new Date().toISOString()
-    }
-  }).promise();
+  await dynamodb
+    .update({
+      TableName: 'Tasks',
+      Key: { taskId },
+      UpdateExpression:
+        'SET #status = :status, aggregatedResult = :result, confidence = :confidence, completedAt = :completedAt',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':status': consolidatedResult.consensusReached ? 'COMPLETED' : 'FAILED',
+        ':result': consolidatedResult.result,
+        ':confidence': consolidatedResult.confidence,
+        ':completedAt': new Date().toISOString(),
+      },
+    })
+    .promise();
 }
 
-async function updateWorkerMetrics(results: VerificationResult[], consolidatedResult: any): Promise<void> {
+async function updateWorkerMetrics(
+  results: VerificationResult[],
+  consolidatedResult: any
+): Promise<void> {
   const updates = results.map(result => {
     const accuracy = calculateWorkerAccuracy(result.result, consolidatedResult.result);
     return updateWorkerAccuracyMetric(result.workerId, accuracy);
@@ -218,35 +235,39 @@ function calculateWorkerAccuracy(workerResult: any, consolidatedResult: any): nu
 }
 
 async function updateWorkerAccuracyMetric(workerId: string, accuracy: number): Promise<void> {
-  await dynamodb.update({
-    TableName: 'WorkerMetrics',
-    Key: {
-      workerId,
-      metricType: 'ACCURACY'
-    },
-    UpdateExpression: 'SET #value = :newValue',
-    ExpressionAttributeNames: {
-      '#value': 'value'
-    },
-    ExpressionAttributeValues: {
-      ':newValue': accuracy
-    }
-  }).promise();
+  await dynamodb
+    .update({
+      TableName: 'WorkerMetrics',
+      Key: {
+        workerId,
+        metricType: 'ACCURACY',
+      },
+      UpdateExpression: 'SET #value = :newValue',
+      ExpressionAttributeNames: {
+        '#value': 'value',
+      },
+      ExpressionAttributeValues: {
+        ':newValue': accuracy,
+      },
+    })
+    .promise();
 }
 
 async function notifyTaskCompletion(taskId: string, consolidatedResult: any): Promise<void> {
-  await sns.publish({
-    TopicArn: process.env.TASK_COMPLETION_TOPIC!,
-    Message: JSON.stringify({
-      type: 'TASK_COMPLETED',
-      taskId,
-      result: consolidatedResult
-    }),
-    MessageAttributes: {
-      'taskId': {
-        DataType: 'String',
-        StringValue: taskId
-      }
-    }
-  }).promise();
-} 
+  await sns
+    .publish({
+      TopicArn: process.env.TASK_COMPLETION_TOPIC!,
+      Message: JSON.stringify({
+        type: 'TASK_COMPLETED',
+        taskId,
+        result: consolidatedResult,
+      }),
+      MessageAttributes: {
+        taskId: {
+          DataType: 'String',
+          StringValue: taskId,
+        },
+      },
+    })
+    .promise();
+}

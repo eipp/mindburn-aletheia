@@ -4,27 +4,27 @@ export enum TaskStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  EXPIRED = 'EXPIRED'
+  EXPIRED = 'EXPIRED',
 }
 
 export enum TaskType {
   TEXT_VERIFICATION = 'TEXT_VERIFICATION',
   IMAGE_VERIFICATION = 'IMAGE_VERIFICATION',
-  CODE_VERIFICATION = 'CODE_VERIFICATION'
+  CODE_VERIFICATION = 'CODE_VERIFICATION',
 }
 
 export enum WorkerStatus {
   ACTIVE = 'ACTIVE',
   BUSY = 'BUSY',
   SUSPENDED = 'SUSPENDED',
-  INACTIVE = 'INACTIVE'
+  INACTIVE = 'INACTIVE',
 }
 
 export enum MetricType {
   ACCURACY = 'ACCURACY',
   RESPONSE_RATE = 'RESPONSE_RATE',
   COMPLETION_RATE = 'COMPLETION_RATE',
-  AVERAGE_TIME = 'AVERAGE_TIME'
+  AVERAGE_TIME = 'AVERAGE_TIME',
 }
 
 export interface Task {
@@ -93,4 +93,4 @@ export interface ErrorResponse {
   message: string;
   details?: any;
   timestamp: string;
-} 
+}

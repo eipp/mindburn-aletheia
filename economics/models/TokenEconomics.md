@@ -3,6 +3,7 @@
 ## Token Overview
 
 ### MindBurn Utility Token (MBU)
+
 - **Supply**: 1 billion tokens
 - **Decimals**: 9
 - **Purpose**: Platform operations, fee payments, staking
@@ -14,12 +15,14 @@
   - 10% Initial Liquidity
 
 ### MindBurn Reputation Token (MBR)
+
 - **Non-transferable**: Earned through verification work
 - **Scoring**: 0-5000 points scale
 - **Levels**: 5 tiers with increasing benefits
 - **Decay**: 5% monthly to encourage active participation
 
 ### MindBurn Governance Token (MBG)
+
 - **Supply**: Minted through platform participation
 - **Voting Power**: 1 token = 1 vote
 - **Proposal Threshold**: 100,000 MBG
@@ -28,11 +31,14 @@
 ## Economic Incentives
 
 ### Worker Rewards
-1. **Base Verification Reward**: 
+
+1. **Base Verification Reward**:
+
    - 10-50 MBU per verification
    - Multiplier based on reputation level (1x-5x)
 
 2. **Reputation Rewards**:
+
    - Earn MBR for high-quality verifications (>75% accuracy)
    - Higher reputation = Higher earning potential
    - Monthly decay mechanism to maintain activity
@@ -45,12 +51,14 @@
 ### Staking Mechanisms
 
 1. **Verification Staking**:
+
    - Workers stake MBU tokens
    - Stake size determines task access level
    - Slashing for poor performance
    - Bonus rewards for accurate verifications
 
 2. **Liquidity Provision**:
+
    - MBU/TON liquidity pool
    - LP token rewards
    - Fee sharing for liquidity providers
@@ -63,6 +71,7 @@
 ### Fee Structure
 
 1. **Platform Fees**:
+
    - 2.5% base fee on verification tasks
    - Reduced by up to 50% through MBU staking
    - Fee distribution:
@@ -78,7 +87,9 @@
 ## Security Mechanisms
 
 ### Economic Security
+
 1. **Collusion Prevention**:
+
    - Reputation-weighted task distribution
    - Random task assignment
    - Multi-level verification for high-value tasks
@@ -89,7 +100,9 @@
    - Appeals process through governance
 
 ### Risk Mitigation
+
 1. **Price Stability**:
+
    - Liquidity pools with balanced incentives
    - Treasury management through governance
    - Dynamic fee adjustment
@@ -102,30 +115,36 @@
 ## Performance Metrics
 
 ### Target KPIs
+
 1. **Verification Quality**:
-   - >95% accuracy rate
+
+   - > 95% accuracy rate
    - <1% dispute rate
    - <24h resolution time
 
 2. **Economic Efficiency**:
-   - >50% token utility rate
+
+   - > 50% token utility rate
    - <5% monthly token inflation
-   - >30% staking ratio
+   - > 30% staking ratio
 
 3. **Platform Growth**:
-   - >20% monthly active workers
-   - >40% token holder retention
-   - >60% fee burn rate
+   - > 20% monthly active workers
+   - > 40% token holder retention
+   - > 60% fee burn rate
 
 ## Governance Parameters
 
 ### Adjustable Parameters
+
 1. **Reward Rates**:
+
    - Verification base rewards
    - Reputation multipliers
    - Staking rewards
 
 2. **Economic Parameters**:
+
    - Fee rates
    - Burn percentages
    - Staking requirements
@@ -133,4 +152,4 @@
 3. **Security Settings**:
    - Slashing conditions
    - Minimum stakes
-   - Verification thresholds 
+   - Verification thresholds

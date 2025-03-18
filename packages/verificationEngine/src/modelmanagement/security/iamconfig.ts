@@ -5,7 +5,7 @@ import {
   IAMConfig,
   PolicyDocument,
   createConfigValidator,
-  z
+  z,
 } from '@mindburn/shared';
 
 const IAMConfigSchema = z.object({
@@ -53,31 +53,39 @@ export class ModelIAMService {
   async createModelRole(modelId: string, policy: PolicyDocument): Promise<string> {
     try {
       this.logger.info('Creating model role', { modelId });
-      
+
       const roleName = `${this.config.rolePrefix}${modelId}`;
       const roleArn = await this.iamService.createRole(roleName, {
         AssumeRolePolicyDocument: JSON.stringify({
           Version: '2012-10-17',
-          Statement: [{
-            Effect: 'Allow',
-            Principal: {
-              Service: 'lambda.amazonaws.com'
+          Statement: [
+            {
+              Effect: 'Allow',
+              Principal: {
+                Service: 'lambda.amazonaws.com',
+              },
+              Action: 'sts:AssumeRole',
             },
-            Action: 'sts:AssumeRole'
-          }]
+          ],
         }),
-        Tags: [{
-          Key: 'ModelId',
-          Value: modelId
-        }]
+        Tags: [
+          {
+            Key: 'ModelId',
+            Value: modelId,
+          },
+        ],
       });
 
-      await this.iamService.putRolePolicy(roleName, `${this.config.policyPrefix}${modelId}`, policy);
+      await this.iamService.putRolePolicy(
+        roleName,
+        `${this.config.policyPrefix}${modelId}`,
+        policy
+      );
 
       await this.eventBus.emit('model.iam.role_created', {
         modelId,
         roleName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model role created successfully', { modelId, roleArn });
@@ -91,7 +99,7 @@ export class ModelIAMService {
   async updateModelPolicy(modelId: string, policy: PolicyDocument): Promise<void> {
     try {
       this.logger.info('Updating model policy', { modelId });
-      
+
       const roleName = `${this.config.rolePrefix}${modelId}`;
       const policyName = `${this.config.policyPrefix}${modelId}`;
 
@@ -100,7 +108,7 @@ export class ModelIAMService {
       await this.eventBus.emit('model.iam.policy_updated', {
         modelId,
         policyName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model policy updated successfully', { modelId });
@@ -113,7 +121,7 @@ export class ModelIAMService {
   async deleteModelRole(modelId: string): Promise<void> {
     try {
       this.logger.info('Deleting model role', { modelId });
-      
+
       const roleName = `${this.config.rolePrefix}${modelId}`;
       const policyName = `${this.config.policyPrefix}${modelId}`;
 
@@ -123,7 +131,7 @@ export class ModelIAMService {
       await this.eventBus.emit('model.iam.role_deleted', {
         modelId,
         roleName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       this.logger.info('Model role deleted successfully', { modelId });
@@ -136,15 +144,17 @@ export class ModelIAMService {
   async validateModelAccess(modelId: string, userId: string): Promise<boolean> {
     try {
       this.logger.info('Validating model access', { modelId, userId });
-      
+
       const roleName = `${this.config.rolePrefix}${modelId}`;
-      const result = await this.iamService.simulatePrincipalPolicy(roleName, [{
-        Action: 'model:Access',
-        Resource: `arn:aws:model:::${modelId}`,
-        Context: {
-          'aws:userId': userId
-        }
-      }]);
+      const result = await this.iamService.simulatePrincipalPolicy(roleName, [
+        {
+          Action: 'model:Access',
+          Resource: `arn:aws:model:::${modelId}`,
+          Context: {
+            'aws:userId': userId,
+          },
+        },
+      ]);
 
       const hasAccess = result.EvaluationResults?.[0]?.EvalDecision === 'allowed';
 
@@ -153,7 +163,7 @@ export class ModelIAMService {
         await this.eventBus.emit('model.iam.access_denied', {
           modelId,
           userId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -163,4 +173,4 @@ export class ModelIAMService {
       throw error;
     }
   }
-} 
+}

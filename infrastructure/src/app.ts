@@ -8,20 +8,25 @@ const app = new cdk.App();
 const envName = (app.node.tryGetContext('env') as Environment) || 'dev';
 const envConfig = environments[envName];
 
-new MainStack(app, `AletheiaMindburn${envName.charAt(0).toUpperCase() + envName.slice(1)}Stack`, {
-  environment: envName,
-  ...envConfig,
-}, {
-  env: {
-    account: envConfig.account,
-    region: envConfig.region,
+new MainStack(
+  app,
+  `AletheiaMindburn${envName.charAt(0).toUpperCase() + envName.slice(1)}Stack`,
+  {
+    environment: envName,
+    ...envConfig,
   },
-  description: `Aletheia Mindburn ${envName} environment stack`,
-  tags: {
-    Environment: envName,
-    Project: 'AletheiaMindburn',
-    ManagedBy: 'CDK',
-  },
-});
+  {
+    env: {
+      account: envConfig.account,
+      region: envConfig.region,
+    },
+    description: `Aletheia Mindburn ${envName} environment stack`,
+    tags: {
+      Environment: envName,
+      Project: 'AletheiaMindburn',
+      ManagedBy: 'CDK',
+    },
+  }
+);
 
-app.synth(); 
+app.synth();

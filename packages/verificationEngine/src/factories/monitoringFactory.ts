@@ -13,19 +13,19 @@ export function createMonitoringManager(config: MonitoringConfig): MonitoringMan
   const cloudwatch = new CloudWatch({
     region: config.region,
     apiVersion: '2010-08-01',
-    maxAttempts: 3
+    maxAttempts: 3,
   });
 
   const sns = new SNS({
     region: config.region,
     apiVersion: '2010-03-31',
-    maxAttempts: 3
+    maxAttempts: 3,
   });
 
   return new MonitoringManager(cloudwatch, sns, {
     environment: config.environment,
     alarmTopicArn: config.alarmTopicArn,
-    namespace: config.namespace
+    namespace: config.namespace,
   });
 }
 
@@ -39,4 +39,4 @@ const monitoring = createMonitoringManager({
 });
 
 await monitoring.setupDefaultAlarms();
-*/ 
+*/

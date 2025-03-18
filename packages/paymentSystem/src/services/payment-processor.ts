@@ -50,25 +50,27 @@ export class PaymentProcessorService {
       logger.info('Processing task reward payment', { payment });
 
       // Calculate adjusted amount based on quality
-      const adjustedAmount = payment.qualityFactor 
-        ? payment.amount * payment.qualityFactor 
+      const adjustedAmount = payment.qualityFactor
+        ? payment.amount * payment.qualityFactor
         : payment.amount;
 
       // Create payment record
       const paymentId = `payment_${Date.now()}_${payment.taskId}`;
-      await this.dynamoDB.put({
-        TableName: process.env.PAYMENTS_TABLE!,
-        Item: {
-          paymentId,
-          taskId: payment.taskId,
-          workerId: payment.workerId,
-          originalAmount: payment.amount,
-          adjustedAmount,
-          status: 'pending',
-          processingStrategy: adjustedAmount > 100 ? 'immediate' : 'batched',
-          createdAt: new Date().toISOString()
-        }
-      }).promise();
+      await this.dynamoDB
+        .put({
+          TableName: process.env.PAYMENTS_TABLE!,
+          Item: {
+            paymentId,
+            taskId: payment.taskId,
+            workerId: payment.workerId,
+            originalAmount: payment.amount,
+            adjustedAmount,
+            status: 'pending',
+            processingStrategy: adjustedAmount > 100 ? 'immediate' : 'batched',
+            createdAt: new Date().toISOString(),
+          },
+        })
+        .promise();
 
       // Process large payments immediately
       if (adjustedAmount > 100) {
@@ -83,7 +85,7 @@ export class PaymentProcessorService {
         adjustedAmount,
         status: 'pending',
         processingStrategy: adjustedAmount > 100 ? 'immediate' : 'batched',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to process task reward', { error, payment });
@@ -105,7 +107,7 @@ export class PaymentProcessorService {
       for (let i = 0; i < batch.paymentIds.length; i += this.BATCH_SIZE) {
         const chunk = batch.paymentIds.slice(i, i + this.BATCH_SIZE);
         const payments = await this.getPaymentsByIds(chunk);
-        
+
         // Create TON transaction batch
         const tonBatch = await this.processPayments(payments);
 
@@ -130,9 +132,9 @@ export class PaymentProcessorService {
         results: {
           successful,
           failed,
-          failedPaymentIds
+          failedPaymentIds,
         },
-        queuedAt: new Date().toISOString()
+        queuedAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to process bulk payments', { error, batch });
@@ -142,10 +144,12 @@ export class PaymentProcessorService {
 
   async getPaymentStatus(paymentId: string) {
     try {
-      const result = await this.dynamoDB.get({
-        TableName: process.env.PAYMENTS_TABLE!,
-        Key: { paymentId }
-      }).promise();
+      const result = await this.dynamoDB
+        .get({
+          TableName: process.env.PAYMENTS_TABLE!,
+          Key: { paymentId },
+        })
+        .promise();
 
       if (!result.Item) {
         throw new Error('Payment not found');
@@ -160,10 +164,12 @@ export class PaymentProcessorService {
 
   async getWorkerBalance(workerId: string) {
     try {
-      const result = await this.dynamoDB.get({
-        TableName: process.env.WORKERS_TABLE!,
-        Key: { workerId }
-      }).promise();
+      const result = await this.dynamoDB
+        .get({
+          TableName: process.env.WORKERS_TABLE!,
+          Key: { workerId },
+        })
+        .promise();
 
       if (!result.Item) {
         throw new Error('Worker not found');
@@ -177,7 +183,7 @@ export class PaymentProcessorService {
         availableBalance: result.Item.balance || 0,
         pendingBalance: pendingAmount,
         totalEarned: result.Item.totalEarned || 0,
-        lastUpdatedAt: new Date().toISOString()
+        lastUpdatedAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to get worker balance', { error, workerId });
@@ -197,7 +203,7 @@ export class PaymentProcessorService {
 
       // Validate address
       const addressValidation = await this.tonService.validateTONAddress({
-        address: request.destinationAddress
+        address: request.destinationAddress,
       });
       if (!addressValidation.valid) {
         throw new Error('Invalid TON address');
@@ -208,26 +214,28 @@ export class PaymentProcessorService {
       const fee = await this.calculateWithdrawalFee(request.amount);
       const netAmount = request.amount - fee;
 
-      await this.dynamoDB.put({
-        TableName: process.env.WITHDRAWALS_TABLE!,
-        Item: {
-          withdrawalId,
-          workerId: request.workerId,
-          amount: request.amount,
-          fee,
-          netAmount,
-          destinationAddress: request.destinationAddress,
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        }
-      }).promise();
+      await this.dynamoDB
+        .put({
+          TableName: process.env.WITHDRAWALS_TABLE!,
+          Item: {
+            withdrawalId,
+            workerId: request.workerId,
+            amount: request.amount,
+            fee,
+            netAmount,
+            destinationAddress: request.destinationAddress,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          },
+        })
+        .promise();
 
       // Process withdrawal
       const transaction = await this.tonService.sendTONPayment({
         destinationAddress: request.destinationAddress,
         amount: netAmount,
         message: `Withdrawal ${withdrawalId}`,
-        referenceId: withdrawalId
+        referenceId: withdrawalId,
       });
 
       // Update withdrawal status
@@ -243,7 +251,7 @@ export class PaymentProcessorService {
         status: transaction.status,
         transactionHash: transaction.transactionHash,
         estimatedCompletionTime: new Date(Date.now() + 600000).toISOString(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to process withdrawal', { error, request });
@@ -259,82 +267,90 @@ export class PaymentProcessorService {
       destinationAddress: worker.walletAddress,
       amount: payment.adjustedAmount,
       message: `Task reward ${payment.taskId}`,
-      referenceId: paymentId
+      referenceId: paymentId,
     });
 
     await this.updatePaymentStatus(paymentId, transaction);
   }
 
   private async getPaymentsByIds(paymentIds: string[]) {
-    const results = await Promise.all(
-      paymentIds.map(id => this.getPaymentStatus(id))
-    );
+    const results = await Promise.all(paymentIds.map(id => this.getPaymentStatus(id)));
     return results.filter(p => p.status === 'pending');
   }
 
   private async updatePaymentStatuses(transactions: any[]) {
     await Promise.all(
-      transactions.map(tx => this.updatePaymentStatus(tx.referenceId!, {
-        status: tx.status,
-        transactionHash: tx.transactionHash
-      }))
+      transactions.map(tx =>
+        this.updatePaymentStatus(tx.referenceId!, {
+          status: tx.status,
+          transactionHash: tx.transactionHash,
+        })
+      )
     );
   }
 
   private async updatePaymentStatus(paymentId: string, transaction: any) {
-    await this.dynamoDB.update({
-      TableName: process.env.PAYMENTS_TABLE!,
-      Key: { paymentId },
-      UpdateExpression: 'SET #status = :status, transactionHash = :txHash, updatedAt = :now',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': transaction.status,
-        ':txHash': transaction.transactionHash,
-        ':now': new Date().toISOString()
-      }
-    }).promise();
+    await this.dynamoDB
+      .update({
+        TableName: process.env.PAYMENTS_TABLE!,
+        Key: { paymentId },
+        UpdateExpression: 'SET #status = :status, transactionHash = :txHash, updatedAt = :now',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': transaction.status,
+          ':txHash': transaction.transactionHash,
+          ':now': new Date().toISOString(),
+        },
+      })
+      .promise();
   }
 
   private async updateWithdrawalStatus(withdrawalId: string, transaction: any) {
-    await this.dynamoDB.update({
-      TableName: process.env.WITHDRAWALS_TABLE!,
-      Key: { withdrawalId },
-      UpdateExpression: 'SET #status = :status, transactionHash = :txHash, updatedAt = :now',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': transaction.status,
-        ':txHash': transaction.transactionHash,
-        ':now': new Date().toISOString()
-      }
-    }).promise();
+    await this.dynamoDB
+      .update({
+        TableName: process.env.WITHDRAWALS_TABLE!,
+        Key: { withdrawalId },
+        UpdateExpression: 'SET #status = :status, transactionHash = :txHash, updatedAt = :now',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': transaction.status,
+          ':txHash': transaction.transactionHash,
+          ':now': new Date().toISOString(),
+        },
+      })
+      .promise();
   }
 
   private async getPendingPayments(workerId: string) {
-    const result = await this.dynamoDB.query({
-      TableName: process.env.PAYMENTS_TABLE!,
-      IndexName: 'WorkerIdStatusIndex',
-      KeyConditionExpression: 'workerId = :workerId AND #status = :status',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':workerId': workerId,
-        ':status': 'pending'
-      }
-    }).promise();
+    const result = await this.dynamoDB
+      .query({
+        TableName: process.env.PAYMENTS_TABLE!,
+        IndexName: 'WorkerIdStatusIndex',
+        KeyConditionExpression: 'workerId = :workerId AND #status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':workerId': workerId,
+          ':status': 'pending',
+        },
+      })
+      .promise();
 
     return result.Items || [];
   }
 
   private async getWorkerData(workerId: string) {
-    const result = await this.dynamoDB.get({
-      TableName: process.env.WORKERS_TABLE!,
-      Key: { workerId }
-    }).promise();
+    const result = await this.dynamoDB
+      .get({
+        TableName: process.env.WORKERS_TABLE!,
+        Key: { workerId },
+      })
+      .promise();
 
     if (!result.Item) {
       throw new Error('Worker not found');
@@ -351,14 +367,12 @@ export class PaymentProcessorService {
   async processPayments(payments: PaymentTransaction[]): Promise<PaymentBatch> {
     try {
       logger.info('Starting payment batch processing', { count: payments.length });
-      
+
       // Group payments by recipient for batching
       const batches = this.createPaymentBatches(payments);
-      
+
       // Process each batch with retries
-      const results = await Promise.all(
-        batches.map(batch => this.processBatchWithRetry(batch))
-      );
+      const results = await Promise.all(batches.map(batch => this.processBatchWithRetry(batch)));
 
       // Aggregate results
       const successfulPayments = results.flatMap(r => r.successful);
@@ -370,7 +384,7 @@ export class PaymentProcessorService {
         successful: successfulPayments,
         failed: failedPayments,
         totalAmount: this.calculateTotalAmount(successfulPayments),
-        processedAt: new Date().toISOString()
+        processedAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Failed to process payment batch', { error });
@@ -387,14 +401,11 @@ export class PaymentProcessorService {
   }
 
   private async processBatchWithRetry(batch: PaymentTransaction[]) {
-    return retry(
-      async () => this.processBatch(batch),
-      {
-        maxRetries: this.maxRetries,
-        backoff: 'exponential',
-        logger: logger
-      }
-    );
+    return retry(async () => this.processBatch(batch), {
+      maxRetries: this.maxRetries,
+      backoff: 'exponential',
+      logger: logger,
+    });
   }
 
   private async processBatch(batch: PaymentTransaction[]) {
@@ -407,22 +418,22 @@ export class PaymentProcessorService {
           new Address(payment.recipientAddress),
           toNano(payment.amount.toString())
         );
-        
+
         successful.push({
           ...payment,
           status: PaymentStatus.COMPLETED,
-          processedAt: new Date().toISOString()
+          processedAt: new Date().toISOString(),
         });
       } catch (error) {
         logger.error('Payment failed', {
           payment,
-          error
+          error,
         });
-        
+
         failed.push({
           ...payment,
           status: PaymentStatus.FAILED,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -433,4 +444,4 @@ export class PaymentProcessorService {
   private calculateTotalAmount(payments: PaymentTransaction[]): number {
     return payments.reduce((sum, payment) => sum + payment.amount, 0);
   }
-} 
+}

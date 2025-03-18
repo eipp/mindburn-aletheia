@@ -42,18 +42,18 @@ export class FailureHandler extends WorkflowHandler {
 
       // Increment recovery attempts if applicable
       const recoveryAttempts = (task.recoveryAttempts || 0) + 1;
-      const canRetry = isRecoverable && 
-        recoveryAttempts <= this.config.maxRecoveryAttempts;
+      const canRetry = isRecoverable && recoveryAttempts <= this.config.maxRecoveryAttempts;
 
       // Update task status
-      await this.updateTask(taskId,
+      await this.updateTask(
+        taskId,
         'SET #status = :status, failureReason = :reason, recoveryAttempts = :attempts, updatedAt = :now',
         {
           ':status': canRetry ? 'pending_retry' : 'failed',
           ':reason': failureReason,
           ':attempts': recoveryAttempts,
           ':now': new Date().toISOString(),
-          '#status': 'status'
+          '#status': 'status',
         }
       );
 
@@ -67,7 +67,7 @@ export class FailureHandler extends WorkflowHandler {
         taskId,
         failureReason,
         recoveryAttempts,
-        canRetry
+        canRetry,
       });
 
       return {
@@ -75,7 +75,7 @@ export class FailureHandler extends WorkflowHandler {
         failureReason,
         failureTimestamp: new Date().toISOString(),
         recoveryAttempts,
-        isRecoverable: canRetry
+        isRecoverable: canRetry,
       };
     } catch (error) {
       this.logger.error('Failure handling failed', { error, input });
@@ -83,7 +83,10 @@ export class FailureHandler extends WorkflowHandler {
     }
   }
 
-  private analyzeFailure(error: any, task: any): {
+  private analyzeFailure(
+    error: any,
+    task: any
+  ): {
     failureReason: string;
     isRecoverable: boolean;
   } {
@@ -91,7 +94,7 @@ export class FailureHandler extends WorkflowHandler {
     if (error.name === 'TaskTimeoutError') {
       return {
         failureReason: 'Task execution timed out',
-        isRecoverable: this.config.recoveryStrategies.timeout
+        isRecoverable: this.config.recoveryStrategies.timeout,
       };
     }
 
@@ -99,7 +102,7 @@ export class FailureHandler extends WorkflowHandler {
     if (error.name === 'NoWorkersAvailableError') {
       return {
         failureReason: 'No eligible workers available',
-        isRecoverable: this.config.recoveryStrategies.noWorkers
+        isRecoverable: this.config.recoveryStrategies.noWorkers,
       };
     }
 
@@ -107,7 +110,7 @@ export class FailureHandler extends WorkflowHandler {
     if (error.name === 'ConsensusFailedError') {
       return {
         failureReason: 'Failed to reach consensus',
-        isRecoverable: this.config.recoveryStrategies.consensusFailed
+        isRecoverable: this.config.recoveryStrategies.consensusFailed,
       };
     }
 
@@ -115,64 +118,62 @@ export class FailureHandler extends WorkflowHandler {
     if (error.name === 'PaymentProcessingError') {
       return {
         failureReason: 'Payment processing failed',
-        isRecoverable: this.config.recoveryStrategies.paymentFailed
+        isRecoverable: this.config.recoveryStrategies.paymentFailed,
       };
     }
 
     // Default case
     return {
       failureReason: error.message || 'Unknown error occurred',
-      isRecoverable: false
+      isRecoverable: false,
     };
   }
 
-  private async emitFailureEvent(
-    taskId: string,
-    reason: string,
-    canRetry: boolean
-  ): Promise<void> {
-    await this.eventBridge.putEvents({
-      Entries: [{
-        Source: 'aletheia.task-failure',
-        DetailType: 'TaskFailed',
-        Detail: JSON.stringify({
-          taskId,
-          reason,
-          canRetry,
-          timestamp: Date.now()
-        }),
-        EventBusName: this.config.eventBusName
-      }]
-    }).promise();
+  private async emitFailureEvent(taskId: string, reason: string, canRetry: boolean): Promise<void> {
+    await this.eventBridge
+      .putEvents({
+        Entries: [
+          {
+            Source: 'aletheia.task-failure',
+            DetailType: 'TaskFailed',
+            Detail: JSON.stringify({
+              taskId,
+              reason,
+              canRetry,
+              timestamp: Date.now(),
+            }),
+            EventBusName: this.config.eventBusName,
+          },
+        ],
+      })
+      .promise();
   }
 
-  private async sendFailureAlert(
-    taskId: string,
-    reason: string,
-    attempts: number
-  ): Promise<void> {
+  private async sendFailureAlert(taskId: string, reason: string, attempts: number): Promise<void> {
     const message = {
       taskId,
       failureReason: reason,
       recoveryAttempts: attempts,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    await this.sns.publish({
-      TopicArn: this.config.alertTopicArn,
-      Message: JSON.stringify(message),
-      MessageAttributes: {
-        taskId: {
-          DataType: 'String',
-          StringValue: taskId
+    await this.sns
+      .publish({
+        TopicArn: this.config.alertTopicArn,
+        Message: JSON.stringify(message),
+        MessageAttributes: {
+          taskId: {
+            DataType: 'String',
+            StringValue: taskId,
+          },
+          severity: {
+            DataType: 'String',
+            StringValue: attempts >= this.config.maxRecoveryAttempts ? 'high' : 'medium',
+          },
         },
-        severity: {
-          DataType: 'String',
-          StringValue: attempts >= this.config.maxRecoveryAttempts ? 'high' : 'medium'
-        }
-      }
-    }).promise();
+      })
+      .promise();
   }
 }
 
-export const handler = new FailureHandler().handler.bind(new FailureHandler()); 
+export const handler = new FailureHandler().handler.bind(new FailureHandler());

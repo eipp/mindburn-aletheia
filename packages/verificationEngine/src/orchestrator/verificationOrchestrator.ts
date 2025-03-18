@@ -8,7 +8,7 @@ import {
   VerificationResult,
   VerificationStatus,
   HumanVerification,
-  CredibilityScore
+  CredibilityScore,
 } from '@mindburn/shared';
 import { z } from 'zod';
 
@@ -59,16 +59,16 @@ export class VerificationOrchestrator {
       }
 
       const updatedFlow = await this.getVerificationFlow(flow.id);
-      this.logger.info('Verification request processed', { 
+      this.logger.info('Verification request processed', {
         requestId: request.id,
-        status: updatedFlow.status
+        status: updatedFlow.status,
       });
 
       return updatedFlow;
     } catch (error) {
       this.logger.error('Failed to process verification request', {
         requestId: request.id,
-        error
+        error,
       });
       throw error;
     }
@@ -82,7 +82,7 @@ export class VerificationOrchestrator {
       this.logger.info('Handling human verification', { flowId });
 
       const flow = await this.getVerificationFlow(flowId);
-      
+
       // Update flow with human verification
       await this.updateVerificationFlow(flowId, {
         humanVerification,
@@ -97,7 +97,7 @@ export class VerificationOrchestrator {
     } catch (error) {
       this.logger.error('Failed to handle human verification', {
         flowId,
-        error
+        error,
       });
       throw error;
     }
@@ -159,7 +159,7 @@ export class VerificationOrchestrator {
       aiResult,
       priority: request.priority,
       queuedAt: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
     });
   }
 
@@ -175,7 +175,7 @@ export class VerificationOrchestrator {
       content: flow.request.content,
       aiVerification: flow.aiResult,
       humanVerification,
-      domain: flow.request.domain
+      domain: flow.request.domain,
     });
   }
 
@@ -208,9 +208,7 @@ export class VerificationOrchestrator {
     await this.storage.update('verification_flows', flowId, update);
   }
 
-  private convertCredibilityToVerification(
-    credibility: CredibilityScore
-  ): VerificationResult {
+  private convertCredibilityToVerification(credibility: CredibilityScore): VerificationResult {
     return {
       source: 'credibility_assessment',
       isAccurate: credibility.overall >= 0.7,
@@ -218,7 +216,7 @@ export class VerificationOrchestrator {
       issues: this.extractCredibilityIssues(credibility),
       suggestions: [],
       explanation: credibility.explanation,
-      timestamp: credibility.timestamp
+      timestamp: credibility.timestamp,
     };
   }
 
@@ -241,4 +239,4 @@ export class VerificationOrchestrator {
 
     return issues;
   }
-} 
+}

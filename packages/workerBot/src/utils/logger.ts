@@ -3,7 +3,7 @@ import logger, { LogLevel } from '@mindburn/shared/src/utils/logging/logger';
 // Re-export the shared logger with worker-bot specific configuration
 export default logger.create({
   service: 'worker-bot',
-  level: LogLevel.INFO
+  level: LogLevel.INFO,
 });
 
 // Export the LogLevel enum for convenience
@@ -15,19 +15,13 @@ if (process.env.NODE_ENV === 'production') {
     new winston.transports.File({
       filename: 'error.log',
       level: 'error',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
     })
   );
   logger.add(
     new winston.transports.File({
       filename: 'combined.log',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
     })
   );
 }
@@ -44,21 +38,20 @@ logger.bot = {
   error: (error: any, userId: string, context?: any) =>
     logger.error('Bot error', { userId, error, context }),
   message: (type: string, userId: string, meta?: any) =>
-    logger.debug(`Bot message: ${type}`, { userId, type, ...meta })
+    logger.debug(`Bot message: ${type}`, { userId, type, ...meta }),
 };
 
 logger.task = {
-  start: (taskId: string, userId: string) =>
-    logger.info('Task started', { taskId, userId }),
+  start: (taskId: string, userId: string) => logger.info('Task started', { taskId, userId }),
   complete: (taskId: string, userId: string, success: boolean) =>
     logger.info('Task completed', { taskId, userId, success }),
   error: (taskId: string, userId: string, error: any) =>
-    logger.error('Task error', { taskId, userId, error })
+    logger.error('Task error', { taskId, userId, error }),
 };
 
 logger.wallet = {
   transaction: (type: string, userId: string, amount: number, meta?: any) =>
     logger.info('Wallet transaction', { type, userId, amount, ...meta }),
   error: (operation: string, userId: string, error: any) =>
-    logger.error('Wallet error', { operation, userId, error })
-}; 
+    logger.error('Wallet error', { operation, userId, error }),
+};

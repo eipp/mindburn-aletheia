@@ -42,14 +42,14 @@ export class WorkerNotifier extends WorkflowHandler {
       this.logger.info('Worker notifications completed', {
         taskId,
         notifiedCount: eligibleWorkers.length,
-        acceptedCount: acceptedWorkers.length
+        acceptedCount: acceptedWorkers.length,
       });
 
       return {
         taskId,
         notifiedWorkers: eligibleWorkers,
         acceptedWorkers,
-        notificationTimestamp: new Date().toISOString()
+        notificationTimestamp: new Date().toISOString(),
       };
     } catch (error) {
       this.logger.error('Worker notification failed', { error, input });
@@ -57,29 +57,35 @@ export class WorkerNotifier extends WorkflowHandler {
     }
   }
 
-  private async sendNotification(taskId: string, workerId: string, strategy: string): Promise<void> {
+  private async sendNotification(
+    taskId: string,
+    workerId: string,
+    strategy: string
+  ): Promise<void> {
     const message = {
       taskId,
       workerId,
       strategy,
       timestamp: Date.now(),
-      expiresAt: Date.now() + (this.config.notificationTimeoutSeconds * 1000)
+      expiresAt: Date.now() + this.config.notificationTimeoutSeconds * 1000,
     };
 
-    await this.sqs.sendMessage({
-      QueueUrl: this.config.notificationQueueUrl,
-      MessageBody: JSON.stringify(message),
-      MessageAttributes: {
-        taskId: {
-          DataType: 'String',
-          StringValue: taskId
+    await this.sqs
+      .sendMessage({
+        QueueUrl: this.config.notificationQueueUrl,
+        MessageBody: JSON.stringify(message),
+        MessageAttributes: {
+          taskId: {
+            DataType: 'String',
+            StringValue: taskId,
+          },
+          workerId: {
+            DataType: 'String',
+            StringValue: workerId,
+          },
         },
-        workerId: {
-          DataType: 'String',
-          StringValue: workerId
-        }
-      }
-    }).promise();
+      })
+      .promise();
   }
 
   private async emitNotificationEvent(
@@ -87,26 +93,30 @@ export class WorkerNotifier extends WorkflowHandler {
     workers: string[],
     strategy: string
   ): Promise<void> {
-    await this.eventBridge.putEvents({
-      Entries: [{
-        Source: 'aletheia.worker-notifier',
-        DetailType: 'WorkersNotified',
-        Detail: JSON.stringify({
-          taskId,
-          workerCount: workers.length,
-          strategy,
-          timestamp: Date.now()
-        }),
-        EventBusName: this.config.eventBusName
-      }]
-    }).promise();
+    await this.eventBridge
+      .putEvents({
+        Entries: [
+          {
+            Source: 'aletheia.worker-notifier',
+            DetailType: 'WorkersNotified',
+            Detail: JSON.stringify({
+              taskId,
+              workerCount: workers.length,
+              strategy,
+              timestamp: Date.now(),
+            }),
+            EventBusName: this.config.eventBusName,
+          },
+        ],
+      })
+      .promise();
   }
 
   private async waitForResponses(taskId: string, workers: string[]): Promise<string[]> {
     // This is a simplified implementation
     // In reality, would implement a proper response collection mechanism
     // possibly using DynamoDB streams or SQS
-    await new Promise(resolve => 
+    await new Promise(resolve =>
       setTimeout(resolve, this.config.notificationTimeoutSeconds * 1000)
     );
 
@@ -115,4 +125,4 @@ export class WorkerNotifier extends WorkflowHandler {
   }
 }
 
-export const handler = new WorkerNotifier().handler.bind(new WorkerNotifier()); 
+export const handler = new WorkerNotifier().handler.bind(new WorkerNotifier());

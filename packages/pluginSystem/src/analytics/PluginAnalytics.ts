@@ -28,12 +28,15 @@ export interface PluginStats {
   averageExecutionTime: number;
   lastExecutionTime: number;
   errorRate: number;
-  methodStats: Record<string, {
-    executions: number;
-    failures: number;
-    totalTime: number;
-    averageTime: number;
-  }>;
+  methodStats: Record<
+    string,
+    {
+      executions: number;
+      failures: number;
+      totalTime: number;
+      averageTime: number;
+    }
+  >;
   memoryUsage: {
     averageHeapUsed: number;
     peakHeapUsed: number;
@@ -127,7 +130,8 @@ export class PluginAnalytics extends EventEmitter {
       totalExecutions += stats.totalExecutions;
       totalErrors += stats.failedExecutions;
       totalTime += stats.totalExecutionTime;
-      if (Date.now() - stats.lastExecutionTime < 3600000) { // Active in last hour
+      if (Date.now() - stats.lastExecutionTime < 3600000) {
+        // Active in last hour
         activePlugins++;
       }
     }
@@ -145,11 +149,7 @@ export class PluginAnalytics extends EventEmitter {
     };
   }
 
-  getHistoricalData(
-    pluginId: string,
-    startTime: number,
-    endTime: number
-  ): AnalyticsSnapshot[] {
+  getHistoricalData(pluginId: string, startTime: number, endTime: number): AnalyticsSnapshot[] {
     return this.snapshots.filter(
       snapshot =>
         snapshot.timestamp >= startTime &&
@@ -218,32 +218,23 @@ export class PluginAnalytics extends EventEmitter {
     return stats.methodStats[methodName];
   }
 
-  private updateResourceMetrics(
-    stats: PluginStats,
-    metrics: ExecutionMetrics
-  ): void {
+  private updateResourceMetrics(stats: PluginStats, metrics: ExecutionMetrics): void {
     // Update memory metrics
     const currentHeapUsed = metrics.memoryUsage.heapUsed;
-    stats.memoryUsage.averageHeapUsed = (
-      (stats.memoryUsage.averageHeapUsed * (stats.totalExecutions - 1)) +
-      currentHeapUsed
-    ) / stats.totalExecutions;
-    
-    stats.memoryUsage.peakHeapUsed = Math.max(
-      stats.memoryUsage.peakHeapUsed,
-      currentHeapUsed
-    );
+    stats.memoryUsage.averageHeapUsed =
+      (stats.memoryUsage.averageHeapUsed * (stats.totalExecutions - 1) + currentHeapUsed) /
+      stats.totalExecutions;
+
+    stats.memoryUsage.peakHeapUsed = Math.max(stats.memoryUsage.peakHeapUsed, currentHeapUsed);
 
     // Update CPU metrics
-    stats.cpuUsage.averageUserTime = (
-      (stats.cpuUsage.averageUserTime * (stats.totalExecutions - 1)) +
-      metrics.cpuUsage.user
-    ) / stats.totalExecutions;
-    
-    stats.cpuUsage.averageSystemTime = (
-      (stats.cpuUsage.averageSystemTime * (stats.totalExecutions - 1)) +
-      metrics.cpuUsage.system
-    ) / stats.totalExecutions;
+    stats.cpuUsage.averageUserTime =
+      (stats.cpuUsage.averageUserTime * (stats.totalExecutions - 1) + metrics.cpuUsage.user) /
+      stats.totalExecutions;
+
+    stats.cpuUsage.averageSystemTime =
+      (stats.cpuUsage.averageSystemTime * (stats.totalExecutions - 1) + metrics.cpuUsage.system) /
+      stats.totalExecutions;
   }
 
   private startSnapshotCollection(): void {
@@ -260,28 +251,28 @@ export class PluginAnalytics extends EventEmitter {
     }, this.snapshotInterval);
   }
 
-  private appendPluginReport(
-    report: string[],
-    pluginId: string,
-    stats: PluginStats
-  ): void {
+  private appendPluginReport(report: string[], pluginId: string, stats: PluginStats): void {
     report.push(`Plugin ID: ${pluginId}`);
     report.push(`Total Executions: ${stats.totalExecutions}`);
     report.push(`Success Rate: ${((1 - stats.errorRate) * 100).toFixed(2)}%`);
     report.push(`Average Execution Time: ${stats.averageExecutionTime.toFixed(2)}ms`);
     report.push('\nMethod Statistics:');
-    
+
     for (const [method, methodStats] of Object.entries(stats.methodStats)) {
       report.push(`  ${method}:`);
       report.push(`    Executions: ${methodStats.executions}`);
       report.push(`    Average Time: ${methodStats.averageTime.toFixed(2)}ms`);
-      report.push(`    Failure Rate: ${(methodStats.failures / methodStats.executions * 100).toFixed(2)}%`);
+      report.push(
+        `    Failure Rate: ${((methodStats.failures / methodStats.executions) * 100).toFixed(2)}%`
+      );
     }
 
     report.push('\nResource Usage:');
-    report.push(`  Average Heap: ${(stats.memoryUsage.averageHeapUsed / 1024 / 1024).toFixed(2)}MB`);
+    report.push(
+      `  Average Heap: ${(stats.memoryUsage.averageHeapUsed / 1024 / 1024).toFixed(2)}MB`
+    );
     report.push(`  Peak Heap: ${(stats.memoryUsage.peakHeapUsed / 1024 / 1024).toFixed(2)}MB`);
     report.push(`  Average CPU (user): ${stats.cpuUsage.averageUserTime.toFixed(2)}ms`);
     report.push(`  Average CPU (system): ${stats.cpuUsage.averageSystemTime.toFixed(2)}ms`);
   }
-} 
+}

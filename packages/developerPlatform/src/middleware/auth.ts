@@ -7,7 +7,9 @@ const logger = createLogger('AuthMiddleware');
 const authService = new AuthService();
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export async function jwtAuthorizer(event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> {
+export async function jwtAuthorizer(
+  event: APIGatewayTokenAuthorizerEvent
+): Promise<APIGatewayAuthorizerResult> {
   try {
     const token = event.authorizationToken.replace('Bearer ', '');
     const decoded = jwt.verify(token, JWT_SECRET) as { developerId: string };
@@ -22,13 +24,13 @@ export async function jwtAuthorizer(event: APIGatewayTokenAuthorizerEvent): Prom
           {
             Action: 'execute-api:Invoke',
             Effect: 'Allow',
-            Resource: event.methodArn
-          }
-        ]
+            Resource: event.methodArn,
+          },
+        ],
       },
       context: {
-        developerId: decoded.developerId
-      }
+        developerId: decoded.developerId,
+      },
     };
   } catch (error) {
     logger.error('JWT validation failed', { error });
@@ -41,15 +43,17 @@ export async function jwtAuthorizer(event: APIGatewayTokenAuthorizerEvent): Prom
           {
             Action: 'execute-api:Invoke',
             Effect: 'Deny',
-            Resource: event.methodArn
-          }
-        ]
-      }
+            Resource: event.methodArn,
+          },
+        ],
+      },
     };
   }
 }
 
-export async function apiKeyAuthorizer(event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> {
+export async function apiKeyAuthorizer(
+  event: APIGatewayTokenAuthorizerEvent
+): Promise<APIGatewayAuthorizerResult> {
   try {
     const apiKey = event.authorizationToken.replace('ApiKey ', '');
     const isValid = await authService.validateApiKey(apiKey);
@@ -71,13 +75,13 @@ export async function apiKeyAuthorizer(event: APIGatewayTokenAuthorizerEvent): P
           {
             Action: 'execute-api:Invoke',
             Effect: 'Allow',
-            Resource: event.methodArn
-          }
-        ]
+            Resource: event.methodArn,
+          },
+        ],
       },
       context: {
-        apiKeyId
-      }
+        apiKeyId,
+      },
     };
   } catch (error) {
     logger.error('API key validation failed', { error });
@@ -90,16 +94,18 @@ export async function apiKeyAuthorizer(event: APIGatewayTokenAuthorizerEvent): P
           {
             Action: 'execute-api:Invoke',
             Effect: 'Deny',
-            Resource: event.methodArn
-          }
-        ]
-      }
+            Resource: event.methodArn,
+          },
+        ],
+      },
     };
   }
 }
 
 // Helper function to validate authorization header format
-export function validateAuthHeader(authHeader: string | undefined): { type: string; token: string } | null {
+export function validateAuthHeader(
+  authHeader: string | undefined
+): { type: string; token: string } | null {
   if (!authHeader) {
     return null;
   }
@@ -125,4 +131,4 @@ export function extractDeveloperId(token: string): string | null {
   } catch {
     return null;
   }
-} 
+}

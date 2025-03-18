@@ -5,15 +5,18 @@ The error handling system provides a robust framework for managing errors in the
 ## Features
 
 ### 1. Error Severity Levels
+
 - `low`: Minor issues that don't affect core functionality
 - `medium`: Issues that may affect performance but not critical operations
 - `high`: Significant issues that affect core functionality
 - `critical`: Severe issues that require immediate attention
 
 ### 2. Retry Mechanism
+
 - Configurable retry attempts with exponential backoff
 - Per-handler retry configuration
 - Example:
+
 ```typescript
 retryConfig: {
   maxAttempts: 3,
@@ -23,10 +26,12 @@ retryConfig: {
 ```
 
 ### 3. Notification System
+
 - Multiple notification channels (Slack, Email, PagerDuty)
 - Throttling to prevent notification flooding
 - Configurable per handler
 - Example:
+
 ```typescript
 notificationConfig: {
   enabled: true,
@@ -36,10 +41,12 @@ notificationConfig: {
 ```
 
 ### 4. Error Reporting
+
 - Integration with multiple services (Sentry, Rollbar, CloudWatch)
 - Environment-aware configuration
 - Sampling rate control
 - Example:
+
 ```typescript
 errorReporting: {
   enabled: true,
@@ -50,10 +57,12 @@ errorReporting: {
 ```
 
 ### 5. Error Monitoring
+
 - Error rate tracking
 - Configurable thresholds
 - Automated alerting
 - Example:
+
 ```typescript
 monitoring: {
   enabled: true,
@@ -63,9 +72,11 @@ monitoring: {
 ```
 
 ### 6. Fallback Strategy
+
 - Configurable default responses
 - Logging of fallback usage
 - Example:
+
 ```typescript
 fallbackStrategy: {
   enabled: true,
@@ -77,6 +88,7 @@ fallbackStrategy: {
 ## Usage
 
 ### Basic Setup
+
 ```typescript
 import { createModelRegistry } from '../factories/create-model-registry';
 
@@ -84,11 +96,12 @@ const registry = await createModelRegistry({
   errorConfigOverrides: {
     enabled: true,
     // ... custom configuration
-  }
+  },
 });
 ```
 
 ### Custom Error Handler
+
 ```typescript
 const errorConfigOverrides = {
   handlers: {
@@ -112,6 +125,7 @@ const errorConfigOverrides = {
 ```
 
 ### Error Metrics
+
 ```typescript
 // Get error metrics for a specific operation
 const metrics = registry.getErrorMetrics('modelRegistration');
@@ -144,22 +158,19 @@ The error handling system uses the following AWS services:
 - **IAM**: Required permissions for CloudWatch and SNS
 
 Required IAM permissions:
+
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "cloudwatch:PutMetricData"
-      ],
+      "Action": ["cloudwatch:PutMetricData"],
       "Resource": "*"
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "sns:Publish"
-      ],
+      "Action": ["sns:Publish"],
       "Resource": [
         "arn:aws:sns:*:*:slack-topic",
         "arn:aws:sns:*:*:email-topic",
@@ -174,21 +185,25 @@ Required IAM permissions:
 ## Best Practices
 
 1. **Error Severity**
+
    - Use appropriate severity levels based on business impact
    - Configure notification channels based on severity
    - Set up different retry strategies for different severity levels
 
 2. **Retry Configuration**
+
    - Use exponential backoff to prevent overwhelming services
    - Set reasonable maximum attempts based on operation criticality
    - Consider operation idempotency when configuring retries
 
 3. **Notifications**
+
    - Implement throttling to prevent alert fatigue
    - Use different channels for different severity levels
    - Include relevant context in notifications
 
 4. **Monitoring**
+
    - Set appropriate error rate thresholds
    - Monitor error trends over time
    - Set up alerts for unusual error patterns
@@ -212,6 +227,7 @@ The error handling system includes comprehensive tests:
 - Error scenario testing
 
 Run tests using:
+
 ```bash
 npm test
 ```
@@ -221,16 +237,19 @@ npm test
 Common issues and solutions:
 
 1. **High Error Rates**
+
    - Check error metrics in CloudWatch
    - Review error patterns in logs
    - Adjust retry configurations if needed
 
 2. **Missing Notifications**
+
    - Verify SNS topic configurations
    - Check IAM permissions
    - Review notification throttling settings
 
 3. **Performance Impact**
+
    - Monitor retry latency
    - Adjust backoff configurations
    - Consider reducing retry attempts
@@ -238,4 +257,4 @@ Common issues and solutions:
 4. **Error Reporting Issues**
    - Verify service credentials
    - Check sampling rate configuration
-   - Review error reporting service status 
+   - Review error reporting service status

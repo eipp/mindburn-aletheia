@@ -80,4 +80,4 @@ export interface UserSettings {
     minReward: number;
     maxDifficulty: 'easy' | 'medium' | 'hard';
   };
-} 
+}

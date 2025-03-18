@@ -1,4 +1,12 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, SendMode } from '@ton/core';
+import {
+  Address,
+  beginCell,
+  Cell,
+  Contract,
+  contractAddress,
+  ContractProvider,
+  SendMode,
+} from '@ton/core';
 import { toNano } from '@ton/core';
 
 export type ProposalType = 'PARAMETER_CHANGE' | 'TREASURY_SPEND' | 'PROTOCOL_UPGRADE';
@@ -49,10 +57,7 @@ export class MindBurnGovernance implements Contract {
       parameters: Cell;
     }
   ) {
-    const proposerBalance = await this.getVotingPower(
-      provider,
-      provider.sender!
-    );
+    const proposerBalance = await this.getVotingPower(provider, provider.sender!);
     const threshold = await this.getProposalThreshold(provider);
 
     if (proposerBalance < threshold) {
@@ -70,10 +75,7 @@ export class MindBurnGovernance implements Contract {
     });
   }
 
-  async castVote(
-    provider: ContractProvider,
-    params: { proposalId: number; support: boolean }
-  ) {
+  async castVote(provider: ContractProvider, params: { proposalId: number; support: boolean }) {
     await provider.internal(SendMode.PAY_GAS_SEPARATELY, {
       value: toNano('0.05'),
       body: beginCell()
@@ -84,10 +86,7 @@ export class MindBurnGovernance implements Contract {
     });
   }
 
-  async executeProposal(
-    provider: ContractProvider,
-    params: { proposalId: number }
-  ) {
+  async executeProposal(provider: ContractProvider, params: { proposalId: number }) {
     const proposal = await this.getProposal(provider, params.proposalId);
     if (!proposal) {
       throw new Error('Proposal not found');
@@ -111,9 +110,7 @@ export class MindBurnGovernance implements Contract {
     provider: ContractProvider,
     proposalId: number
   ): Promise<ProposalConfig | null> {
-    const result = await provider.get('get_proposal', [
-      { type: 'number', value: proposalId },
-    ]);
+    const result = await provider.get('get_proposal', [{ type: 'number', value: proposalId }]);
     if (result.stack.readBoolean()) {
       return null;
     }
@@ -152,10 +149,7 @@ export class MindBurnGovernance implements Contract {
     }
   }
 
-  async getVotingPower(
-    provider: ContractProvider,
-    voter: Address
-  ): Promise<bigint> {
+  async getVotingPower(provider: ContractProvider, voter: Address): Promise<bigint> {
     const result = await provider.get('get_voting_power', [
       { type: 'slice', cell: beginCell().storeAddress(voter).endCell() },
     ]);
@@ -194,4 +188,4 @@ export class MindBurnGovernance implements Contract {
     const result = await provider.get('get_execution_delay', []);
     return result.stack.readNumber();
   }
-} 
+}

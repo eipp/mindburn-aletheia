@@ -23,7 +23,7 @@ export class FraudQualityController {
     const apiLimiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: 100, // Limit each IP to 100 requests per windowMs
-      message: 'Too many requests from this IP, please try again later'
+      message: 'Too many requests from this IP, please try again later',
     });
 
     // Apply rate limiting and authentication to all routes
@@ -37,16 +37,9 @@ export class FraudQualityController {
       this.processSubmission.bind(this)
     );
 
-    this.router.post(
-      '/webhook',
-      validateSchema(webhookSchema),
-      this.handleWebhook.bind(this)
-    );
+    this.router.post('/webhook', validateSchema(webhookSchema), this.handleWebhook.bind(this));
 
-    this.router.get(
-      '/metrics',
-      this.getMetrics.bind(this)
-    );
+    this.router.get('/metrics', this.getMetrics.bind(this));
 
     // Error handling
     this.router.use(this.errorHandler.bind(this));
@@ -56,10 +49,10 @@ export class FraudQualityController {
     try {
       const submission = req.body;
       const result = await this.orchestrator.processSubmission(submission);
-      
+
       res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -70,10 +63,10 @@ export class FraudQualityController {
     try {
       const webhook = req.body;
       // Process webhook data asynchronously
-      this.processWebhookAsync(webhook).catch(error => 
+      this.processWebhookAsync(webhook).catch(error =>
         this.logger.error('Webhook processing failed', { error, webhook })
       );
-      
+
       // Return immediately as webhook processing happens in background
       res.status(202).json({ success: true });
     } catch (error) {
@@ -90,15 +83,15 @@ export class FraudQualityController {
     try {
       const startTime = req.query.startTime as string;
       const endTime = req.query.endTime as string;
-      
+
       const metrics = await this.orchestrator.dashboard.getDashboardMetrics({
         startTime: new Date(startTime),
-        endTime: new Date(endTime)
+        endTime: new Date(endTime),
       });
-      
+
       res.status(200).json({
         success: true,
-        data: metrics
+        data: metrics,
       });
     } catch (error) {
       next(error);
@@ -107,17 +100,17 @@ export class FraudQualityController {
 
   private errorHandler(error: Error, req: Request, res: Response, next: NextFunction): void {
     this.logger.error('API error', { error, path: req.path });
-    
+
     res.status(500).json({
       success: false,
       error: {
         message: error.message,
-        code: 'INTERNAL_SERVER_ERROR'
-      }
+        code: 'INTERNAL_SERVER_ERROR',
+      },
     });
   }
 
   getRouter(): Router {
     return this.router;
   }
-} 
+}

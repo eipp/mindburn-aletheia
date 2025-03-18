@@ -15,10 +15,12 @@ export abstract class WorkflowHandler {
 
   protected async getTask(taskId: string) {
     try {
-      const result = await this.dynamodb.get({
-        TableName: this.tableName,
-        Key: { taskId }
-      }).promise();
+      const result = await this.dynamodb
+        .get({
+          TableName: this.tableName,
+          Key: { taskId },
+        })
+        .promise();
 
       return result.Item;
     } catch (error) {
@@ -29,13 +31,15 @@ export abstract class WorkflowHandler {
 
   protected async updateTask(taskId: string, updateExpression: string, expressionValues: any) {
     try {
-      await this.dynamodb.update({
-        TableName: this.tableName,
-        Key: { taskId },
-        UpdateExpression: updateExpression,
-        ExpressionAttributeValues: expressionValues,
-        ReturnValues: 'NONE'
-      }).promise();
+      await this.dynamodb
+        .update({
+          TableName: this.tableName,
+          Key: { taskId },
+          UpdateExpression: updateExpression,
+          ExpressionAttributeValues: expressionValues,
+          ReturnValues: 'NONE',
+        })
+        .promise();
     } catch (error) {
       this.logger.error('Error updating task', { taskId, error });
       throw error;
@@ -46,14 +50,14 @@ export abstract class WorkflowHandler {
     this.logger.error('Workflow step error', {
       error,
       executionId: context.executionId,
-      taskId: context.taskData?.taskId
+      taskId: context.taskData?.taskId,
     });
 
     return {
       error: error.message,
       isRecoverable: this.isRecoverableError(error),
       timestamp: new Date().toISOString(),
-      context
+      context,
     };
   }
 
@@ -61,7 +65,7 @@ export abstract class WorkflowHandler {
     const nonRecoverableErrors = [
       'ValidationError',
       'ResourceNotFoundException',
-      'InvalidParameterException'
+      'InvalidParameterException',
     ];
     return !nonRecoverableErrors.includes(error.name);
   }
@@ -73,4 +77,4 @@ export abstract class WorkflowHandler {
       }
     }
   }
-} 
+}

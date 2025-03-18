@@ -37,28 +37,32 @@ export const handler: APIGatewayProxyWebsocketHandlerV2 = async (event: WebSocke
 };
 
 async function handleConnect(connectionId: string): Promise<void> {
-  await dynamodb.put({
-    TableName: TABLE_NAME,
-    Item: {
-      connectionId,
-      timestamp: Date.now(),
-      status: 'connected',
-    },
-  }).promise();
+  await dynamodb
+    .put({
+      TableName: TABLE_NAME,
+      Item: {
+        connectionId,
+        timestamp: Date.now(),
+        status: 'connected',
+      },
+    })
+    .promise();
 }
 
 async function handleDisconnect(connectionId: string): Promise<void> {
-  await dynamodb.delete({
-    TableName: TABLE_NAME,
-    Key: { connectionId },
-  }).promise();
+  await dynamodb
+    .delete({
+      TableName: TABLE_NAME,
+      Key: { connectionId },
+    })
+    .promise();
 }
 
 async function handleMessage(connectionId: string, message?: string): Promise<void> {
   if (!message) return;
 
   const data = JSON.parse(message);
-  
+
   // Handle different message types
   switch (data.type) {
     case 'task_update':
@@ -74,10 +78,12 @@ async function handleMessage(connectionId: string, message?: string): Promise<vo
 }
 
 async function broadcastToWorkers(data: any): Promise<void> {
-  const connections = await dynamodb.scan({
-    TableName: TABLE_NAME,
-    ProjectionExpression: 'connectionId',
-  }).promise();
+  const connections = await dynamodb
+    .scan({
+      TableName: TABLE_NAME,
+      ProjectionExpression: 'connectionId',
+    })
+    .promise();
 
   const apiGateway = new ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_API_ENDPOINT,
@@ -96,7 +102,7 @@ async function broadcastToWorkers(data: any): Promise<void> {
           Data: message,
         })
         .promise()
-        .catch((error) => {
+        .catch(error => {
           if (error.statusCode === 410) {
             return handleDisconnect(connectionId);
           }
@@ -108,14 +114,16 @@ async function broadcastToWorkers(data: any): Promise<void> {
 
 async function notifyDeveloper(data: any): Promise<void> {
   // Query developers from DynamoDB
-  const developers = await dynamodb.query({
-    TableName: TABLE_NAME,
-    IndexName: 'DeveloperIdIndex',
-    KeyConditionExpression: 'developer_id = :devId',
-    ExpressionAttributeValues: {
-      ':devId': data.developer_id,
-    },
-  }).promise();
+  const developers = await dynamodb
+    .query({
+      TableName: TABLE_NAME,
+      IndexName: 'DeveloperIdIndex',
+      KeyConditionExpression: 'developer_id = :devId',
+      ExpressionAttributeValues: {
+        ':devId': data.developer_id,
+      },
+    })
+    .promise();
 
   const apiGateway = new ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_API_ENDPOINT,
@@ -134,7 +142,7 @@ async function notifyDeveloper(data: any): Promise<void> {
           Data: message,
         })
         .promise()
-        .catch((error) => {
+        .catch(error => {
           if (error.statusCode === 410) {
             return handleDisconnect(connectionId);
           }
@@ -146,14 +154,16 @@ async function notifyDeveloper(data: any): Promise<void> {
 
 async function notifyWorker(data: any): Promise<void> {
   // Query worker from DynamoDB
-  const workers = await dynamodb.query({
-    TableName: TABLE_NAME,
-    IndexName: 'WorkerIdIndex',
-    KeyConditionExpression: 'worker_id = :workerId',
-    ExpressionAttributeValues: {
-      ':workerId': data.worker_id,
-    },
-  }).promise();
+  const workers = await dynamodb
+    .query({
+      TableName: TABLE_NAME,
+      IndexName: 'WorkerIdIndex',
+      KeyConditionExpression: 'worker_id = :workerId',
+      ExpressionAttributeValues: {
+        ':workerId': data.worker_id,
+      },
+    })
+    .promise();
 
   const apiGateway = new ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_API_ENDPOINT,
@@ -172,7 +182,7 @@ async function notifyWorker(data: any): Promise<void> {
           Data: message,
         })
         .promise()
-        .catch((error) => {
+        .catch(error => {
           if (error.statusCode === 410) {
             return handleDisconnect(connectionId);
           }
@@ -198,4 +208,4 @@ class ApiGatewayManagementApi {
       Data: Buffer.from(Data),
     });
   }
-} 
+}

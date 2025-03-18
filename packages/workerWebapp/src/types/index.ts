@@ -3,21 +3,21 @@ export enum TaskType {
   IMAGE = 'image',
   CODE = 'code',
   DATA = 'data',
-  AUDIO = 'audio'
+  AUDIO = 'audio',
 }
 
 export enum TaskStatus {
   AVAILABLE = 'available',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 export enum EvidenceType {
   SCREENSHOT = 'screenshot',
   TEXT = 'text',
   LINK = 'link',
-  FILE = 'file'
+  FILE = 'file',
 }
 
 export interface Evidence {
@@ -189,4 +189,4 @@ declare global {
       };
     };
   }
-} 
+}

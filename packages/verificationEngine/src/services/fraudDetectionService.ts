@@ -1,10 +1,10 @@
 import { Logger } from '@mindburn/shared/logger';
-import { 
+import {
   WorkerSubmission,
   FraudDetectionResult,
   FraudPattern,
   SuspiciousActivity,
-  WorkerBehavior
+  WorkerBehavior,
 } from '../types';
 import { FraudDetectionError } from '../errors';
 
@@ -16,16 +16,14 @@ export class FraudDetectionService {
     similarityThreshold: 0.9,
     patternRepetitionThreshold: 0.8,
     suspiciousSpeedThreshold: 0.3, // 30% of average time
-    maxConsecutiveSimilar: 3
+    maxConsecutiveSimilar: 3,
   };
 
   constructor(logger: Logger) {
     this.logger = logger.child({ service: 'FraudDetection' });
   }
 
-  async analyzeSubmissions(
-    submissions: WorkerSubmission[]
-  ): Promise<FraudDetectionResult> {
+  async analyzeSubmissions(submissions: WorkerSubmission[]): Promise<FraudDetectionResult> {
     try {
       const suspiciousActivities: SuspiciousActivity[] = [];
 
@@ -42,7 +40,7 @@ export class FraudDetectionService {
           type: 'PATTERN_REPETITION',
           description: 'Repeated submission patterns detected',
           evidence: patterns,
-          severity: 'HIGH'
+          severity: 'HIGH',
         });
       }
 
@@ -53,7 +51,7 @@ export class FraudDetectionService {
           type: 'WORKER_COLLUSION',
           description: 'Potential worker collusion detected',
           evidence: collusion,
-          severity: 'HIGH'
+          severity: 'HIGH',
         });
       }
 
@@ -64,21 +62,19 @@ export class FraudDetectionService {
           type: 'AUTOMATED_SUBMISSION',
           description: 'Potential automated submission behavior detected',
           evidence: automation.evidence,
-          severity: 'HIGH'
+          severity: 'HIGH',
         });
       }
 
       // Analyze worker behavior patterns
-      const behaviorAnalysis = await this.analyzeWorkerBehavior(
-        submissions.map(s => s.workerId)
-      );
+      const behaviorAnalysis = await this.analyzeWorkerBehavior(submissions.map(s => s.workerId));
 
       const result: FraudDetectionResult = {
         hasSuspiciousActivity: suspiciousActivities.length > 0,
         suspiciousActivities,
         riskLevel: this.calculateRiskLevel(suspiciousActivities),
         workerBehaviorAnalysis: behaviorAnalysis,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       if (result.hasSuspiciousActivity) {
@@ -92,14 +88,12 @@ export class FraudDetectionService {
     }
   }
 
-  private detectTimeAnomalies(
-    submissions: WorkerSubmission[]
-  ): SuspiciousActivity[] {
+  private detectTimeAnomalies(submissions: WorkerSubmission[]): SuspiciousActivity[] {
     const anomalies: SuspiciousActivity[] = [];
 
     for (const submission of submissions) {
       const timeSpent = submission.completedAt - submission.startedAt;
-      
+
       // Check for suspiciously fast submissions
       if (timeSpent < this.thresholds.minTimeSeconds * 1000) {
         anomalies.push({
@@ -108,9 +102,9 @@ export class FraudDetectionService {
           evidence: {
             submissionId: submission.submissionId,
             timeSpent,
-            threshold: this.thresholds.minTimeSeconds * 1000
+            threshold: this.thresholds.minTimeSeconds * 1000,
           },
-          severity: 'MEDIUM'
+          severity: 'MEDIUM',
         });
       }
 
@@ -122,9 +116,9 @@ export class FraudDetectionService {
           evidence: {
             submissionId: submission.submissionId,
             timeSpent,
-            threshold: this.thresholds.maxTimeSeconds * 1000
+            threshold: this.thresholds.maxTimeSeconds * 1000,
           },
-          severity: 'LOW'
+          severity: 'LOW',
         });
       }
     }
@@ -132,9 +126,7 @@ export class FraudDetectionService {
     return anomalies;
   }
 
-  private detectPatternRepetition(
-    submissions: WorkerSubmission[]
-  ): FraudPattern[] {
+  private detectPatternRepetition(submissions: WorkerSubmission[]): FraudPattern[] {
     const patterns: FraudPattern[] = [];
     const submissionsByWorker = new Map<string, WorkerSubmission[]>();
 
@@ -154,7 +146,10 @@ export class FraudDetectionService {
 
       for (let i = 1; i < workerSubmissions.length; i++) {
         const currentResult = JSON.stringify(workerSubmissions[i].result);
-        if (this.calculateSimilarity(previousResult, currentResult) > this.thresholds.similarityThreshold) {
+        if (
+          this.calculateSimilarity(previousResult, currentResult) >
+          this.thresholds.similarityThreshold
+        ) {
           similarSubmissions++;
           if (similarSubmissions >= this.thresholds.maxConsecutiveSimilar) {
             patterns.push({
@@ -163,7 +158,7 @@ export class FraudDetectionService {
               submissionIds: workerSubmissions
                 .slice(i - this.thresholds.maxConsecutiveSimilar, i + 1)
                 .map(s => s.submissionId),
-              confidence: similarSubmissions / workerSubmissions.length
+              confidence: similarSubmissions / workerSubmissions.length,
             });
             break;
           }
@@ -209,9 +204,9 @@ export class FraudDetectionService {
             evidence: {
               worker1: workers[i],
               worker2: workers[j],
-              similarity
+              similarity,
             },
-            severity: 'HIGH'
+            severity: 'HIGH',
           });
         }
       }
@@ -220,20 +215,18 @@ export class FraudDetectionService {
     return suspiciousActivities;
   }
 
-  private detectAutomation(
-    submissions: WorkerSubmission[]
-  ): {
+  private detectAutomation(submissions: WorkerSubmission[]): {
     isAutomated: boolean;
     evidence?: any;
   } {
     const submissionTimes = submissions.map(s => s.completedAt - s.startedAt);
-    const averageTime = submissionTimes.reduce((sum, time) => sum + time, 0) / submissionTimes.length;
-    
+    const averageTime =
+      submissionTimes.reduce((sum, time) => sum + time, 0) / submissionTimes.length;
+
     // Check for consistent submission times (potential automation)
-    const timeVariance = submissionTimes.reduce(
-      (variance, time) => variance + Math.pow(time - averageTime, 2),
-      0
-    ) / submissionTimes.length;
+    const timeVariance =
+      submissionTimes.reduce((variance, time) => variance + Math.pow(time - averageTime, 2), 0) /
+      submissionTimes.length;
 
     const standardDeviation = Math.sqrt(timeVariance);
     const coefficientOfVariation = standardDeviation / averageTime;
@@ -245,24 +238,22 @@ export class FraudDetectionService {
         evidence: {
           coefficientOfVariation,
           averageTime,
-          standardDeviation
-        }
+          standardDeviation,
+        },
       };
     }
 
     return { isAutomated: false };
   }
 
-  private async analyzeWorkerBehavior(
-    workerIds: string[]
-  ): Promise<WorkerBehavior[]> {
+  private async analyzeWorkerBehavior(workerIds: string[]): Promise<WorkerBehavior[]> {
     // TODO: Implement worker behavior analysis from database
     // This is a placeholder
     return workerIds.map(workerId => ({
       workerId,
       riskScore: 0.1,
       patterns: [],
-      lastAnalysis: new Date().toISOString()
+      lastAnalysis: new Date().toISOString(),
     }));
   }
 
@@ -272,7 +263,7 @@ export class FraudDetectionService {
 
     const longerLength = Math.max(str1.length, str2.length);
     const editDistance = this.levenshteinDistance(str1, str2);
-    
+
     return (longerLength - editDistance) / longerLength;
   }
 
@@ -321,13 +312,11 @@ export class FraudDetectionService {
     return matrix[str1.length][str2.length];
   }
 
-  private calculateRiskLevel(
-    activities: SuspiciousActivity[]
-  ): 'LOW' | 'MEDIUM' | 'HIGH' {
+  private calculateRiskLevel(activities: SuspiciousActivity[]): 'LOW' | 'MEDIUM' | 'HIGH' {
     const severityScores = {
       LOW: 1,
       MEDIUM: 2,
-      HIGH: 3
+      HIGH: 3,
     };
 
     const totalScore = activities.reduce(
@@ -341,4 +330,4 @@ export class FraudDetectionService {
     if (averageScore >= 1.5) return 'MEDIUM';
     return 'LOW';
   }
-} 
+}

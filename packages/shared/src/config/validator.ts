@@ -20,7 +20,7 @@ export function createConfigValidator<T>({
   schema,
   defaultConfig,
   transformers = [],
-  validators = []
+  validators = [],
 }: ConfigValidatorOptions<T>): ConfigValidator<T> {
   return (partialConfig: Partial<T>): T => {
     // Apply transformers in sequence
@@ -32,7 +32,7 @@ export function createConfigValidator<T>({
     // Merge with default config
     const mergedConfig = merge(defaultConfig, transformedConfig, {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      arrayMerge: (_target, source) => source // Replace arrays instead of concatenating
+      arrayMerge: (_target, source) => source, // Replace arrays instead of concatenating
     });
 
     // Validate against schema
@@ -55,7 +55,9 @@ export function createConfigValidator<T>({
   };
 }
 
-export function createEnvironmentTransformer<T>(envMap: Record<keyof T, string>): (config: Partial<T>) => Partial<T> {
+export function createEnvironmentTransformer<T>(
+  envMap: Record<keyof T, string>
+): (config: Partial<T>) => Partial<T> {
   return (config: Partial<T>) => {
     const envConfig: Partial<T> = {} as Partial<T>;
 
@@ -77,10 +79,16 @@ export function createSecurityValidator<T>(sensitiveFields: Array<keyof T>) {
 
     for (const field of sensitiveFields) {
       if ((config as any)[field]) {
-        if (typeof (config as any)[field] === 'string' && (config as any)[field].includes('Bearer ')) {
+        if (
+          typeof (config as any)[field] === 'string' &&
+          (config as any)[field].includes('Bearer ')
+        ) {
           errors.push(`Security violation: ${String(field)} contains authorization token`);
         }
-        if (typeof (config as any)[field] === 'string' && (config as any)[field].match(/[A-Z0-9]{20,}/)) {
+        if (
+          typeof (config as any)[field] === 'string' &&
+          (config as any)[field].match(/[A-Z0-9]{20,}/)
+        ) {
           warnings.push(`Potential security risk: ${String(field)} may contain an API key`);
         }
       }
@@ -89,7 +97,7 @@ export function createSecurityValidator<T>(sensitiveFields: Array<keyof T>) {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   };
 }
@@ -101,14 +109,16 @@ export function createPerformanceValidator<T>(thresholds: Partial<Record<keyof T
     for (const [key, thresholdValue] of Object.entries(thresholds)) {
       const value = (config as any)[key];
       if (typeof value === 'number' && thresholdValue !== undefined && value > thresholdValue) {
-        warnings.push(`Performance warning: ${key} (${value}) exceeds recommended threshold (${thresholdValue})`);
+        warnings.push(
+          `Performance warning: ${key} (${value}) exceeds recommended threshold (${thresholdValue})`
+        );
       }
     }
 
     return {
       isValid: true,
       errors: [],
-      warnings
+      warnings,
     };
   };
-} 
+}

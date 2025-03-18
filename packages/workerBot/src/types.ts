@@ -68,7 +68,7 @@ export enum ExpertiseLevel {
   NOVICE = 'novice',
   INTERMEDIATE = 'intermediate',
   EXPERT = 'expert',
-  MASTER = 'master'
+  MASTER = 'master',
 }
 
 export interface QualityMetrics {
@@ -109,4 +109,4 @@ export interface WalletInfo {
     timestamp: string;
     status: 'pending' | 'completed' | 'failed';
   };
-} 
+}

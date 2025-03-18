@@ -31,10 +31,10 @@ export class VerificationRewards {
     reputationChange: number;
   }> {
     const workerAddress = Address.parse(result.workerId);
-    
+
     // Calculate base reward
     const baseReward = this.calculateBaseReward(result);
-    
+
     // Get reputation multiplier
     const reputationMultiplier = await this.reputationToken.getReputationMultiplier(
       this.provider,
@@ -42,9 +42,7 @@ export class VerificationRewards {
     );
 
     // Calculate final reward
-    const finalReward = BigInt(
-      Math.floor(Number(baseReward) * reputationMultiplier)
-    );
+    const finalReward = BigInt(Math.floor(Number(baseReward) * reputationMultiplier));
 
     // Calculate reputation change
     const reputationChange = this.calculateReputationChange(result);
@@ -79,20 +77,16 @@ export class VerificationRewards {
 
     // Base calculation considering accuracy
     const accuracyFactor = (result.accuracy - MIN_ACCURACY) / (100 - MIN_ACCURACY);
-    
+
     // Complexity factor (0.5 to 2.0)
-    const complexityFactor = 0.5 + (result.complexity * 1.5);
-    
+    const complexityFactor = 0.5 + result.complexity * 1.5;
+
     // Time efficiency factor (inversely proportional to time spent)
     const expectedTime = 300; // 5 minutes in seconds
-    const timeEfficiencyFactor = Math.min(
-      2.0,
-      Math.max(0.5, expectedTime / result.timeSpent)
-    );
+    const timeEfficiencyFactor = Math.min(2.0, Math.max(0.5, expectedTime / result.timeSpent));
 
-    const finalFactor =
-      accuracyFactor * complexityFactor * timeEfficiencyFactor;
-    
+    const finalFactor = accuracyFactor * complexityFactor * timeEfficiencyFactor;
+
     return BigInt(Math.floor(Number(MAX_REWARD) * finalFactor));
   }
 
@@ -107,8 +101,8 @@ export class VerificationRewards {
 
     const accuracyFactor = (result.accuracy - MIN_ACCURACY) / (100 - MIN_ACCURACY);
     const complexityBonus = result.complexity * MAX_POINTS * 0.5;
-    
-    return Math.floor(BASE_POINTS + (accuracyFactor * MAX_POINTS) + complexityBonus);
+
+    return Math.floor(BASE_POINTS + accuracyFactor * MAX_POINTS + complexityBonus);
   }
 
   async applyStakingRewards(
@@ -118,12 +112,9 @@ export class VerificationRewards {
   ): Promise<bigint> {
     const DAILY_RATE = 0.0005; // 0.05% daily
     const daysStaked = stakingPeriod / 86400; // Convert seconds to days
-    
+
     const rewardAmount = BigInt(
-      Math.floor(
-        Number(stakedAmount) * Math.pow(1 + DAILY_RATE, daysStaked) -
-          Number(stakedAmount)
-      )
+      Math.floor(Number(stakedAmount) * Math.pow(1 + DAILY_RATE, daysStaked) - Number(stakedAmount))
     );
 
     if (rewardAmount > 0n) {
@@ -136,26 +127,19 @@ export class VerificationRewards {
     return rewardAmount;
   }
 
-  async applyPenalty(
-    worker: Address,
-    penaltyAmount: bigint,
-    reason: string
-  ): Promise<void> {
+  async applyPenalty(worker: Address, penaltyAmount: bigint, reason: string): Promise<void> {
     // Burn penalized tokens
     await this.utilityToken.burn(this.provider, {
       amount: penaltyAmount,
     });
 
     // Reduce reputation
-    const currentReputation = await this.reputationToken.getWorkerReputation(
-      this.provider,
-      worker
-    );
-    
+    const currentReputation = await this.reputationToken.getWorkerReputation(this.provider, worker);
+
     const penaltyScore = Math.max(0, currentReputation - 50);
     await this.reputationToken.updateReputation(this.provider, {
       worker,
       verificationScore: penaltyScore,
     });
   }
-} 
+}

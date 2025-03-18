@@ -1,9 +1,11 @@
 # MindBurn Payments Smart Contract
 
 ## Overview
+
 The MindBurn Payments smart contract manages the payment and reward system for the Mindburn Aletheia platform. It handles task creation, worker assignments, payment processing, and reputation management.
 
 ## Features
+
 - Task creation and management
 - Automated payment processing
 - Worker reputation system
@@ -15,6 +17,7 @@ The MindBurn Payments smart contract manages the payment and reward system for t
 ## Contract Architecture
 
 ### Storage Structure
+
 ```
 storage#_ owner_address:MsgAddress
          clients_map:(HashmapE 256 Client)
@@ -29,6 +32,7 @@ storage#_ owner_address:MsgAddress
 ```
 
 ### Constants
+
 - `MIN_TON_FOR_STORAGE`: 0.05 TON
 - `MAX_PENALTY`: 1 TON
 - `LARGE_PAYMENT_THRESHOLD`: 100 TON
@@ -40,12 +44,15 @@ storage#_ owner_address:MsgAddress
 ## Functions
 
 ### Task Management
+
 1. `create_task(client_addr, task_id, reward)`
+
    - Creates a new task with specified reward
    - Requires minimum stake
    - Stores task data in contract storage
 
 2. `assign_task(task_id, worker_addr)`
+
    - Assigns task to worker
    - Checks worker reputation
    - Only owner can assign tasks
@@ -56,7 +63,9 @@ storage#_ owner_address:MsgAddress
    - Updates worker reputation
 
 ### Multi-signature System
+
 1. `approve_payment(task_id, approver_addr)`
+
    - Records payment approval for large transactions
    - Validates approver authorization
    - Required for payments above threshold
@@ -67,12 +76,14 @@ storage#_ owner_address:MsgAddress
    - Returns current approval count
 
 ### Reputation System
+
 1. `update_worker_reputation(worker_addr, delta)`
    - Updates worker reputation score
    - Maintains bounds (0-1000)
    - Tracks completed tasks
 
 ### Contract Upgrade
+
 1. `upgrade_code(new_code)`
    - Allows contract code upgrade
    - Only owner can upgrade
@@ -81,26 +92,31 @@ storage#_ owner_address:MsgAddress
 ## Security Features
 
 ### Access Control
+
 - Owner-only functions
 - Multi-signature requirement for large payments
 - Reputation-based worker validation
 
 ### Payment Protection
+
 - Minimum stake requirement
 - Multi-signature approval for large payments
 - Separate gas fee handling
 
 ### Data Validation
+
 - Input validation for all operations
 - Status checks for state transitions
 - Balance verification
 
 ### Gas Optimization
+
 - Efficient storage structure
 - Optimized message handling
 - Gas-conscious operation design
 
 ## Error Codes
+
 - 101: Insufficient funds
 - 102: Invalid reward
 - 103: Task not found
@@ -111,6 +127,7 @@ storage#_ owner_address:MsgAddress
 - 108: Upgrade failed
 
 ## Events
+
 1. TaskCreated(taskId, client, reward)
 2. TaskAssigned(taskId, worker)
 3. TaskCompleted(taskId, success)
@@ -120,22 +137,27 @@ storage#_ owner_address:MsgAddress
 ## Deployment
 
 ### Prerequisites
+
 - TON wallet with sufficient balance
 - Node.js environment
 - Required dependencies installed
 
 ### Steps
+
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Build contract:
+
    ```bash
    npm run build
    ```
 
 3. Deploy to testnet:
+
    ```bash
    DEPLOYER_MNEMONIC="your mnemonic" npm run deploy:testnet
    ```
@@ -148,6 +170,7 @@ storage#_ owner_address:MsgAddress
 ## Integration
 
 ### TON Connect
+
 ```typescript
 const wallet = new TonWalletConnector(
   'https://your-app.com/tonconnect-manifest.json',
@@ -157,11 +180,13 @@ await wallet.connect();
 ```
 
 ### Creating Tasks
+
 ```typescript
 await wallet.createTask(taskId, reward);
 ```
 
 ### Processing Verifications
+
 ```typescript
 await wallet.verifyTask(taskId, success);
 ```
@@ -169,6 +194,7 @@ await wallet.verifyTask(taskId, success);
 ## Security Considerations
 
 ### Audit Checklist
+
 1. Contract code review
 2. Gas usage analysis
 3. Access control verification
@@ -178,6 +204,7 @@ await wallet.verifyTask(taskId, success);
 7. Error handling coverage
 
 ### Best Practices
+
 1. Use testnet for initial testing
 2. Implement rate limiting
 3. Monitor contract balance
@@ -186,6 +213,7 @@ await wallet.verifyTask(taskId, success);
 6. Monitor events for anomalies
 
 ## Gas Usage
+
 - Task Creation: ~10k gas
 - Task Assignment: ~15k gas
 - Task Verification: ~25k gas
@@ -193,6 +221,7 @@ await wallet.verifyTask(taskId, success);
 - Code Upgrade: ~20k gas
 
 ## Limitations
+
 1. Maximum contract size: 16KB
 2. Maximum pending tasks: 100
 3. Verification timeout: 24 hours
@@ -200,10 +229,13 @@ await wallet.verifyTask(taskId, success);
 5. Maximum task reward: 1000 TON
 
 ## Testing
+
 Run the test suite:
+
 ```bash
 npm test
 ```
 
 ## Support
-For technical support or questions, please open an issue in the repository or contact the development team. 
+
+For technical support or questions, please open an issue in the repository or contact the development team.
