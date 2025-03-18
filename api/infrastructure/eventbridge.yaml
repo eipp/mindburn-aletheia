@@ -1,0 +1,98 @@
+Resources:
+  IntegrationEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: mindburn-integration-bus
+      
+  ApiDestination:
+    Type: AWS::Events::ApiDestination
+    Properties:
+      Name: mindburn-api-destination
+      ConnectionArn: !Ref ApiConnection
+      InvocationEndpoint: https://api.mindburn.org/v1/events
+      HttpMethod: POST
+      InvocationRateLimitPerSecond: 300
+      
+  ApiConnection:
+    Type: AWS::Events::Connection
+    Properties:
+      Name: mindburn-api-connection
+      AuthorizationType: API_KEY
+      AuthParameters:
+        ApiKeyAuthParameters:
+          ApiKeyName: X-API-Key
+          ApiKeyValue: '{{resolve:secretsmanager:mindburn/api-keys:SecretString:integration}}'
+          
+  TaskCreatedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mindburn-task-created
+      EventBusName: !Ref IntegrationEventBus
+      EventPattern:
+        source: ['mindburn.tasks']
+        detail-type: ['TaskCreated']
+      Targets:
+        - Id: NotifyIntegrations
+          Arn: !Ref ApiDestination
+          RoleArn: !GetAtt EventBridgeRole.Arn
+          
+  VerificationCompletedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mindburn-verification-completed
+      EventBusName: !Ref IntegrationEventBus
+      EventPattern:
+        source: ['mindburn.verification']
+        detail-type: ['VerificationCompleted']
+      Targets:
+        - Id: NotifyIntegrations
+          Arn: !Ref ApiDestination
+          RoleArn: !GetAtt EventBridgeRole.Arn
+          
+  PaymentProcessedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: mindburn-payment-processed
+      EventBusName: !Ref IntegrationEventBus
+      EventPattern:
+        source: ['mindburn.payments']
+        detail-type: ['PaymentProcessed']
+      Targets:
+        - Id: NotifyIntegrations
+          Arn: !Ref ApiDestination
+          RoleArn: !GetAtt EventBridgeRole.Arn
+          
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EventBridgeInvokeApi
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:InvokeApiDestination
+                Resource: !GetAtt ApiDestination.Arn
+                
+  IntegrationDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: mindburn-integration-dlq
+      MessageRetentionPeriod: 1209600 # 14 days
+      
+  IntegrationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: mindburn-integration-queue
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt IntegrationDLQ.Arn
+        maxReceiveCount: 3 

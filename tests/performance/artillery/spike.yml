@@ -1,0 +1,56 @@
+config:
+  phases:
+    - name: "Baseline"
+      duration: 60
+      arrivalRate: 10
+    - name: "Spike 1"
+      duration: 60
+      arrivalRate: 100
+    - name: "Recovery 1"
+      duration: 120
+      arrivalRate: 10
+    - name: "Spike 2"
+      duration: 30
+      arrivalRate: 200
+    - name: "Recovery 2"
+      duration: 180
+      arrivalRate: 10
+    - name: "Massive spike"
+      duration: 30
+      arrivalRate: 500
+    - name: "Final recovery"
+      duration: 300
+      arrivalRate: 10
+
+  plugins:
+    expect:
+      outputFormat: "prettyError"
+      handleErrors: true
+    metrics-by-endpoint:
+      enabled: true
+    apdex:
+      threshold: 250
+    cloudwatch:
+      namespace: "MindBurnAletheia/SpikeTest"
+
+  apdex:
+    threshold: 250
+    rating:
+      tolerable: 1000
+      frustrated: 2000
+
+  defaults:
+    timeout: 10000
+
+  ensure:
+    thresholds:
+      - http.response_time.p95: 2000
+      - http.response_time.p99: 5000
+      - errors.rate: 5
+      - http.codes.429: 100  # Allow some throttling during spikes
+      - http.codes.500: 50   # Allow some errors during spikes
+
+  reporting:
+    - type: "json"
+      filename: "spike-test-report.json"
+    - type: "cloudwatch" 

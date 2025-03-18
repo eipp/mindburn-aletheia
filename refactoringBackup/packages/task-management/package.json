@@ -1,0 +1,31 @@
+{
+  "name": "@mindburn/task-management",
+  "version": "1.0.0",
+  "description": "Task management system for Mindburn Aletheia",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.529.1",
+    "@aws-sdk/client-sfn": "3.529.1",
+    "@aws-sdk/lib-dynamodb": "3.529.1",
+    "@mindburn/shared": "workspace:*",
+    "aws-sdk": "2.1574.0",
+    "lodash": "4.17.21",
+    "uuid": "9.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.136",
+    "@types/aws-sdk": "2.7.0",
+    "@types/jest": "29.5.12",
+    "@types/lodash": "4.14.202",
+    "@types/node": "20.11.24",
+    "@types/uuid": "9.0.8",
+    "typescript": "5.3.3"
+  }
+}

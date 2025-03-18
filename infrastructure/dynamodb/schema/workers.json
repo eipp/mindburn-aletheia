@@ -1,0 +1,84 @@
+{
+  "TableName": "Workers",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "N" },
+    { "AttributeName": "GSI2PK", "AttributeType": "S" },
+    { "AttributeName": "GSI2SK", "AttributeType": "N" },
+    { "AttributeName": "TelegramId", "AttributeType": "S" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "SkillIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "PerformanceIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI2PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI2SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "TelegramIndex",
+      "KeySchema": [
+        { "AttributeName": "TelegramId", "KeyType": "HASH" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "AttributePatterns": {
+    "Worker": {
+      "PK": "WORKER#<workerId>",
+      "SK": "METADATA",
+      "TelegramId": "string",
+      "Username": "string",
+      "Name": "string",
+      "Email": "string",
+      "Skills": "stringSet",
+      "ExpertiseLevels": "map",
+      "Status": "string",
+      "Rating": "number",
+      "TasksCompleted": "number",
+      "AccuracyScore": "number",
+      "ResponseTime": "number",
+      "LastActive": "number",
+      "WalletAddress": "string",
+      "CreatedAt": "number",
+      "UpdatedAt": "number"
+    },
+    "WorkerSkill": {
+      "PK": "WORKER#<workerId>",
+      "SK": "SKILL#<skillId>",
+      "GSI1PK": "SKILL#<skillId>",
+      "GSI1SK": "<expertiseLevel>",
+      "ExpertiseLevel": "number",
+      "Endorsements": "number",
+      "LastUsed": "number"
+    },
+    "WorkerPerformance": {
+      "PK": "WORKER#<workerId>",
+      "SK": "PERFORMANCE#<taskType>",
+      "GSI2PK": "TASKTYPE#<taskType>",
+      "GSI2SK": "<accuracyScore>",
+      "AccuracyScore": "number",
+      "ResponseTime": "number",
+      "CompletionRate": "number",
+      "TasksCompleted": "number",
+      "AverageConfidence": "number",
+      "UpdatedAt": "number"
+    }
+  }
+} 

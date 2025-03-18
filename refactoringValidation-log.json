@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-03-18T04:45:10.737Z",
+  "testsResult": {
+    "success": false,
+    "error": "Command failed: npm run test:all\nsh: jest: command not found\n",
+    "output": "\n> mindburn-aletheia@0.1.0 test:all\n> pnpm test:unit && pnpm test:integration && pnpm test:e2e\n\n WARN  The \"workspaces\" field in package.json is not supported by pnpm. Create a \"pnpm-workspace.yaml\" file instead.\n\n> mindburn-aletheia@0.1.0 test:unit /Users/ivanpeychev/saas/aletheia.mindburn.org\n> jest --selectProjects unit --coverage\n\n ELIFECYCLE  Command failed.\n WARN   Local package.json exists, but node_modules missing, did you mean to install?\n",
+    "stderr": "sh: jest: command not found\n"
+  },
+  "lintResult": {
+    "success": false,
+    "error": "Command failed: npm run lint\n WARNING  No locally installed `turbo` found. Using version: 2.3.1.\nturbo 2.3.1\n\n  x found `pipeline` field instead of `tasks`\n    ,-[turbo.json:3:1]\n  3 |       \"globalDependencies\": [\"**/.env.*local\"],\n  4 | ,->   \"pipeline\": {\n  5 | |       \"build\": {\n  6 | |         \"dependsOn\": [\"^build\"],\n  7 | |         \"outputs\": [\"dist/**\", \".next/**\", \"build/**\"]\n  8 | |       },\n  9 | |       \"lint\": {\n 10 | |         \"outputs\": []\n 11 | |       },\n 12 | |       \"dev\": {\n 13 | |         \"cache\": false,\n 14 | |         \"persistent\": true\n 15 | |       },\n 16 | |       \"test\": {\n 17 | |         \"dependsOn\": [\"build\"],\n 18 | |         \"inputs\": [\"src/**/*.tsx\", \"src/**/*.ts\", \"test/**/*.ts\", \"test/**/*.tsx\"]\n 19 | |       },\n 20 | |       \"clean\": {\n 21 | |         \"cache\": false\n 22 | |       },\n 23 | |       \"deploy\": {\n 24 | |         \"dependsOn\": [\"build\", \"test\", \"lint\"],\n 25 | |         \"outputs\": []\n 26 | |       }\n 27 | |->   }\n    : `---- rename `pipeline` field to `tasks`\n 28 |     }\n    `----\n  help: changed in 2.0: `pipeline` has been renamed to `tasks`\n\n",
+    "output": "\n> mindburn-aletheia@0.1.0 lint\n> turbo run lint\n\n",
+    "stderr": " WARNING  No locally installed `turbo` found. Using version: 2.3.1.\nturbo 2.3.1\n\n  x found `pipeline` field instead of `tasks`\n    ,-[turbo.json:3:1]\n  3 |       \"globalDependencies\": [\"**/.env.*local\"],\n  4 | ,->   \"pipeline\": {\n  5 | |       \"build\": {\n  6 | |         \"dependsOn\": [\"^build\"],\n  7 | |         \"outputs\": [\"dist/**\", \".next/**\", \"build/**\"]\n  8 | |       },\n  9 | |       \"lint\": {\n 10 | |         \"outputs\": []\n 11 | |       },\n 12 | |       \"dev\": {\n 13 | |         \"cache\": false,\n 14 | |         \"persistent\": true\n 15 | |       },\n 16 | |       \"test\": {\n 17 | |         \"dependsOn\": [\"build\"],\n 18 | |         \"inputs\": [\"src/**/*.tsx\", \"src/**/*.ts\", \"test/**/*.ts\", \"test/**/*.tsx\"]\n 19 | |       },\n 20 | |       \"clean\": {\n 21 | |         \"cache\": false\n 22 | |       },\n 23 | |       \"deploy\": {\n 24 | |         \"dependsOn\": [\"build\", \"test\", \"lint\"],\n 25 | |         \"outputs\": []\n 26 | |       }\n 27 | |->   }\n    : `---- rename `pipeline` field to `tasks`\n 28 |     }\n    `----\n  help: changed in 2.0: `pipeline` has been renamed to `tasks`\n\n"
+  },
+  "buildResult": {
+    "success": false,
+    "error": "Command failed: npm run build\n WARNING  No locally installed `turbo` found. Using version: 2.3.1.\nturbo 2.3.1\n\n  x found `pipeline` field instead of `tasks`\n    ,-[turbo.json:3:1]\n  3 |       \"globalDependencies\": [\"**/.env.*local\"],\n  4 | ,->   \"pipeline\": {\n  5 | |       \"build\": {\n  6 | |         \"dependsOn\": [\"^build\"],\n  7 | |         \"outputs\": [\"dist/**\", \".next/**\", \"build/**\"]\n  8 | |       },\n  9 | |       \"lint\": {\n 10 | |         \"outputs\": []\n 11 | |       },\n 12 | |       \"dev\": {\n 13 | |         \"cache\": false,\n 14 | |         \"persistent\": true\n 15 | |       },\n 16 | |       \"test\": {\n 17 | |         \"dependsOn\": [\"build\"],\n 18 | |         \"inputs\": [\"src/**/*.tsx\", \"src/**/*.ts\", \"test/**/*.ts\", \"test/**/*.tsx\"]\n 19 | |       },\n 20 | |       \"clean\": {\n 21 | |         \"cache\": false\n 22 | |       },\n 23 | |       \"deploy\": {\n 24 | |         \"dependsOn\": [\"build\", \"test\", \"lint\"],\n 25 | |         \"outputs\": []\n 26 | |       }\n 27 | |->   }\n    : `---- rename `pipeline` field to `tasks`\n 28 |     }\n    `----\n  help: changed in 2.0: `pipeline` has been renamed to `tasks`\n\n",
+    "output": "\n> mindburn-aletheia@0.1.0 build\n> turbo run build\n\n",
+    "stderr": " WARNING  No locally installed `turbo` found. Using version: 2.3.1.\nturbo 2.3.1\n\n  x found `pipeline` field instead of `tasks`\n    ,-[turbo.json:3:1]\n  3 |       \"globalDependencies\": [\"**/.env.*local\"],\n  4 | ,->   \"pipeline\": {\n  5 | |       \"build\": {\n  6 | |         \"dependsOn\": [\"^build\"],\n  7 | |         \"outputs\": [\"dist/**\", \".next/**\", \"build/**\"]\n  8 | |       },\n  9 | |       \"lint\": {\n 10 | |         \"outputs\": []\n 11 | |       },\n 12 | |       \"dev\": {\n 13 | |         \"cache\": false,\n 14 | |         \"persistent\": true\n 15 | |       },\n 16 | |       \"test\": {\n 17 | |         \"dependsOn\": [\"build\"],\n 18 | |         \"inputs\": [\"src/**/*.tsx\", \"src/**/*.ts\", \"test/**/*.ts\", \"test/**/*.tsx\"]\n 19 | |       },\n 20 | |       \"clean\": {\n 21 | |         \"cache\": false\n 22 | |       },\n 23 | |       \"deploy\": {\n 24 | |         \"dependsOn\": [\"build\", \"test\", \"lint\"],\n 25 | |         \"outputs\": []\n 26 | |       }\n 27 | |->   }\n    : `---- rename `pipeline` field to `tasks`\n 28 |     }\n    `----\n  help: changed in 2.0: `pipeline` has been renamed to `tasks`\n\n"
+  },
+  "importErrors": [],
+  "packageProblems": [
+    "Missing package.json in core",
+    "Missing src/index.ts in core",
+    "Package payment-system has incorrect main field: undefined",
+    "Missing src/index.ts in token-economy",
+    "Missing src/index.ts in ton-contracts",
+    "Package worker-bot has incorrect main field: undefined",
+    "Package worker-interface has incorrect name format: @aletheia/worker-interface",
+    "Missing src/index.ts in worker-webapp",
+    "Package worker-webapp has incorrect main field: undefined"
+  ]
+}

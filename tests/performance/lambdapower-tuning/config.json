@@ -1,0 +1,17 @@
+{
+  "lambdaARN": "{{ LAMBDA_ARN }}",
+  "powerValues": [128, 256, 512, 1024, 1536, 1792, 2048],
+  "num": 50,
+  "payload": {
+    "taskType": "text_verification",
+    "content": "Sample content for power tuning test",
+    "complexity": "medium"
+  },
+  "strategy": "cost",
+  "autoOptimize": true,
+  "autoOptimizeAlias": "production",
+  "visualizationType": "graph",
+  "parallelInvocation": true,
+  "outputCSV": true,
+  "statsFileName": "power-tuning-stats.json"
+} 

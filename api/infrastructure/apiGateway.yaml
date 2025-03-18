@@ -1,0 +1,123 @@
+Resources:
+  ApiGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: mindburn-api
+      Description: Mindburn Aletheia API Gateway
+      EndpointConfiguration:
+        Types: [REGIONAL]
+      MinimumCompressionSize: 1024
+      
+  ApiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: mindburn-usage-plan
+      Description: Rate limits and quotas for API access
+      ApiStages:
+        - ApiId: !Ref ApiGatewayRestApi
+          Stage: prod
+      Throttle:
+        BurstLimit: 1000
+        RateLimit: 500
+      Quota:
+        Limit: 1000000
+        Period: MONTH
+        
+  ApiGatewayCacheSettings:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: prod
+      RestApiId: !Ref ApiGatewayRestApi
+      CacheClusterEnabled: true
+      CacheClusterSize: '0.5'
+      MethodSettings:
+        - ResourcePath: /*
+          HttpMethod: '*'
+          CachingEnabled: true
+          CacheTtlInSeconds: 300
+          ThrottlingBurstLimit: 1000
+          ThrottlingRateLimit: 500
+          
+  ApiGatewayWAF:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: mindburn-api-waf
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: RateLimit
+          Priority: 1
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+            
+  ApiGatewayCloudWatch:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+      
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        
+  ApiGatewayCustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: api.mindburn.org
+      RegionalCertificateArn: !Ref ApiCertificate
+      EndpointConfiguration:
+        Types: [REGIONAL]
+        
+  ApiGatewayBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref ApiGatewayCustomDomain
+      RestApiId: !Ref ApiGatewayRestApi
+      Stage: prod
+      
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: api.mindburn.org
+      ValidationMethod: DNS
+      
+  ApiGatewayRequestValidator:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      Name: mindburn-request-validator
+      RestApiId: !Ref ApiGatewayRestApi
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
+      
+  ApiGatewayModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ContentType: application/json
+      Name: ErrorResponse
+      Schema:
+        type: object
+        properties:
+          code:
+            type: string
+          message:
+            type: string
+          details:
+            type: object 

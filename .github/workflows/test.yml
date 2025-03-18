@@ -1,0 +1,79 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      localstack:
+        image: localstack/localstack
+        env:
+          SERVICES: dynamodb,sns,sqs
+          DEBUG: 1
+        ports:
+          - 4566:4566
+      
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Run linting
+        run: pnpm lint
+      
+      - name: Run unit tests
+        run: pnpm test:unit
+        env:
+          NODE_ENV: test
+      
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          NODE_ENV: test
+          AWS_ENDPOINT: http://localhost:4566
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+      
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          NODE_ENV: test
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
+          TON_TESTNET_ENDPOINT: ${{ secrets.TON_TESTNET_ENDPOINT }}
+      
+      - name: Run security tests
+        run: |
+          pnpm audit
+          pnpm dlx snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+      
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: reports/ 

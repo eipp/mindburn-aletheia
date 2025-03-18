@@ -1,0 +1,256 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia Payment API
+  version: 1.0.0
+  description: API for handling TON blockchain transactions and payments
+
+servers:
+  - url: https://payment-api.mindburn.org/v1
+    description: Production server
+  - url: https://staging-payment-api.mindburn.org/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    internalApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    PaymentTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        type:
+          type: string
+          enum: [TASK_PAYMENT, WORKER_PAYOUT, REFUND]
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          enum: [TON]
+        fromAddress:
+          type: string
+        toAddress:
+          type: string
+        taskId:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        transactionHash:
+          type: string
+        blockchainStatus:
+          type: string
+          enum: [PENDING, CONFIRMED, REJECTED]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    Balance:
+      type: object
+      properties:
+        address:
+          type: string
+        balance:
+          type: number
+          format: double
+        currency:
+          type: string
+          enum: [TON]
+        lastUpdated:
+          type: string
+          format: date-time
+
+paths:
+  /transactions:
+    post:
+      summary: Create a new payment transaction
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - amount
+                - toAddress
+              properties:
+                type:
+                  type: string
+                  enum: [TASK_PAYMENT, WORKER_PAYOUT, REFUND]
+                amount:
+                  type: number
+                  format: double
+                toAddress:
+                  type: string
+                taskId:
+                  type: string
+                  format: uuid
+                workerId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransaction'
+        '400':
+          description: Invalid request
+        '402':
+          description: Insufficient funds
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /transactions/{transactionId}:
+    get:
+      summary: Get transaction details
+      security:
+        - bearerAuth: []
+        - internalApiKey: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransaction'
+        '404':
+          description: Transaction not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /balances/{address}:
+    get:
+      summary: Get wallet balance
+      security:
+        - bearerAuth: []
+        - internalApiKey: []
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '404':
+          description: Address not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /webhooks/ton:
+    post:
+      summary: Webhook endpoint for TON blockchain events
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - data
+              properties:
+                type:
+                  type: string
+                  enum: [TRANSACTION_CONFIRMED, TRANSACTION_FAILED]
+                data:
+                  type: object
+                  properties:
+                    transactionHash:
+                      type: string
+                    blockNumber:
+                      type: integer
+                    status:
+                      type: string
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          description: Invalid webhook payload
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /escrow:
+    post:
+      summary: Create an escrow contract for task payment
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+                - amount
+              properties:
+                taskId:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: double
+                expirationTime:
+                  type: integer
+                  description: Time in seconds until escrow expires
+      responses:
+        '201':
+          description: Escrow contract created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractAddress:
+                    type: string
+                  transactionHash:
+                    type: string
+                  status:
+                    type: string
+        '400':
+          description: Invalid request
+      x-rateLimit:
+        requests: 100
+        period: 60 

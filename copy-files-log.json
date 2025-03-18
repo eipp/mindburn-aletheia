@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-03-18T04:48:17.102Z",
+  "copiedFiles": [
+    {
+      "from": "packages/developer-platform/tsconfig.json",
+      "to": "packages/developerPlatform/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/payment-system/tsconfig.json",
+      "to": "packages/paymentSystem/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/plugin-system/tsconfig.json",
+      "to": "packages/pluginSystem/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/task-management/tsconfig.json",
+      "to": "packages/taskManagement/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/token-economy/tsconfig.json",
+      "to": "packages/tokenEconomy/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/ton-contracts/tsconfig.json",
+      "to": "packages/tonContracts/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/verification-engine/tsconfig.json",
+      "to": "packages/verificationEngine/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/worker-bot/tsconfig.json",
+      "to": "packages/workerBot/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/worker-core/tsconfig.json",
+      "to": "packages/workerCore/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/worker-interface/tsconfig.json",
+      "to": "packages/workerInterface/tsconfig.json",
+      "fixed": false
+    },
+    {
+      "from": "packages/worker-webapp/tsconfig.json",
+      "to": "packages/workerWebapp/tsconfig.json",
+      "fixed": false
+    }
+  ],
+  "createdFiles": [],
+  "fixedFiles": [],
+  "errors": []
+}

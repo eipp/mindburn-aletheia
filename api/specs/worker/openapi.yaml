@@ -1,0 +1,306 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia Worker API
+  version: 1.0.0
+  description: API for managing worker profiles, performance, and task interactions
+
+servers:
+  - url: https://worker-api.mindburn.org/v1
+    description: Production server
+  - url: https://staging-worker-api.mindburn.org/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WorkerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        telegramId:
+          type: string
+        walletAddress:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED]
+        skills:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+        timezone:
+          type: string
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        taskTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastActive:
+          type: string
+          format: date-time
+
+    WorkerStats:
+      type: object
+      properties:
+        workerId:
+          type: string
+          format: uuid
+        tasksCompleted:
+          type: integer
+        accuracyRate:
+          type: number
+        averageResponseTime:
+          type: number
+        totalEarnings:
+          type: number
+        reputationScore:
+          type: number
+        qualityScore:
+          type: number
+        period:
+          type: string
+          enum: [DAILY, WEEKLY, MONTHLY, ALL_TIME]
+
+    WorkerPreferences:
+      type: object
+      properties:
+        workerId:
+          type: string
+          format: uuid
+        maxDailyTasks:
+          type: integer
+        preferredTaskTypes:
+          type: array
+          items:
+            type: string
+        availableHours:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+              startTime:
+                type: string
+                format: time
+              endTime:
+                type: string
+                format: time
+        minPaymentPerTask:
+          type: number
+        notifications:
+          type: object
+          properties:
+            telegram:
+              type: boolean
+            email:
+              type: boolean
+
+paths:
+  /profile:
+    get:
+      summary: Get worker profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Worker profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+    put:
+      summary: Update worker profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerProfile'
+      responses:
+        '200':
+          description: Profile updated successfully
+        '400':
+          description: Invalid request
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+  /stats:
+    get:
+      summary: Get worker statistics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [DAILY, WEEKLY, MONTHLY, ALL_TIME]
+      responses:
+        '200':
+          description: Worker statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerStats'
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+  /preferences:
+    get:
+      summary: Get worker preferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Worker preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerPreferences'
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+    put:
+      summary: Update worker preferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerPreferences'
+      responses:
+        '200':
+          description: Preferences updated successfully
+        '400':
+          description: Invalid request
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+  /availability:
+    post:
+      summary: Update worker availability status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [AVAILABLE, BUSY, OFFLINE]
+                until:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Availability updated successfully
+        '400':
+          description: Invalid request
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+  /earnings:
+    get:
+      summary: Get worker earnings history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Earnings history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        taskId:
+                          type: string
+                          format: uuid
+                        amount:
+                          type: number
+                        currency:
+                          type: string
+                        timestamp:
+                          type: string
+                          format: date-time
+                        status:
+                          type: string
+                          enum: [PENDING, COMPLETED, FAILED]
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+                      current:
+                        type: integer
+      x-rateLimit:
+        requests: 100
+        period: 60 

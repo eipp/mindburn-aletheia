@@ -1,0 +1,79 @@
+;; MindBurn Utility Token (MBU)
+;; SPDX-License-Identifier: MIT
+#include "stdlib.fc";
+#include "tokens/ft.fc";
+
+const int MIN_STORAGE_FEE = 10000000; ;; 0.01 TON
+const int DECIMALS = 9;
+const int MAX_SUPPLY = 1000000000; ;; 1 billion tokens
+
+;; Storage variables
+global int total_supply;
+global cell owner_address;
+global cell token_wallet_code;
+
+;; Token data structure
+(int, slice, cell, cell) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_uint(32),  ;; total_supply
+        ds~load_msg_addr(),;; owner_address
+        ds~load_ref(),     ;; token_wallet_code
+        ds~load_ref()      ;; content
+    );
+}
+
+() save_data(int total_supply, slice owner_address, cell token_wallet_code, cell content) impure inline {
+    set_data(begin_cell()
+        .store_uint(total_supply, 32)
+        .store_slice(owner_address)
+        .store_ref(token_wallet_code)
+        .store_ref(content)
+        .end_cell());
+}
+
+;; Minting logic
+() mint(slice to_address, int amount) impure {
+    throw_unless(73, amount > 0);
+    throw_unless(74, total_supply + amount <= MAX_SUPPLY);
+    
+    var wallet_init = calculate_wallet_init(to_address);
+    var msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(to_address)
+        .store_coins(0)
+        .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+        .store_ref(wallet_init);
+    send_raw_message(msg.end_cell(), 64);
+    
+    total_supply += amount;
+    save_data(total_supply, owner_address, token_wallet_code, content);
+}
+
+;; Governance functions
+() propose_governance_action(slice proposer, cell proposal_data) impure {
+    throw_unless(75, equal_slices(proposer, owner_address));
+    ;; Implementation of governance proposal logic
+}
+
+;; Token burning mechanism
+() burn(slice from_address, int amount) impure {
+    throw_unless(76, amount > 0);
+    throw_unless(77, total_supply >= amount);
+    
+    total_supply -= amount;
+    save_data(total_supply, owner_address, token_wallet_code, content);
+}
+
+;; Get methods
+int get_total_supply() method_id {
+    return total_supply;
+}
+
+slice get_owner() method_id {
+    return owner_address;
+}
+
+cell get_wallet_code() method_id {
+    return token_wallet_code;
+} 

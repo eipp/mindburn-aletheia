@@ -2,6 +2,7 @@
 node_modules
 .pnp
 .pnp.js
+pnpm-lock.yaml
 
 # Testing
 coverage
@@ -43,3 +44,27 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts.cursor/
+
+# Analysis and reports
+docs/analysis/
+*-report.json
+tree.txt
+duplication-report.json
+jscpd-output/
+jscpd-report.json
+dependency-graph.json
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.qodo
+.temp*
+.backup/
+refactoring-backup/
+*.bak
+
+# Refactoring-specific
+rename-log.json
+refactor-log.txt
+refactoring-state.json

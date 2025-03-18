@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Mindburn Aletheia API
+  version: '2025.1'
+  description: |
+    API for integrating with Mindburn Aletheia's human-in-the-loop AI verification platform.
+    Enables custom verification methods, webhook integrations, and task management.
+
+servers:
+  - url: https://api.mindburn.org/v1
+    description: Production API
+  - url: https://staging-api.mindburn.org/v1
+    description: Staging environment
+
+security:
+  - ApiKeyAuth: []
+  - OAuth2: ['read', 'write']
+
+paths:
+  /verification-methods:
+    post:
+      summary: Register custom verification method
+      operationId: createVerificationMethod
+      tags: ['Verification']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationMethod'
+      responses:
+        '201':
+          description: Verification method created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationMethodResponse'
+    
+  /webhooks:
+    post:
+      summary: Configure webhook endpoint
+      operationId: createWebhook
+      tags: ['Webhooks']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookConfig'
+      responses:
+        '201':
+          description: Webhook configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+
+  /tasks/types:
+    post:
+      summary: Define custom task type
+      operationId: createTaskType
+      tags: ['Tasks']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskType'
+      responses:
+        '201':
+          description: Task type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTypeResponse'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.mindburn.org/oauth/authorize
+          tokenUrl: https://auth.mindburn.org/oauth/token
+          scopes:
+            read: Read access
+            write: Write access
+
+  schemas:
+    VerificationMethod:
+      type: object
+      required: ['name', 'endpoint', 'inputSchema', 'outputSchema']
+      properties:
+        name:
+          type: string
+          description: Unique identifier for the verification method
+        endpoint:
+          type: string
+          format: uri
+          description: HTTPS endpoint for verification requests
+        inputSchema:
+          type: object
+          description: JSON Schema for verification input
+        outputSchema:
+          type: object
+          description: JSON Schema for verification output
+        timeout:
+          type: integer
+          description: Timeout in seconds
+          default: 30
+
+    WebhookConfig:
+      type: object
+      required: ['url', 'events']
+      properties:
+        url:
+          type: string
+          format: uri
+          description: HTTPS endpoint for webhook delivery
+        events:
+          type: array
+          items:
+            type: string
+            enum: ['task.created', 'verification.completed', 'payment.processed']
+        secret:
+          type: string
+          description: Webhook signing secret
+        retryConfig:
+          type: object
+          properties:
+            maxRetries:
+              type: integer
+              default: 3
+            backoffMultiplier:
+              type: number
+              default: 2.0
+
+    TaskType:
+      type: object
+      required: ['name', 'schema', 'verificationMethod']
+      properties:
+        name:
+          type: string
+          description: Unique identifier for the task type
+        schema:
+          type: object
+          description: JSON Schema for task data
+        verificationMethod:
+          type: string
+          description: Reference to verification method
+        timeout:
+          type: integer
+          description: Task timeout in seconds
+          default: 300
+        reward:
+          type: object
+          properties:
+            amount:
+              type: number
+            currency:
+              type: string
+              enum: ['TON'] 

@@ -1,0 +1,1394 @@
+{
+  "timestamp": "2025-03-18T04:45:10.567Z",
+  "changes": [
+    {
+      "from": ".vscode/launch.json",
+      "to": "Vscode/launch.json"
+    },
+    {
+      "from": "docs/analysis/codebase-analysis.json",
+      "to": "docs/analysis/codebaseAnalysis.json"
+    },
+    {
+      "from": "docs/analysis/codebase-analysis.md",
+      "to": "docs/analysis/codebaseAnalysis.md"
+    },
+    {
+      "from": "docs/analysis/rename-results.json",
+      "to": "docs/analysis/renameResults.json"
+    },
+    {
+      "from": "docs/refactoring/developer-guidelines.md",
+      "to": "docs/refactoring/developerGuidelines.md"
+    },
+    {
+      "from": "docs/refactoring/naming-convention-guide.md",
+      "to": "docs/refactoring/namingConvention-guide.md"
+    },
+    {
+      "from": "docs/refactoring/naming-convention.md",
+      "to": "docs/refactoring/namingConvention.md"
+    },
+    {
+      "from": "docs/refactoring/refactoring-plan.md",
+      "to": "docs/refactoring/refactoringPlan.md"
+    },
+    {
+      "from": "docs/technical-design-1.md",
+      "to": "docs/technicalDesign-1.md"
+    },
+    {
+      "from": "docs/technical-design-10.md",
+      "to": "docs/technicalDesign-10.md"
+    },
+    {
+      "from": "docs/technical-design-2.md",
+      "to": "docs/technicalDesign-2.md"
+    },
+    {
+      "from": "docs/technical-design-3.md",
+      "to": "docs/technicalDesign-3.md"
+    },
+    {
+      "from": "docs/technical-design-4.md",
+      "to": "docs/technicalDesign-4.md"
+    },
+    {
+      "from": "docs/technical-design-5.md",
+      "to": "docs/technicalDesign-5.md"
+    },
+    {
+      "from": "docs/technical-design-6.md",
+      "to": "docs/technicalDesign-6.md"
+    },
+    {
+      "from": "docs/technical-design-7.md",
+      "to": "docs/technicalDesign-7.md"
+    },
+    {
+      "from": "docs/technical-design-8.md",
+      "to": "docs/technicalDesign-8.md"
+    },
+    {
+      "from": "docs/technical-design-9.md",
+      "to": "docs/technicalDesign-9.md"
+    },
+    {
+      "from": "infrastructure/lib/monitoring-stack.ts",
+      "to": "infrastructure/lib/monitoringStack.ts"
+    },
+    {
+      "from": "infrastructure/lib/security-stack.ts",
+      "to": "infrastructure/lib/securityStack.ts"
+    },
+    {
+      "from": "infrastructure/monitoring/performance-dashboard.ts",
+      "to": "infrastructure/monitoring/performanceDashboard.ts"
+    },
+    {
+      "from": "infrastructure/security/auth/mfa-config.ts",
+      "to": "infrastructure/security/auth/mfaconfig.ts"
+    },
+    {
+      "from": "infrastructure/security/encryption/field-encryption.ts",
+      "to": "infrastructure/security/encryption/fieldEncryption.ts"
+    },
+    {
+      "from": "infrastructure/security/iam/policies/lambda-base-policy.json",
+      "to": "infrastructure/security/iam/policies/lambdaBase-policy.json"
+    },
+    {
+      "from": "infrastructure/security/kms/key-policy.json",
+      "to": "infrastructure/security/kms/keyPolicy.json"
+    },
+    {
+      "from": "infrastructure/security/monitoring/security-dashboard.ts",
+      "to": "infrastructure/security/monitoring/securityDashboard.ts"
+    },
+    {
+      "from": "infrastructure/security/runtime/lambda-hardening.ts",
+      "to": "infrastructure/security/runtime/lambdaHardening.ts"
+    },
+    {
+      "from": "infrastructure/security/vpc/vpc-config.ts",
+      "to": "infrastructure/security/vpc/vpcconfig.ts"
+    },
+    {
+      "from": "infrastructure/security/waf/waf-rules.ts",
+      "to": "infrastructure/security/waf/wafRules.ts"
+    },
+    {
+      "from": "infrastructure/src/dashboards/quicksight-dashboards.ts",
+      "to": "infrastructure/src/dashboards/quicksightDashboards.ts"
+    },
+    {
+      "from": "infrastructure/src/stacks/api-gateway-stack.ts",
+      "to": "infrastructure/src/stacks/apiGateway-stack.ts"
+    },
+    {
+      "from": "infrastructure/src/stacks/event-bus-stack.ts",
+      "to": "infrastructure/src/stacks/eventBus-stack.ts"
+    },
+    {
+      "from": "infrastructure/src/stacks/main-stack.ts",
+      "to": "infrastructure/src/stacks/mainStack.ts"
+    },
+    {
+      "from": "infrastructure/src/stacks/websocket-connections-stack.ts",
+      "to": "infrastructure/src/stacks/websocketConnections-stack.ts"
+    },
+    {
+      "from": "jscpd-output/jscpd-report.json",
+      "to": "jscpdOutput/jscpd-report.json"
+    },
+    {
+      "from": "packages/developer-platform/README.md",
+      "to": "packages/developerPlatform/README.md"
+    },
+    {
+      "from": "packages/developer-platform/package.json",
+      "to": "packages/developerPlatform/package.json"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/App.tsx",
+      "to": "Packages/developer-platform/src/dashboard/App.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Analytics.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Analytics.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Dashboard.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Dashboard.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Layout.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Layout.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Login.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Login.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/PrivateRoute.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/PrivateRoute.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Register.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Register.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Settings.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Settings.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Tasks.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Tasks.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/Webhooks.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/Webhooks.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Analytics.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Analytics.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Dashboard.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Dashboard.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Layout.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Layout.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Login.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Login.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/PrivateRoute.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/PrivateRoute.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Register.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Register.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Settings.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Settings.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Tasks.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Tasks.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/components/__tests__/Webhooks.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/components/__tests__/Webhooks.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/context/__tests__/AuthContext.test.tsx",
+      "to": "Packages/developer-platform/src/dashboard/context/__tests__/AuthContext.test.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/contexts/AuthContext.tsx",
+      "to": "Packages/developer-platform/src/dashboard/contexts/AuthContext.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/dashboard/theme.ts",
+      "to": "packages/developerPlatform/src/dashboard/theme.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/handlers/analytics.ts",
+      "to": "packages/developerPlatform/src/handlers/analytics.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/handlers/auth.ts",
+      "to": "packages/developerPlatform/src/handlers/auth.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/handlers/task.ts",
+      "to": "packages/developerPlatform/src/handlers/task.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/handlers/webhook.ts",
+      "to": "packages/developerPlatform/src/handlers/webhook.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/index.ts",
+      "to": "packages/developerPlatform/src/index.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/middleware/auth.ts",
+      "to": "packages/developerPlatform/src/middleware/auth.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/middleware/rateLimit.ts",
+      "to": "packages/developerPlatform/src/middleware/rateLimit.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/services/analytics.service.ts",
+      "to": "packages/developerPlatform/src/services/analytics.service.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/services/auth.service.ts",
+      "to": "packages/developerPlatform/src/services/auth.service.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/services/task.service.ts",
+      "to": "packages/developerPlatform/src/services/task.service.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/services/webhook.service.ts",
+      "to": "packages/developerPlatform/src/services/webhook.service.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/test/setup.ts",
+      "to": "packages/developerPlatform/src/test/setup.ts"
+    },
+    {
+      "from": "packages/developer-platform/src/test/utils.tsx",
+      "to": "Packages/developer-platform/src/test/utils.tsx"
+    },
+    {
+      "from": "packages/developer-platform/src/types/api.ts",
+      "to": "packages/developerPlatform/src/types/api.ts"
+    },
+    {
+      "from": "packages/payment-system/README.md",
+      "to": "packages/paymentSystem/README.md"
+    },
+    {
+      "from": "packages/payment-system/docs/api.md",
+      "to": "packages/paymentSystem/docs/api.md"
+    },
+    {
+      "from": "packages/payment-system/infrastructure/payment-batches-table.ts",
+      "to": "packages/paymentSystem/infrastructure/payment-batches-table.ts"
+    },
+    {
+      "from": "packages/payment-system/infrastructure/payment-dashboard.ts",
+      "to": "packages/paymentSystem/infrastructure/payment-dashboard.ts"
+    },
+    {
+      "from": "packages/payment-system/infrastructure/payment-processor-stack.ts",
+      "to": "packages/paymentSystem/infrastructure/payment-processor-stack.ts"
+    },
+    {
+      "from": "packages/payment-system/package.json",
+      "to": "packages/paymentSystem/package.json"
+    },
+    {
+      "from": "packages/payment-system/src/config.ts",
+      "to": "packages/paymentsystem/src/config.ts"
+    },
+    {
+      "from": "packages/payment-system/src/errors.ts",
+      "to": "packages/paymentSystem/src/errors.ts"
+    },
+    {
+      "from": "packages/payment-system/src/handlers/process-payment-batches.ts",
+      "to": "packages/paymentSystem/src/handlers/process-payment-batches.ts"
+    },
+    {
+      "from": "packages/payment-system/src/index.ts",
+      "to": "packages/paymentSystem/src/index.ts"
+    },
+    {
+      "from": "packages/payment-system/src/models/payment-batch.ts",
+      "to": "packages/paymentSystem/src/models/payment-batch.ts"
+    },
+    {
+      "from": "packages/payment-system/src/services/payment-processor.ts",
+      "to": "packages/paymentSystem/src/services/payment-processor.ts"
+    },
+    {
+      "from": "packages/payment-system/src/services/payment.ts",
+      "to": "packages/paymentSystem/src/services/payment.ts"
+    },
+    {
+      "from": "packages/payment-system/src/services/ton-integration.ts",
+      "to": "packages/paymentSystem/src/services/ton-integration.ts"
+    },
+    {
+      "from": "packages/payment-system/src/types.ts",
+      "to": "packages/paymentSystem/src/types.ts"
+    },
+    {
+      "from": "packages/plugin-system/README.md",
+      "to": "packages/pluginSystem/README.md"
+    },
+    {
+      "from": "packages/plugin-system/package.json",
+      "to": "packages/pluginSystem/package.json"
+    },
+    {
+      "from": "packages/plugin-system/src/analytics/PluginAnalytics.ts",
+      "to": "packages/pluginSystem/src/analytics/PluginAnalytics.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/core/PluginManager.ts",
+      "to": "packages/pluginSystem/src/core/PluginManager.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/core/PluginValidator.ts",
+      "to": "packages/pluginSystem/src/core/PluginValidator.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/core/types.ts",
+      "to": "packages/pluginSystem/src/core/types.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/errors/PluginError.ts",
+      "to": "packages/pluginSystem/src/errors/PluginError.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/index.ts",
+      "to": "packages/pluginSystem/src/index.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/marketplace/MarketplaceAPI.ts",
+      "to": "packages/pluginSystem/src/marketplace/MarketplaceAPI.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/sandbox/SandboxExecutor.ts",
+      "to": "packages/pluginSystem/src/sandbox/SandboxExecutor.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/sandbox/worker.js",
+      "to": "packages/pluginSystem/src/sandbox/worker.js"
+    },
+    {
+      "from": "packages/plugin-system/src/sdk/PluginSDK.ts",
+      "to": "packages/pluginSystem/src/sdk/PluginSDK.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/testing/PluginTester.ts",
+      "to": "packages/pluginSystem/src/testing/PluginTester.ts"
+    },
+    {
+      "from": "packages/plugin-system/src/testing/setup.ts",
+      "to": "packages/pluginSystem/src/testing/setup.ts"
+    },
+    {
+      "from": "packages/task-management/README.md",
+      "to": "packages/taskManagement/README.md"
+    },
+    {
+      "from": "packages/task-management/package.json",
+      "to": "packages/taskManagement/package.json"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskAssignmentHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskAssignmentHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskCancellationHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskCancellationHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskCompletionHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskCompletionHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskCreationHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskCreationHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskDistributor.ts",
+      "to": "packages/taskManagement/src/handlers/taskDistributor.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskExpirationHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskExpirationHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskNotificationHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskNotificationHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskStatusHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskStatusHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/handlers/taskSubmissionHandler.ts",
+      "to": "packages/taskManagement/src/handlers/taskSubmissionHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/index.ts",
+      "to": "packages/taskManagement/src/index.ts"
+    },
+    {
+      "from": "packages/task-management/src/services/taskDistributor.ts",
+      "to": "packages/taskManagement/src/services/taskDistributor.ts"
+    },
+    {
+      "from": "packages/task-management/src/services/workerMatcher.ts",
+      "to": "packages/taskManagement/src/services/workerMatcher.ts"
+    },
+    {
+      "from": "packages/task-management/src/types/distributor.ts",
+      "to": "packages/taskManagement/src/types/distributor.ts"
+    },
+    {
+      "from": "packages/task-management/src/types.ts",
+      "to": "packages/taskManagement/src/types.ts"
+    },
+    {
+      "from": "packages/task-management/src/utils/validation.ts",
+      "to": "packages/taskManagement/src/utils/validation.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/base.ts",
+      "to": "packages/taskManagement/src/workflows/functions/base.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/completionNotifier.ts",
+      "to": "packages/taskManagement/src/workflows/functions/completionNotifier.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/errorHandler.ts",
+      "to": "packages/taskManagement/src/workflows/functions/errorHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/failureHandler.ts",
+      "to": "packages/taskManagement/src/workflows/functions/failureHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/noWorkersHandler.ts",
+      "to": "packages/taskManagement/src/workflows/functions/noWorkersHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/paymentProcessor.ts",
+      "to": "packages/taskManagement/src/workflows/functions/paymentProcessor.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/resultConsolidator.ts",
+      "to": "packages/taskManagement/src/workflows/functions/resultConsolidator.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/taskCompleter.ts",
+      "to": "packages/taskManagement/src/workflows/functions/taskCompleter.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/taskInitializer.ts",
+      "to": "packages/taskManagement/src/workflows/functions/taskInitializer.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/taskStatusChecker.ts",
+      "to": "packages/taskManagement/src/workflows/functions/taskStatusChecker.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/timeoutHandler.ts",
+      "to": "packages/taskManagement/src/workflows/functions/timeoutHandler.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/verificationMonitor.ts",
+      "to": "packages/taskManagement/src/workflows/functions/verificationMonitor.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/workerMatcher.ts",
+      "to": "packages/taskManagement/src/workflows/functions/workerMatcher.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/functions/workerNotifier.ts",
+      "to": "packages/taskManagement/src/workflows/functions/workerNotifier.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/states/verificationWorkflow.ts",
+      "to": "packages/taskManagement/src/workflows/states/verificationWorkflow.ts"
+    },
+    {
+      "from": "packages/task-management/src/workflows/types/workflow.ts",
+      "to": "packages/taskManagement/src/workflows/types/workflow.ts"
+    },
+    {
+      "from": "packages/token-economy/package.json",
+      "to": "packages/tokenEconomy/package.json"
+    },
+    {
+      "from": "packages/token-economy/src/contracts/MindBurnGovernance.ts",
+      "to": "packages/tokenEconomy/src/contracts/MindBurnGovernance.ts"
+    },
+    {
+      "from": "packages/token-economy/src/contracts/MindBurnReputation.ts",
+      "to": "packages/tokenEconomy/src/contracts/MindBurnReputation.ts"
+    },
+    {
+      "from": "packages/token-economy/src/contracts/MindBurnToken.ts",
+      "to": "packages/tokenEconomy/src/contracts/MindBurnToken.ts"
+    },
+    {
+      "from": "packages/token-economy/src/integration/VerificationRewards.ts",
+      "to": "packages/tokenEconomy/src/integration/VerificationRewards.ts"
+    },
+    {
+      "from": "packages/token-economy/src/scripts/deploy.ts",
+      "to": "packages/tokenEconomy/src/scripts/deploy.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/config.ts",
+      "to": "packages/tokeneconomy/src/tests/config.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/globalSetup.ts",
+      "to": "packages/tokenEconomy/src/tests/globalSetup.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/globalTeardown.ts",
+      "to": "packages/tokenEconomy/src/tests/globalTeardown.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/helpers.ts",
+      "to": "packages/tokenEconomy/src/tests/helpers.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/setup.ts",
+      "to": "packages/tokenEconomy/src/tests/setup.ts"
+    },
+    {
+      "from": "packages/token-economy/src/tests/types.d.ts",
+      "to": "packages/tokenEconomy/src/tests/types.d.ts"
+    },
+    {
+      "from": "packages/ton-contracts/README.md",
+      "to": "packages/tonContracts/README.md"
+    },
+    {
+      "from": "packages/ton-contracts/docs/API.md",
+      "to": "packages/tonContracts/docs/API.md"
+    },
+    {
+      "from": "packages/ton-contracts/docs/MindBurnPayments.md",
+      "to": "packages/tonContracts/docs/MindBurnPayments.md"
+    },
+    {
+      "from": "packages/ton-contracts/package.json",
+      "to": "packages/tonContracts/package.json"
+    },
+    {
+      "from": "packages/ton-contracts/scripts/benchmark.ts",
+      "to": "packages/tonContracts/scripts/benchmark.ts"
+    },
+    {
+      "from": "packages/ton-contracts/scripts/build.ts",
+      "to": "packages/tonContracts/scripts/build.ts"
+    },
+    {
+      "from": "packages/ton-contracts/scripts/deploy.ts",
+      "to": "packages/tonContracts/scripts/deploy.ts"
+    },
+    {
+      "from": "packages/ton-contracts/scripts/example.ts",
+      "to": "packages/tonContracts/scripts/example.ts"
+    },
+    {
+      "from": "packages/ton-contracts/src/tonConnect.ts",
+      "to": "packages/tonContracts/src/tonConnect.ts"
+    },
+    {
+      "from": "packages/ton-contracts/wrappers/MindBurnPayments.ts",
+      "to": "packages/tonContracts/wrappers/MindBurnPayments.ts"
+    },
+    {
+      "from": "packages/ton-contracts/wrappers/UtilityToken.ts",
+      "to": "packages/tonContracts/wrappers/UtilityToken.ts"
+    },
+    {
+      "from": "packages/ton-contracts/wrappers/WorkerReputation.ts",
+      "to": "packages/tonContracts/wrappers/WorkerReputation.ts"
+    },
+    {
+      "from": "packages/ton-contracts/wrappers/WorkerReward.ts",
+      "to": "packages/tonContracts/wrappers/WorkerReward.ts"
+    },
+    {
+      "from": "packages/verification-engine/README.md",
+      "to": "packages/verificationEngine/README.md"
+    },
+    {
+      "from": "packages/verification-engine/docs/FRAUD_DETECTOR_MIGRATION.md",
+      "to": "packages/verificationEngine/docs/FRAUD_DETECTOR_MIGRATION.md"
+    },
+    {
+      "from": "packages/verification-engine/package.json",
+      "to": "packages/verificationEngine/package.json"
+    },
+    {
+      "from": "packages/verification-engine/src/__tests__/setup.ts",
+      "to": "packages/verificationEngine/src/__tests__/setup.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/controllers/workerController.ts",
+      "to": "packages/verificationEngine/src/api/controllers/workerController.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/errors/ApiError.ts",
+      "to": "packages/verificationEngine/src/api/errors/ApiError.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/middleware/authenticate.ts",
+      "to": "packages/verificationEngine/src/api/middleware/authenticate.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/middleware/errorHandler.ts",
+      "to": "packages/verificationEngine/src/api/middleware/errorHandler.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/middleware/metricsMiddleware.ts",
+      "to": "packages/verificationEngine/src/api/middleware/metricsMiddleware.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/middleware/validateRequest.ts",
+      "to": "packages/verificationEngine/src/api/middleware/validateRequest.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/api/routes/workerRoutes.ts",
+      "to": "packages/verificationEngine/src/api/routes/workerRoutes.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/backup/backupManager.ts",
+      "to": "packages/verificationEngine/src/backup/backupManager.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/config/index.ts",
+      "to": "packages/verificationEngine/src/config/index.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/errors/index.ts",
+      "to": "packages/verificationEngine/src/errors/index.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/examples/errorHandlingExample.ts",
+      "to": "packages/verificationEngine/src/examples/errorHandlingExample.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/factories/monitoringFactory.ts",
+      "to": "packages/verificationEngine/src/factories/monitoringFactory.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/factories/workerManagementFactory.ts",
+      "to": "packages/verificationEngine/src/factories/workerManagementFactory.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/fraudDetection/FraudDetector.ts",
+      "to": "packages/verificationEngine/src/fraudDetection/FraudDetector.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/fraudDetection/index.ts",
+      "to": "packages/verificationEngine/src/fraudDetection/index.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/fraudDetection/types.ts",
+      "to": "packages/verificationEngine/src/fraudDetection/types.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/index.ts",
+      "to": "packages/verificationEngine/src/index.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/infrastructure/stacks/dashboardStack.ts",
+      "to": "packages/verificationEngine/src/infrastructure/stacks/dashboardStack.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/migrations/20240328000000_create_worker_table.ts",
+      "to": "packages/verificationEngine/src/migrations/20240328000000_create_worker_table.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/migrations/runner.ts",
+      "to": "packages/verificationEngine/src/migrations/runner.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/config/approvalWorkflowConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/config/approvalworkflowconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/config/errorHandlingConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/config/errorhandlingconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/config/modelRegistryConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/config/modelregistryconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/config/monitoringConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/config/monitoringconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/config/versioningConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/config/versioningconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/docs/error-handling.md",
+      "to": "packages/verificationEngine/src/modelManagement/docs/error-handling.md"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/examplePolicies.ts",
+      "to": "packages/verificationEngine/src/modelManagement/examplePolicies.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/factories/createModelRegistry.ts",
+      "to": "packages/verificationEngine/src/modelManagement/factories/createModelRegistry.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/modelGovernance.ts",
+      "to": "packages/verificationEngine/src/modelManagement/modelGovernance.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/modelRegistry.ts",
+      "to": "packages/verificationEngine/src/modelManagement/modelRegistry.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/modelVersioning.ts",
+      "to": "packages/verificationEngine/src/modelManagement/modelVersioning.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/security/authService.ts",
+      "to": "packages/verificationEngine/src/modelManagement/security/authService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/security/iamConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/security/iamconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/security/secureModelAccess.ts",
+      "to": "packages/verificationEngine/src/modelManagement/security/secureModelAccess.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/security/securityConfig.ts",
+      "to": "packages/verificationengine/src/modelmanagement/security/securityconfig.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/services/errorHandler.ts",
+      "to": "packages/verificationEngine/src/modelManagement/services/errorHandler.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/modelManagement/services/modelRegistryWithErrorHandling.ts",
+      "to": "packages/verificationEngine/src/modelManagement/services/modelRegistryWithErrorHandling.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/monitoring/monitoringManager.ts",
+      "to": "packages/verificationEngine/src/monitoring/monitoringManager.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/orchestrator/verificationOrchestrator.ts",
+      "to": "packages/verificationEngine/src/orchestrator/verificationOrchestrator.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/repositories/workerRepository.ts",
+      "to": "packages/verificationEngine/src/repositories/workerRepository.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/assessmentTaskRepository.ts",
+      "to": "packages/verificationEngine/src/services/assessmentTaskRepository.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/auctionFraudDetectionService.ts",
+      "to": "packages/verificationEngine/src/services/auctionFraudDetectionService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/auctionMetricsService.ts",
+      "to": "packages/verificationEngine/src/services/auctionMetricsService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/auctionService.ts",
+      "to": "packages/verificationEngine/src/services/auctionService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/consensusService.ts",
+      "to": "packages/verificationEngine/src/services/consensusService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/fraudDetectionService.ts",
+      "to": "packages/verificationEngine/src/services/fraudDetectionService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/identityVerificationService.ts",
+      "to": "packages/verificationEngine/src/services/identityVerificationService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/notificationService.ts",
+      "to": "packages/verificationEngine/src/services/notificationService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/qualityControlService.ts",
+      "to": "packages/verificationEngine/src/services/qualityControlService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/streamProcessor.ts",
+      "to": "packages/verificationEngine/src/services/streamProcessor.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/taskDistributionService.ts",
+      "to": "packages/verificationEngine/src/services/taskDistributionService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/taskLifecycleService.ts",
+      "to": "packages/verificationEngine/src/services/taskLifecycleService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/taskVerificationStrategies.ts",
+      "to": "packages/verificationEngine/src/services/taskVerificationStrategies.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/tonWalletVerificationService.ts",
+      "to": "packages/verificationEngine/src/services/tonWalletVerificationService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/verificationEngine.ts",
+      "to": "packages/verificationEngine/src/services/verificationEngine.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/verificationOptimizer.ts",
+      "to": "packages/verificationEngine/src/services/verificationOptimizer.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/verificationService.ts",
+      "to": "packages/verificationEngine/src/services/verificationService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerActivityService.ts",
+      "to": "packages/verificationEngine/src/services/workerActivityService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerManagementService.ts",
+      "to": "packages/verificationEngine/src/services/workerManagementService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerMatcherService.ts",
+      "to": "packages/verificationEngine/src/services/workerMatcherService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerOnboardingService.ts",
+      "to": "packages/verificationEngine/src/services/workerOnboardingService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerReputationService.ts",
+      "to": "packages/verificationEngine/src/services/workerReputationService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/services/workerSkillAssessmentService.ts",
+      "to": "packages/verificationEngine/src/services/workerSkillAssessmentService.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/test/setup.ts",
+      "to": "packages/verificationEngine/src/test/setup.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/test/utils.ts",
+      "to": "packages/verificationEngine/src/test/utils.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/types/index.ts",
+      "to": "packages/verificationEngine/src/types/index.ts"
+    },
+    {
+      "from": "packages/verification-engine/src/types.ts",
+      "to": "packages/verificationEngine/src/types.ts"
+    },
+    {
+      "from": "packages/worker-bot/package.json",
+      "to": "packages/workerBot/package.json"
+    },
+    {
+      "from": "packages/worker-bot/src/commands/profile.ts",
+      "to": "packages/workerBot/src/commands/profile.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/commands/start.ts",
+      "to": "packages/workerBot/src/commands/start.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/commands/tasks.ts",
+      "to": "packages/workerBot/src/commands/tasks.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/commands/wallet.ts",
+      "to": "packages/workerBot/src/commands/wallet.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/flows/registration.ts",
+      "to": "packages/workerBot/src/flows/registration.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/flows/training.ts",
+      "to": "packages/workerBot/src/flows/training.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/flows/verification.ts",
+      "to": "packages/workerBot/src/flows/verification.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/flows/wallet.ts",
+      "to": "packages/workerBot/src/flows/wallet.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/index.ts",
+      "to": "packages/workerBot/src/index.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/analytics.ts",
+      "to": "packages/workerBot/src/middlewares/analytics.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/auth.ts",
+      "to": "packages/workerBot/src/middlewares/auth.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/errorHandler.ts",
+      "to": "packages/workerBot/src/middlewares/errorHandler.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/i18n.ts",
+      "to": "packages/workerBot/src/middlewares/i18n.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/logging.ts",
+      "to": "packages/workerBot/src/middlewares/logging.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/middlewares/rateLimiter.ts",
+      "to": "packages/workerBot/src/middlewares/rateLimiter.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/services/bot.ts",
+      "to": "packages/workerBot/src/services/bot.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/services/dynamodb.ts",
+      "to": "packages/workerBot/src/services/dynamodb.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/services/monitoring.ts",
+      "to": "packages/workerBot/src/services/monitoring.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/services/ton.ts",
+      "to": "packages/workerBot/src/services/ton.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/services/verification.ts",
+      "to": "packages/workerBot/src/services/verification.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/types/index.ts",
+      "to": "packages/workerBot/src/types/index.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/types.ts",
+      "to": "packages/workerBot/src/types.ts"
+    },
+    {
+      "from": "packages/worker-bot/src/utils/logger.ts",
+      "to": "packages/workerBot/src/utils/logger.ts"
+    },
+    {
+      "from": "packages/worker-core/README.md",
+      "to": "packages/workerCore/README.md"
+    },
+    {
+      "from": "packages/worker-core/package.json",
+      "to": "packages/workerCore/package.json"
+    },
+    {
+      "from": "packages/worker-core/src/index.ts",
+      "to": "packages/workerCore/src/index.ts"
+    },
+    {
+      "from": "packages/worker-core/src/services/worker.ts",
+      "to": "packages/workerCore/src/services/worker.ts"
+    },
+    {
+      "from": "packages/worker-core/src/types.ts",
+      "to": "packages/workerCore/src/types.ts"
+    },
+    {
+      "from": "packages/worker-interface/README.md",
+      "to": "packages/workerInterface/README.md"
+    },
+    {
+      "from": "packages/worker-interface/package.json",
+      "to": "packages/workerInterface/package.json"
+    },
+    {
+      "from": "packages/worker-interface/src/handlers/commands.ts",
+      "to": "packages/workerInterface/src/handlers/commands.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/index.ts",
+      "to": "packages/workerInterface/src/index.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/middleware/index.ts",
+      "to": "packages/workerInterface/src/middleware/index.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/middleware/security.ts",
+      "to": "packages/workerInterface/src/middleware/security.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/middleware/tracing.ts",
+      "to": "packages/workerInterface/src/middleware/tracing.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/services/aws.ts",
+      "to": "packages/workerInterface/src/services/aws.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/types/index.ts",
+      "to": "packages/workerInterface/src/types/index.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/types/telegrafSessionDynamodb.d.ts",
+      "to": "packages/workerInterface/src/types/telegrafSessionDynamodb.d.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/utils/encryption.ts",
+      "to": "packages/workerInterface/src/utils/encryption.ts"
+    },
+    {
+      "from": "packages/worker-interface/src/utils/logger.ts",
+      "to": "packages/workerInterface/src/utils/logger.ts"
+    },
+    {
+      "from": "packages/worker-webapp/README.md",
+      "to": "packages/workerWebapp/README.md"
+    },
+    {
+      "from": "packages/worker-webapp/package.json",
+      "to": "packages/workerWebapp/package.json"
+    },
+    {
+      "from": "packages/worker-webapp/public/manifest.json",
+      "to": "packages/workerWebapp/public/manifest.json"
+    },
+    {
+      "from": "packages/worker-webapp/public/tonconnect-manifest.json",
+      "to": "packages/workerWebapp/public/tonconnect-manifest.json"
+    },
+    {
+      "from": "packages/worker-webapp/src/App.tsx",
+      "to": "Packages/worker-webapp/src/App.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/BottomNav.tsx",
+      "to": "Packages/worker-webapp/src/components/BottomNav.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/ErrorAlert.tsx",
+      "to": "Packages/worker-webapp/src/components/ErrorAlert.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/ErrorBoundary.tsx",
+      "to": "Packages/worker-webapp/src/components/ErrorBoundary.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/Header.tsx",
+      "to": "Packages/worker-webapp/src/components/Header.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/Layout.tsx",
+      "to": "Packages/worker-webapp/src/components/Layout.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/LoadingScreen.tsx",
+      "to": "Packages/worker-webapp/src/components/LoadingScreen.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/LoadingSpinner.tsx",
+      "to": "Packages/worker-webapp/src/components/LoadingSpinner.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/ProfileCard.tsx",
+      "to": "Packages/worker-webapp/src/components/ProfileCard.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/TaskCard.tsx",
+      "to": "Packages/worker-webapp/src/components/TaskCard.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/TaskDetail.tsx",
+      "to": "Packages/worker-webapp/src/components/TaskDetail.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/TaskList.tsx",
+      "to": "Packages/worker-webapp/src/components/TaskList.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/components/WalletCard.tsx",
+      "to": "Packages/worker-webapp/src/components/WalletCard.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/config/ton.ts",
+      "to": "packages/workerWebapp/src/config/ton.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/contexts/TelegramWebApp.tsx",
+      "to": "Packages/worker-webapp/src/contexts/TelegramWebApp.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/contexts/WorkerContext.tsx",
+      "to": "Packages/worker-webapp/src/contexts/WorkerContext.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/contracts/payment.ts",
+      "to": "packages/workerWebapp/src/contracts/payment.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/hooks/useWorker.ts",
+      "to": "packages/workerWebapp/src/hooks/useWorker.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/main.tsx",
+      "to": "Packages/worker-webapp/src/main.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Dashboard/index.tsx",
+      "to": "Packages/worker-webapp/src/pages/Dashboard/index.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Earnings.tsx",
+      "to": "Packages/worker-webapp/src/pages/Earnings.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Profile/index.tsx",
+      "to": "Packages/worker-webapp/src/pages/Profile/index.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Profile.tsx",
+      "to": "Packages/worker-webapp/src/pages/Profile.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/ProfilePage.tsx",
+      "to": "Packages/worker-webapp/src/pages/ProfilePage.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Settings.tsx",
+      "to": "Packages/worker-webapp/src/pages/Settings.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/TaskDetail.tsx",
+      "to": "Packages/worker-webapp/src/pages/TaskDetail.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/TaskList.tsx",
+      "to": "Packages/worker-webapp/src/pages/TaskList.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/TaskVerification/index.tsx",
+      "to": "Packages/worker-webapp/src/pages/TaskVerification/index.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/TasksPage.tsx",
+      "to": "Packages/worker-webapp/src/pages/TasksPage.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/Wallet/index.tsx",
+      "to": "Packages/worker-webapp/src/pages/Wallet/index.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/pages/WalletPage.tsx",
+      "to": "Packages/worker-webapp/src/pages/WalletPage.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/routes/index.tsx",
+      "to": "Packages/worker-webapp/src/routes/index.tsx"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/api.ts",
+      "to": "packages/workerWebapp/src/services/api.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/payment.ts",
+      "to": "packages/workerWebapp/src/services/payment.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/ton.ts",
+      "to": "packages/workerWebapp/src/services/ton.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/verification.ts",
+      "to": "packages/workerWebapp/src/services/verification.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/wallet.ts",
+      "to": "packages/workerWebapp/src/services/wallet.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/services/websocket.ts",
+      "to": "packages/workerWebapp/src/services/websocket.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/store/api/apiSlice.ts",
+      "to": "packages/workerWebapp/src/store/api/apiSlice.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/store/index.ts",
+      "to": "packages/workerWebapp/src/store/index.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/store/slices/paymentSlice.ts",
+      "to": "packages/workerWebapp/src/store/slices/paymentSlice.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/store/wallet.ts",
+      "to": "packages/workerWebapp/src/store/wallet.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/styles/theme.ts",
+      "to": "packages/workerWebapp/src/styles/theme.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/test/setup.ts",
+      "to": "packages/workerWebapp/src/test/setup.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/theme/index.ts",
+      "to": "packages/workerWebapp/src/theme/index.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/types/api.ts",
+      "to": "packages/workerWebapp/src/types/api.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/types/enums.ts",
+      "to": "packages/workerWebapp/src/types/enums.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/types/index.ts",
+      "to": "packages/workerWebapp/src/types/index.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/types.ts",
+      "to": "packages/workerWebapp/src/types.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/utils/formatters.ts",
+      "to": "packages/workerWebapp/src/utils/formatters.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/utils/logger.ts",
+      "to": "packages/workerWebapp/src/utils/logger.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/utils/telegram.ts",
+      "to": "packages/workerWebapp/src/utils/telegram.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/utils/wallet.ts",
+      "to": "packages/workerWebapp/src/utils/wallet.ts"
+    },
+    {
+      "from": "packages/worker-webapp/src/vite-env.d.ts",
+      "to": "packages/workerWebapp/src/vite-env.d.ts"
+    },
+    {
+      "from": "refactoring-validation-log.json",
+      "to": "refactoringValidation-log.json"
+    },
+    {
+      "from": "rename-log.json",
+      "to": "renameLog.json"
+    },
+    {
+      "from": "scripts/analysis/analyze-duplication.js",
+      "to": "scripts/analysis/analyzeDuplication.js"
+    },
+    {
+      "from": "scripts/deployment/deploy-scaling.ts",
+      "to": "scripts/deployment/deployScaling.ts"
+    },
+    {
+      "from": "scripts/refactoring/analyze-codebase.js",
+      "to": "scripts/refactoring/analyzeCodebase.js"
+    },
+    {
+      "from": "scripts/refactoring/consolidateConfig.js",
+      "to": "scripts/refactoring/consolidateconfig.js"
+    },
+    {
+      "from": "scripts/refactoring/fix-naming-conventions.js",
+      "to": "scripts/refactoring/fixNaming-conventions.js"
+    },
+    {
+      "from": "scripts/refactoring/organize-scripts.js",
+      "to": "scripts/refactoring/organizeScripts.js"
+    },
+    {
+      "from": "scripts/refactoring/refactor-module.js",
+      "to": "scripts/refactoring/refactorModule.js"
+    },
+    {
+      "from": "scripts/refactoring/rename-files.js",
+      "to": "scripts/refactoring/renameFiles.js"
+    },
+    {
+      "from": "scripts/refactoring/verify-refactoring.js",
+      "to": "scripts/refactoring/verifyRefactoring.js"
+    },
+    {
+      "from": "src/config/FraudQualityConfig.ts",
+      "to": "src/config/fraudqualityconfig.ts"
+    },
+    {
+      "from": "src/config/ScalingConfig.ts",
+      "to": "src/config/scalingconfig.ts"
+    },
+    {
+      "from": "src/tests/load-test-functions.ts",
+      "to": "src/tests/loadTest-functions.ts"
+    },
+    {
+      "from": "src/tests/load-test.ts",
+      "to": "src/tests/loadTest.ts"
+    },
+    {
+      "from": "tests/load/scenarios/verification-load.js",
+      "to": "tests/load/scenarios/verificationLoad.js"
+    },
+    {
+      "from": "tests/performance/lambda-power-tuning/config.json",
+      "to": "tests/performance/lambdapower-tuning/config.json"
+    }
+  ],
+  "errors": []
+}

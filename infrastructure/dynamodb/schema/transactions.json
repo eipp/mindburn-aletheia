@@ -1,0 +1,87 @@
+{
+  "TableName": "Transactions",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "N" },
+    { "AttributeName": "TxHash", "AttributeType": "S" },
+    { "AttributeName": "CreatedAt", "AttributeType": "N" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "EntityIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "TxHashIndex",
+      "KeySchema": [
+        { "AttributeName": "TxHash", "KeyType": "HASH" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "TimeIndex",
+      "KeySchema": [
+        { "AttributeName": "PK", "KeyType": "HASH" },
+        { "AttributeName": "CreatedAt", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "TimeToLiveSpecification": {
+    "AttributeName": "TTL",
+    "Enabled": true
+  },
+  "AttributePatterns": {
+    "Transaction": {
+      "PK": "TX#<transactionId>",
+      "SK": "METADATA",
+      "GSI1PK": "<entityType>#<entityId>",
+      "GSI1SK": "<timestamp>",
+      "Type": "string",
+      "Status": "string",
+      "Amount": "number",
+      "Currency": "string",
+      "FromAddress": "string",
+      "ToAddress": "string",
+      "TxHash": "string",
+      "BlockNumber": "number",
+      "NetworkFee": "number",
+      "Metadata": "map",
+      "CreatedAt": "number",
+      "UpdatedAt": "number",
+      "TTL": "number"
+    },
+    "PaymentBatch": {
+      "PK": "BATCH#<batchId>",
+      "SK": "TX#<transactionId>",
+      "GSI1PK": "BATCH#<batchId>",
+      "GSI1SK": "<timestamp>",
+      "Status": "string",
+      "Amount": "number",
+      "WorkerId": "string",
+      "TaskIds": "stringSet",
+      "ProcessedAt": "number"
+    },
+    "TransactionSummary": {
+      "PK": "SUMMARY#<entityType>#<entityId>",
+      "SK": "PERIOD#<yyyy-mm>",
+      "TotalAmount": "number",
+      "TransactionCount": "number",
+      "SuccessCount": "number",
+      "FailureCount": "number",
+      "AverageAmount": "number",
+      "LastUpdated": "number"
+    }
+  }
+} 

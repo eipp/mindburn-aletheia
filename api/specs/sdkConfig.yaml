@@ -1,0 +1,66 @@
+sdkGeneration:
+  languages:
+    - name: typescript
+      version: 5.3
+      features:
+        - typeSafety
+        - asyncAwait
+        - documentation
+      outputDir: ../sdk/typescript
+      
+    - name: python
+      version: '3.12'
+      features:
+        - asyncio
+        - typingHints
+        - documentation
+      outputDir: ../sdk/python
+      
+    - name: go
+      version: '1.22'
+      features:
+        - contextSupport
+        - errorWrapping
+        - documentation
+      outputDir: ../sdk/go
+
+  common:
+    packageName: mindburn-aletheia-sdk
+    version: '2025.1'
+    license: MIT
+    author: Mindburn Labs
+    
+  features:
+    - automaticRetries
+    - rateLimit
+    - logging
+    - metrics
+    - tracing
+    - caching
+    
+  documentation:
+    format: markdown
+    examples: true
+    apiReference: true
+    
+  testing:
+    unitTests: true
+    integrationTests: true
+    mockServer: true
+    
+  security:
+    apiKeyAuth: true
+    oauth2: true
+    
+  networking:
+    http2: true
+    compression: true
+    keepAlive: true
+    timeout: 30s
+    
+  errorHandling:
+    retryableErrors:
+      - 429 # Too Many Requests
+      - 503 # Service Unavailable
+    maxRetries: 3
+    backoffMultiplier: 2.0 

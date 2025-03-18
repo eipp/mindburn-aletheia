@@ -1,0 +1,54 @@
+{
+  "summary": {
+    "analyzedDirs": [
+      "src",
+      "packages/*/src",
+      "api/src"
+    ],
+    "excludedPatterns": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.git/**",
+      "**/.vscode/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/*.test.ts",
+      "**/*.spec.ts"
+    ],
+    "generatedAt": "2025-03-16T15:01:26.714Z"
+  },
+  "potentialDuplicationPatterns": [
+    {
+      "pattern": "Enhanced vs non-enhanced files",
+      "description": "Files with 'Enhanced' or 'Advanced' in the name often duplicate functionality from base versions",
+      "suggestion": "Consolidate into a single implementation with configuration options"
+    },
+    {
+      "pattern": "Utility files across packages",
+      "description": "Common utilities like logging, validation, and formatting may be duplicated across packages",
+      "suggestion": "Move to shared/utils with appropriate exports"
+    },
+    {
+      "pattern": "Cross-package type definitions",
+      "description": "Type definitions may be duplicated across packages",
+      "suggestion": "Centralize in shared/types"
+    }
+  ],
+  "highPriorityActions": [
+    {
+      "action": "Consolidate FraudDetector implementation",
+      "description": "FraudDetector and AdvancedFraudDetector have been consolidated into verification-engine/fraud-detection",
+      "status": "COMPLETED"
+    },
+    {
+      "action": "Centralize logging",
+      "description": "Multiple logger implementations should be consolidated into shared/utils/logging",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "action": "Standardize utility functions",
+      "description": "Move common utilities to shared package",
+      "status": "PENDING"
+    }
+  ]
+}

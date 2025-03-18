@@ -1,0 +1,210 @@
+scalar JSON
+scalar DateTime
+scalar URI
+
+type Query {
+  verificationMethods(
+    first: Int
+    after: String
+    filter: VerificationMethodFilter
+  ): VerificationMethodConnection!
+  
+  tasks(
+    first: Int
+    after: String
+    filter: TaskFilter
+  ): TaskConnection!
+  
+  webhooks(
+    first: Int
+    after: String
+  ): WebhookConnection!
+}
+
+type Mutation {
+  createVerificationMethod(input: CreateVerificationMethodInput!): CreateVerificationMethodPayload!
+  updateVerificationMethod(input: UpdateVerificationMethodInput!): UpdateVerificationMethodPayload!
+  deleteVerificationMethod(input: DeleteVerificationMethodInput!): DeleteVerificationMethodPayload!
+  
+  createWebhook(input: CreateWebhookInput!): CreateWebhookPayload!
+  updateWebhook(input: UpdateWebhookInput!): UpdateWebhookPayload!
+  deleteWebhook(input: DeleteWebhookInput!): DeleteWebhookPayload!
+  
+  createTaskType(input: CreateTaskTypeInput!): CreateTaskTypePayload!
+  updateTaskType(input: UpdateTaskTypeInput!): UpdateTaskTypePayload!
+  deleteTaskType(input: DeleteTaskTypeInput!): DeleteTaskTypePayload!
+}
+
+type Subscription {
+  onTaskCreated: Task!
+  onVerificationCompleted: VerificationResult!
+  onPaymentProcessed: Payment!
+}
+
+type VerificationMethod {
+  id: ID!
+  name: String!
+  endpoint: URI!
+  inputSchema: JSON!
+  outputSchema: JSON!
+  timeout: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Webhook {
+  id: ID!
+  url: URI!
+  events: [String!]!
+  secret: String
+  retryConfig: RetryConfig
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TaskType {
+  id: ID!
+  name: String!
+  schema: JSON!
+  verificationMethod: VerificationMethod!
+  timeout: Int
+  reward: Reward
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type RetryConfig {
+  maxRetries: Int!
+  backoffMultiplier: Float!
+}
+
+type Reward {
+  amount: Float!
+  currency: Currency!
+}
+
+enum Currency {
+  TON
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type VerificationMethodConnection {
+  edges: [VerificationMethodEdge!]!
+  pageInfo: PageInfo!
+}
+
+type VerificationMethodEdge {
+  node: VerificationMethod!
+  cursor: String!
+}
+
+type WebhookConnection {
+  edges: [WebhookEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WebhookEdge {
+  node: Webhook!
+  cursor: String!
+}
+
+type TaskConnection {
+  edges: [TaskEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TaskEdge {
+  node: Task!
+  cursor: String!
+}
+
+input VerificationMethodFilter {
+  name: String
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+input TaskFilter {
+  type: String
+  status: TaskStatus
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+input CreateVerificationMethodInput {
+  name: String!
+  endpoint: URI!
+  inputSchema: JSON!
+  outputSchema: JSON!
+  timeout: Int
+}
+
+input UpdateVerificationMethodInput {
+  id: ID!
+  name: String
+  endpoint: URI
+  inputSchema: JSON
+  outputSchema: JSON
+  timeout: Int
+}
+
+input DeleteVerificationMethodInput {
+  id: ID!
+}
+
+input CreateWebhookInput {
+  url: URI!
+  events: [String!]!
+  secret: String
+  retryConfig: RetryConfigInput
+}
+
+input RetryConfigInput {
+  maxRetries: Int!
+  backoffMultiplier: Float!
+}
+
+input UpdateWebhookInput {
+  id: ID!
+  url: URI
+  events: [String!]
+  secret: String
+  retryConfig: RetryConfigInput
+}
+
+input DeleteWebhookInput {
+  id: ID!
+}
+
+input CreateTaskTypeInput {
+  name: String!
+  schema: JSON!
+  verificationMethodId: ID!
+  timeout: Int
+  reward: RewardInput
+}
+
+input RewardInput {
+  amount: Float!
+  currency: Currency!
+}
+
+input UpdateTaskTypeInput {
+  id: ID!
+  name: String
+  schema: JSON
+  verificationMethodId: ID
+  timeout: Int
+  reward: RewardInput
+} 

@@ -1,0 +1,78 @@
+{
+  "TableName": "Tasks",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "S" },
+    { "AttributeName": "GSI2PK", "AttributeType": "S" },
+    { "AttributeName": "GSI2SK", "AttributeType": "N" },
+    { "AttributeName": "TaskStatus", "AttributeType": "S" },
+    { "AttributeName": "CreatedAt", "AttributeType": "N" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "GSI1",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "GSI2",
+      "KeySchema": [
+        { "AttributeName": "GSI2PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI2SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "StatusCreatedIndex",
+      "KeySchema": [
+        { "AttributeName": "TaskStatus", "KeyType": "HASH" },
+        { "AttributeName": "CreatedAt", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "TimeToLiveSpecification": {
+    "AttributeName": "TTL",
+    "Enabled": true
+  },
+  "AttributePatterns": {
+    "Task": {
+      "PK": "TASK#<taskId>",
+      "SK": "METADATA",
+      "GSI1PK": "COMPANY#<companyId>",
+      "GSI1SK": "TASK#<createdAt>",
+      "GSI2PK": "STATUS#<status>",
+      "GSI2SK": "<priority>",
+      "TaskType": "string",
+      "TaskStatus": "string",
+      "Content": "map",
+      "Priority": "number",
+      "Deadline": "number",
+      "Budget": "number",
+      "RequiredSkills": "stringSet",
+      "MinConfidence": "number",
+      "CreatedAt": "number",
+      "UpdatedAt": "number",
+      "TTL": "number (optional)"
+    },
+    "TaskAssignment": {
+      "PK": "TASK#<taskId>",
+      "SK": "WORKER#<workerId>",
+      "GSI1PK": "WORKER#<workerId>",
+      "GSI1SK": "TASK#<assignedAt>",
+      "AssignedAt": "number",
+      "Status": "string",
+      "Deadline": "number"
+    }
+  }
+} 

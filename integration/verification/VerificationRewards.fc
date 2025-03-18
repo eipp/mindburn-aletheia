@@ -1,0 +1,113 @@
+;; Verification Rewards Integration
+;; SPDX-License-Identifier: MIT
+#include "stdlib.fc";
+
+const int MIN_STAKE = 1000000000; ;; 1000 MBU
+const int MAX_REWARD = 50000000;  ;; 50 MBU
+const int MIN_ACCURACY = 75;      ;; 75% minimum accuracy
+
+;; Storage variables
+global cell worker_stakes;
+global cell verification_stats;
+global cell token_contracts;
+global slice admin_address;
+
+;; Data structures
+(cell, cell, cell, slice) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_ref(),     ;; worker_stakes
+        ds~load_ref(),     ;; verification_stats
+        ds~load_ref(),     ;; token_contracts
+        ds~load_msg_addr() ;; admin_address
+    );
+}
+
+() save_data(cell worker_stakes, cell verification_stats, cell token_contracts, slice admin_address) impure inline {
+    set_data(begin_cell()
+        .store_ref(worker_stakes)
+        .store_ref(verification_stats)
+        .store_ref(token_contracts)
+        .store_slice(admin_address)
+        .end_cell());
+}
+
+;; Stake management
+() stake_tokens(slice worker_address, int amount) impure {
+    throw_unless(200, amount >= MIN_STAKE);
+    
+    cell updated_stakes = update_worker_stake(worker_stakes, worker_address, amount);
+    save_data(updated_stakes, verification_stats, token_contracts, admin_address);
+}
+
+;; Process verification result
+() process_verification(slice worker_address, int task_id, int accuracy_score) impure {
+    throw_unless(201, equal_slices(msg.sender, admin_address));
+    
+    ;; Calculate rewards
+    int base_reward = calculate_base_reward(accuracy_score);
+    int reputation_multiplier = get_reputation_multiplier(worker_address);
+    int stake_multiplier = get_stake_multiplier(worker_address);
+    
+    int total_reward = base_reward * reputation_multiplier * stake_multiplier / 100;
+    
+    ;; Update stats
+    cell updated_stats = update_verification_stats(
+        verification_stats,
+        worker_address,
+        task_id,
+        accuracy_score,
+        total_reward
+    );
+    
+    ;; Distribute rewards
+    if (accuracy_score >= MIN_ACCURACY) {
+        distribute_rewards(worker_address, total_reward);
+        update_reputation(worker_address, accuracy_score);
+    } else {
+        apply_penalty(worker_address, accuracy_score);
+    }
+    
+    save_data(worker_stakes, updated_stats, token_contracts, admin_address);
+}
+
+;; Reward calculation helpers
+int calculate_base_reward(int accuracy_score) inline {
+    if (accuracy_score < MIN_ACCURACY) { return 0; }
+    return (accuracy_score - MIN_ACCURACY) * MAX_REWARD / (100 - MIN_ACCURACY);
+}
+
+int get_reputation_multiplier(slice worker_address) inline {
+    ;; Call reputation contract
+    cell reputation_data = get_worker_reputation(worker_address);
+    return calculate_multiplier_from_reputation(reputation_data);
+}
+
+int get_stake_multiplier(slice worker_address) inline {
+    int stake = get_worker_stake(worker_stakes, worker_address);
+    return calculate_multiplier_from_stake(stake);
+}
+
+;; Penalty handling
+() apply_penalty(slice worker_address, int accuracy_score) impure {
+    int stake = get_worker_stake(worker_stakes, worker_address);
+    int penalty = calculate_penalty(stake, accuracy_score);
+    
+    if (penalty > 0) {
+        cell updated_stakes = reduce_worker_stake(worker_stakes, worker_address, penalty);
+        save_data(updated_stakes, verification_stats, token_contracts, admin_address);
+    }
+}
+
+;; Get methods
+int get_worker_rewards(slice worker_address) method_id {
+    return calculate_pending_rewards(verification_stats, worker_address);
+}
+
+cell get_worker_stats(slice worker_address) method_id {
+    return get_verification_history(verification_stats, worker_address);
+}
+
+int get_current_stake(slice worker_address) method_id {
+    return get_worker_stake(worker_stakes, worker_address);
+} 
