@@ -1,4 +1,5 @@
 import { Logger } from '@mindburn/shared/logger';
+import { RedisCache } from '@mindburn/shared';
 import {
   WorkerProfile,
   TaskType,
@@ -25,6 +26,8 @@ interface ReputationFactors {
 
 export class WorkerReputationService {
   private readonly logger: Logger;
+  private readonly cache: RedisCache | null;
+  private readonly CACHE_TTL = 3600; // Default cache TTL: 1 hour
   private readonly levelThresholds = {
     BEGINNER: 0,
     INTERMEDIATE: 100,
@@ -53,8 +56,34 @@ export class WorkerReputationService {
     DOCUMENT_VERIFICATION: 1.2,
   };
 
-  constructor(logger: Logger) {
+  constructor(logger: Logger, cache: RedisCache | null = null) {
     this.logger = logger.child({ service: 'WorkerReputation' });
+    this.cache = cache;
+  }
+
+  /**
+   * Get a worker profile from cache or fallback function
+   */
+  private async getCachedWorkerProfile(
+    workerId: string, 
+    fallbackFn: () => Promise<WorkerProfile>
+  ): Promise<WorkerProfile> {
+    if (!this.cache) {
+      return fallbackFn();
+    }
+
+    const cacheKey = `worker:profile:${workerId}`;
+    return this.cache.getOrSet(cacheKey, fallbackFn, this.CACHE_TTL);
+  }
+
+  /**
+   * Invalidate worker profile cache
+   */
+  private async invalidateWorkerCache(workerId: string): Promise<void> {
+    if (this.cache) {
+      const cacheKey = `worker:profile:${workerId}`;
+      await this.cache.delete(cacheKey);
+    }
   }
 
   async updateWorkerReputation(
@@ -121,6 +150,9 @@ export class WorkerReputationService {
         newScore: newReputationScore,
         taskType,
       });
+
+      // Invalidate cache for this worker
+      await this.invalidateWorkerCache(worker.workerId);
 
       return updatedWorker;
     } catch (error) {
@@ -234,7 +266,7 @@ export class WorkerReputationService {
     return skillGap <= skillBuffer;
   }
 
-  getWorkerStats(worker: WorkerProfile): {
+  async getWorkerStats(workerId: string, getWorkerFn: () => Promise<WorkerProfile>): Promise<{
     totalTasks: number;
     averageAccuracy: number;
     skillDistribution: Record<TaskType, number>;
@@ -244,7 +276,9 @@ export class WorkerReputationService {
       accuracy: number;
       timestamp: string;
     }>;
-  } {
+  }> {
+    // Get worker profile with caching if available
+    const worker = await this.getCachedWorkerProfile(workerId, getWorkerFn);
     const taskHistory = worker.metadata?.taskHistory || [];
 
     return {
@@ -260,7 +294,11 @@ export class WorkerReputationService {
       accuracy: number;
     }>
   ): number {
-    if (taskHistory.length === 0) return 0;
-    return taskHistory.reduce((sum, task) => sum + task.accuracy, 0) / taskHistory.length;
+    if (taskHistory.length === 0) {
+      return 0;
+    }
+
+    const sum = taskHistory.reduce((acc, task) => acc + task.accuracy, 0);
+    return sum / taskHistory.length;
   }
 }
