@@ -1,0 +1,23 @@
+{
+  "TableName": "aletheia-dev-migrations",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "version", "AttributeType": "S" },
+    { "AttributeName": "status", "AttributeType": "S" },
+    { "AttributeName": "appliedAt", "AttributeType": "N" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "version", "KeyType": "HASH" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "StatusIndex",
+      "KeySchema": [
+        { "AttributeName": "status", "KeyType": "HASH" },
+        { "AttributeName": "appliedAt", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "DeletionProtectionEnabled": true
+} 

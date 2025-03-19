@@ -1,0 +1,8 @@
+{
+  "language": {
+    "changed": "¡Idioma cambiado a Español exitosamente!",
+    "not_supported": "Lo siento, el idioma '${language}' no está soportado. Idiomas disponibles: ${supported}",
+    "select": "Por favor, selecciona tu idioma preferido:",
+    "current": "Tu idioma actual es Español."
+  }
+} 

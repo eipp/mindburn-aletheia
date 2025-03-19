@@ -1,0 +1,63 @@
+;; Standard TON library functions for FunC contracts
+;; This is a simplified version of the standard library with just the essential functions
+
+{- 
+  Basic operations with cells, slices, builders and other core types.
+-}
+
+cell begin_cell() asm "NEWC";
+builder store_uint(builder b, int x, int len) asm(x b len) "STUX";
+builder store_int(builder b, int x, int len) asm(x b len) "STIX";
+builder store_slice(builder b, slice s) asm "STSLICER";
+builder store_dict(builder b, cell dict) asm(b dict) "STDICT";
+builder store_ref(builder b, cell c) asm "STREF";
+cell end_cell(builder b) asm "ENDC";
+
+{-
+  Slice operations
+-}
+
+int preload_uint(slice s, int len) asm(s len) "LDUX";
+int preload_int(slice s, int len) asm(s len) "LDIX";
+(slice, int) load_uint(slice s, int len) asm(s len) "LDUX";
+(slice, int) load_int(slice s, int len) asm(s len) "LDIX";
+(slice, slice) load_ref(slice s) asm "LDREF";
+(slice, cell) load_dict(slice s) asm(s) "LDDICT";
+slice begin_parse(cell c) asm "CTOS";
+forall X -> tuple cons(X head, tuple tail) asm "CONS";
+forall X -> (tuple, X) uncons(tuple list) asm "UNCONS";
+forall X -> (tuple, X) list_next(tuple list) asm "UNCONS";
+forall X -> tuple nil() asm "NIL";
+forall X -> (tuple, ()) list_empty?(tuple list) asm "NULLSWAPIF";
+
+{-
+  Dictionary operations
+-}
+
+cell new_dict() asm "NEWDICT";
+(cell, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTGET" "NULLSWAPIFNOT";
+(slice, int) udict_get_ref?(cell dict, int key_len, int index) asm(index dict key_len) "DICTGETREF" "NULLSWAPIFNOT";
+cell udict_set(cell dict, int key_len, int index, slice value) asm(value index dict key_len) "DICTSET";
+cell udict_set_ref(cell dict, int key_len, int index, cell value) asm(value index dict key_len) "DICTSETREF";
+cell udict_set_ref(cell dict, int key_len, int index, cell value) asm(value index dict key_len) "DICTSETREF";
+(cell, int, slice, int) udict_delete?(cell dict, int key_len, int index) asm(index dict key_len) "DICTDEL";
+(cell, int) idict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTGET" "NULLSWAPIFNOT";
+(cell, int, slice, int) udict_get_next?(cell dict, int key_len, int pivot) asm(pivot dict key_len) "DICTGETNEXT" "NULLSWAPIFNOT";
+
+{-
+  Integer operations
+-}
+
+int min(int x, int y) asm "MIN";
+int max(int x, int y) asm "MAX";
+int now() asm "NOW";
+int null() asm "NULL";
+int equal_slices(slice a, slice b) asm "SDEQ";
+
+{-
+  Exception operations
+-}
+
+() throw(int excno) impure asm "THROW";
+() throw_if(int excno, int cond) impure asm "THROWARGIF";
+() throw_unless(int excno, int cond) impure asm "THROWARGIFNOT"; 

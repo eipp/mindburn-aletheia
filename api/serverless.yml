@@ -1,0 +1,371 @@
+service: mindburn-aletheia-api
+
+frameworkVersion: '>=3.0.0 <4.0.0'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+    DEVELOPERS_TABLE: ${self:custom.tablesPrefix}-developers
+    API_KEYS_TABLE: ${self:custom.tablesPrefix}-api-keys
+    USAGE_TABLE: ${self:custom.tablesPrefix}-usage
+    CONNECTIONS_TABLE: ${self:custom.tablesPrefix}-websocket-connections
+    WEBSOCKET_EVENTS_QUEUE_URL: !Ref WebSocketEventsQueue
+    JWT_SECRET: ${env:JWT_SECRET, 'local-development-jwt-secret-key-for-testing-only'}
+    OAUTH_CLIENTS_TABLE: ${self:custom.tablesPrefix}-oauth-clients
+    AUTH_CODES_TABLE: ${self:custom.tablesPrefix}-auth-codes
+    OAUTH_TOKENS_TABLE: ${self:custom.tablesPrefix}-oauth-tokens
+  
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - !GetAtt DevelopersTable.Arn
+            - !GetAtt ApiKeysTable.Arn
+            - !GetAtt UsageTable.Arn
+            - !GetAtt ConnectionsTable.Arn
+            - !GetAtt OAuthClientsTable.Arn
+            - !GetAtt AuthCodesTable.Arn
+            - !GetAtt OAuthTokensTable.Arn
+            - !Join ["", [!GetAtt ConnectionsTable.Arn, "/index/*"]]
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - !GetAtt WebSocketEventsQueue.Arn
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*"
+
+custom:
+  tablesPrefix: mindburn-${self:provider.stage}
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 100
+    maxConcurrentRequests: 50
+    
+package:
+  individually: true
+  patterns:
+    - "!node_modules/**"
+    - "!esbuild.config.js"
+    - "src/**"
+
+functions:
+  # Developer API endpoints
+  developerRegistration:
+    handler: src/developer/handlers/demo.handler
+    events:
+      - http:
+          path: /developers/register
+          method: post
+          cors: true
+  
+  developerLogin:
+    handler: src/developer/handlers/login.handler
+    events:
+      - http:
+          path: /developers/login
+          method: post
+          cors: true
+  
+  listApiKeys:
+    handler: src/developer/handlers/apiKeys.listApiKeys
+    events:
+      - http:
+          path: /developers/api-keys
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  generateApiKey:
+    handler: src/developer/handlers/apiKeys.generateApiKey
+    events:
+      - http:
+          path: /developers/api-keys
+          method: post
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  revokeApiKey:
+    handler: src/developer/handlers/apiKeys.revokeApiKey
+    events:
+      - http:
+          path: /developers/api-keys/{apiKeyId}
+          method: delete
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  getUsageStats:
+    handler: src/developer/handlers/analytics.getUsageStats
+    events:
+      - http:
+          path: /developers/analytics/usage
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  getBillingUsage:
+    handler: src/developer/handlers/analytics.getBillingUsage
+    events:
+      - http:
+          path: /developers/analytics/billing
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  # OAuth2 endpoints
+  oauthAuthorize:
+    handler: src/developer/handlers/oauth.authorize
+    events:
+      - http:
+          path: /oauth/authorize
+          method: get
+          cors: true
+  
+  oauthToken:
+    handler: src/developer/handlers/oauth.token
+    events:
+      - http:
+          path: /oauth/token
+          method: post
+          cors: true
+  
+  registerOAuthClient:
+    handler: src/developer/handlers/oauth.registerClient
+    events:
+      - http:
+          path: /developers/oauth-clients
+          method: post
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  # JWT Authorizer
+  jwtAuthorizer:
+    handler: src/developer/handlers/auth.jwtAuthorizer
+  
+  # WebSocket handlers
+  websocketHandler:
+    handler: src/websocket/index.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: subscribe
+      - websocket:
+          route: unsubscribe
+      - websocket:
+          route: ping
+  
+  websocketBroadcaster:
+    handler: src/websocket/broadcaster.handler
+    events:
+      - sqs:
+          arn: !GetAtt WebSocketEventsQueue.Arn
+          batchSize: 10
+
+resources:
+  Resources:
+    # DynamoDB Tables
+    DevelopersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-developers
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: developerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DeveloperIdIndex
+            KeySchema:
+              - AttributeName: developerId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    
+    ApiKeysTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-api-keys
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: apiKeyId
+            AttributeType: S
+          - AttributeName: developerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: apiKeyId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DeveloperIdIndex
+            KeySchema:
+              - AttributeName: developerId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    
+    UsageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-usage
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: developerId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: developerId
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+    
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-websocket-connections
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+          - AttributeName: subscriptionType
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: SubscriptionTypeIndex
+            KeySchema:
+              - AttributeName: subscriptionType
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+    
+    OAuthClientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-oauth-clients
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: clientId
+            AttributeType: S
+          - AttributeName: developerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: clientId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DeveloperIdIndex
+            KeySchema:
+              - AttributeName: developerId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    
+    AuthCodesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-auth-codes
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: code
+            AttributeType: S
+        KeySchema:
+          - AttributeName: code
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+    
+    OAuthTokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tablesPrefix}-oauth-tokens
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: refreshToken
+            AttributeType: S
+          - AttributeName: developerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: refreshToken
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DeveloperIdIndex
+            KeySchema:
+              - AttributeName: developerId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+    
+    # SQS Queue for WebSocket events
+    WebSocketEventsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.tablesPrefix}-websocket-events
+        VisibilityTimeout: 60
+        MessageRetentionPeriod: 1209600 # 14 days
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt WebSocketEventsDLQ.Arn
+          maxReceiveCount: 5
+    
+    WebSocketEventsDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.tablesPrefix}-websocket-events-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+    
+    # WebSocket API
+    WebSocketApi:
+      Type: AWS::ApiGatewayV2::Api
+      Properties:
+        Name: mindburn-websocket-api-${self:provider.stage}
+        ProtocolType: WEBSOCKET
+        RouteSelectionExpression: $request.body.action 

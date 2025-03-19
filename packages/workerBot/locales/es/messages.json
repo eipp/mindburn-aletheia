@@ -1,0 +1,190 @@
+{
+  "start": {
+    "greeting": "👋 ¡Bienvenido al Bot de Trabajador de Aletheia! Soy tu asistente para tareas de verificación humana.",
+    "intro": "Puedes ganar criptomoneda TON completando tareas de verificación para sistemas de IA.",
+    "profile_created": "✅ ¡Tu perfil ha sido creado con éxito!",
+    "profile_exists": "¡Bienvenido de nuevo! Tu perfil ya está configurado.",
+    "next_steps": "¿Qué te gustaría hacer a continuación?",
+    "help": "Usa /help para ver todos los comandos disponibles o haz clic en el botón de menú."
+  },
+  "profile": {
+    "title": "👤 Tu Perfil",
+    "stats": "Nivel: ${level} ⭐ | Calificación: ${rating}/5.0 | Tareas: ${tasksCompleted}",
+    "earnings": "Ganancias totales: ${totalEarned} TON",
+    "wallet": "Monedero: ${walletAddress}",
+    "no_wallet": "No hay monedero conectado. Usa /wallet para conectar.",
+    "task_preferences": "Preferencias de tareas:",
+    "update_profile": "Actualizar Perfil",
+    "view_stats": "Ver Estadísticas Detalladas",
+    "preferences": "Actualizar Preferencias"
+  },
+  "wallet": {
+    "not_connected": "💼 Aún no tienes un monedero conectado. Conecta tu monedero TON para recibir pagos por tareas completadas.",
+    "status": "💼 <b>Estado del Monedero</b>\n\nDirección: ${address}\nSaldo: ${balance} TON\nPendiente: ${pending} TON",
+    "last_withdrawal": "Última retirada: ${amount} TON el ${date}\nEstado: ${status}",
+    "min_withdrawal": "Cantidad mínima de retirada: ${min} TON",
+    "connect_success": "✅ ¡Monedero conectado con éxito! Ahora puedes recibir recompensas por tareas completadas.",
+    "withdrawal_initiated": "💸 Retirada de ${amount} TON iniciada. Recibirás una notificación cuando la transacción esté completa.",
+    "insufficient_balance": "⚠️ Saldo insuficiente. Tu saldo actual es ${balance} TON.",
+    "connect_action": "Conectar Monedero",
+    "help_action": "Cómo Conectar",
+    "withdraw_action": "Retirar",
+    "transactions_action": "Historial de Transacciones",
+    "settings_action": "Configuración",
+    "status_pending": "Pendiente",
+    "status_completed": "Completado",
+    "status_failed": "Fallido"
+  },
+  "tasks": {
+    "available": "Tareas Disponibles (${count})",
+    "no_tasks": "No hay tareas disponibles en este momento. ¡Te notificaré cuando lleguen nuevas tareas! 🔔",
+    "no_tasks_available": "No hay tareas disponibles",
+    "task_info": "Tarea #${id} | Recompensa: ${reward} TON | Tiempo estimado: ${time} min",
+    "task_accepted": "✅ ¡Tarea aceptada! Comencemos el proceso de verificación.",
+    "task_expired": "⚠️ Esta tarea ya no está disponible.",
+    "task_completed": "🎉 ¡Buen trabajo! Tarea completada con éxito.",
+    "task_failed": "❌ Tarea fallida. Razón: ${reason}",
+    "task_reward": "Tu recompensa: ${reward} TON",
+    "task_rating": "Por favor, califica tu experiencia con esta tarea:",
+    "time_left": "⏱ Tiempo restante: ${time}",
+    "verification_guide": "Te guiaré a través de cada paso del proceso de verificación.",
+    "start_verification": "▶️ Iniciar Verificación",
+    "status": "Estado",
+    "status_pending": "Pendiente",
+    "status_in_progress": "En Progreso",
+    "status_completed": "Completada",
+    "status_expired": "Expirada",
+    "navigation": {
+      "prev": "⬅️ Anterior",
+      "next": "➡️ Siguiente", 
+      "refresh": "🔄 Actualizar"
+    },
+    "actions": {
+      "accept": "✅ Aceptar Tarea",
+      "skip": "⏩ Omitir",
+      "cancel": "❌ Cancelar"
+    },
+    "types": {
+      "text_verification": "📝 Verificación de Texto",
+      "image_verification": "🖼 Verificación de Imagen",
+      "audio_verification": "🎵 Verificación de Audio",
+      "video_verification": "🎬 Verificación de Video"
+    }
+  },
+  "errors": {
+    "general": "Lo siento, algo salió mal. Por favor, inténtalo de nuevo.",
+    "task_unavailable": "Esta tarea ya no está disponible.",
+    "unauthorized": "Necesitas iniciar el bot primero. Usa el comando /start.",
+    "rate_limited": "Estás haciendo demasiadas solicitudes. Por favor, espera un momento e inténtalo de nuevo.",
+    "timeout": "Operación agotada. Por favor, inténtalo de nuevo."
+  },
+  "help": {
+    "message": "<b>Comandos Disponibles:</b>\n\n/start - Inicializar tu perfil\n/tasks - Explorar tareas disponibles\n/wallet - Gestionar tu monedero TON\n/profile - Ver tu perfil y estadísticas\n/help - Mostrar este mensaje de ayuda",
+    "task_help": "Así es como completar una tarea:\n1. Revisa el contenido cuidadosamente\n2. Proporciona tu verificación\n3. Envía tu respuesta\n4. Recibe recompensas en TON",
+    "wallet_help": "Para conectar tu monedero:\n1. Usa el comando /wallet\n2. Haz clic en 'Conectar Monedero'\n3. Abre el enlace en la app TON Connect\n4. Confirma la conexión"
+  },
+  "verification": {
+    "task_not_found": "Tarea no encontrada o ya no disponible.",
+    "not_eligible": "No cumples los requisitos para esta tarea. Comprueba otras tareas disponibles.",
+    "cancelled": "❌ Verificación cancelada. Puedes elegir otra tarea.",
+    "task_header": "📝 <b>Tarea: ${type}</b>\n\n💰 Recompensa: <b>${reward} TON</b>\n⏱ Tiempo estimado: ${timeEstimate} min\n🔄 Dificultad: ${complexity}",
+    "task_description": "<b>${title}</b>\n\n${description}",
+    "content_caption": "${type}: verifica este contenido",
+    "content_link": "Ver contenido: <a href='${url}'>abrir enlace</a>",
+    "content_error": "No se pudo cargar el contenido. Por favor, intenta abrir el enlace directamente.",
+    "time_limit": "⏳ <b>Límite de tiempo:</b> ${minutes}:${seconds}. Por favor, completa la tarea antes de que se agote el tiempo.",
+    "already_claimed": "Esta tarea ya ha sido reclamada por otro trabajador. Por favor, elige otra tarea.",
+    "options_prompt": "Elige una opción para la tarea <b>${taskType}</b>:",
+    "provide_details": "Has elegido <b>${selected}</b>. Por favor, proporciona detalles adicionales o una explicación de tu decisión:",
+    "confirmation": "📝 <b>Confirmación de respuesta</b>\n\nTarea: ${taskType}\nTu respuesta: <b>${selected}</b>",
+    "additional_details": "<b>Detalles adicionales:</b>\n${details}",
+    "time_spent": "<b>Tiempo empleado:</b> ${minutes} min ${seconds} seg",
+    "select_option": "Por favor, selecciona una de las opciones usando los botones de abajo.",
+    "submission_success": "✅ <b>¡Tarea enviada con éxito!</b>\n\nHas ganado <b>${reward} TON</b>. Los fondos se han añadido a tu saldo.",
+    "submission_error": "❌ Se produjo un error al enviar la tarea. Por favor, inténtalo de nuevo o elige otra tarea.",
+    "start_task": "Comenzar tarea",
+    "cancel_task": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "options": {
+      "safe": "Seguro",
+      "nsfw": "NSFW",
+      "adult": "Adulto",
+      "unsafe": "No seguro",
+      "true": "Verdadero",
+      "false": "Falso",
+      "misleading": "Engañoso",
+      "unverifiable": "No verificable",
+      "not_toxic": "No tóxico",
+      "mildly_toxic": "Ligeramente tóxico",
+      "toxic": "Tóxico",
+      "severely_toxic": "Muy tóxico",
+      "hate_speech": "Discurso de odio",
+      "spam": "Spam",
+      "very_positive": "Muy positivo",
+      "positive": "Positivo",
+      "neutral": "Neutral",
+      "negative": "Negativo",
+      "very_negative": "Muy negativo",
+      "yes": "Sí",
+      "no": "No",
+      "unsure": "No estoy seguro"
+    },
+    "instructions": {
+      "content_moderation": "Examina el contenido y determina si es seguro, NSFW (no seguro para el trabajo), contenido para adultos o no seguro.",
+      "fact_check": "Lee la afirmación y determina si es verdadera, falsa, engañosa o no verificable. Proporciona evidencia para tu decisión.",
+      "toxicity": "Evalúa el contenido por toxicidad, desde no tóxico hasta severamente tóxico o discurso de odio.",
+      "sentiment": "Determina el sentimiento general del contenido, desde muy positivo hasta muy negativo.",
+      "custom": "Completa la tarea según las instrucciones anteriores y elige la respuesta más apropiada.",
+      "default": "Examina el contenido proporcionado y elige la respuesta más apropiada."
+    }
+  },
+  "registration": {
+    "welcome": "👋 <b>¡Bienvenido a Aletheia!</b>\n\nEstamos encantados de que te unas a nuestra comunidad de verificadores. Antes de empezar, vamos a conocerte un poco y revisar los términos de servicio.",
+    "view_terms": "Ver términos",
+    "accept_terms": "Aceptar y continuar",
+    "terms": "<b>Términos de servicio de Aletheia</b>\n\n1. Aceptas verificar el contenido de manera honesta y de buena fe.\n2. Tus pagos se realizarán en criptomoneda TON.\n3. Podemos monitorear la calidad de tu trabajo para garantizar la precisión.\n4. Aceptas no utilizar nuestros servicios para actividades ilegales.\n\nTérminos completos: aletheia.mindburn.org/terms",
+    "task_preferences": "<b>¿Qué tipos de tareas te interesan?</b>\n\nSelecciona todos los que apliquen:",
+    "preference_added": "¡Preferencia añadida!",
+    "preference_removed": "Preferencia eliminada",
+    "no_preferences": "Por favor, selecciona al menos un tipo de tarea",
+    "continue": "Continuar",
+    "language_selection": "<b>Elige tu idioma preferido</b>\n\nEsto nos ayudará a mostrarte tareas en el idioma que prefieras:",
+    "summary": "<b>Resumen de registro</b>\n\nNombre de usuario: ${username}\n\n<b>Tipos de tareas seleccionados:</b>\n• ${preferences}\n\n<b>Idioma:</b> ${language}\n\n¿Es correcto?",
+    "complete": "Completar registro",
+    "back": "Volver",
+    "complete_success": "✅ <b>¡Registro completado!</b>\n\n¡Bienvenido a Aletheia, ${username}! Ahora puedes comenzar el entrenamiento y ganar TON completando tareas de verificación.",
+    "start_training": "Comenzar entrenamiento",
+    "connect_wallet": "Conectar billetera",
+    "cancelled": "❌ Registro cancelado. Usa /start para comenzar de nuevo.",
+    "hint_terms": "Por favor, revisa los términos de servicio y haz clic en 'Aceptar y continuar' para pasar al siguiente paso.",
+    "hint_preferences": "Selecciona los tipos de tareas que te interesan y haz clic en 'Continuar'.",
+    "hint_language": "Elige tu idioma preferido para las tareas.",
+    "hint_completion": "Verifica la información y haz clic en 'Completar registro' para crear tu perfil."
+  },
+  "welcome": {
+    "back": "👋 ¡Bienvenido de nuevo, ${username}!\n\n📊 <b>Tus estadísticas:</b>\nNivel: ${level} ⭐\nTareas completadas: ${tasks}\nGanancias: ${earnings} TON",
+    "new": "👋 <b>¡Bienvenido a Aletheia!</b>\n\nGracias por unirte a nuestra plataforma de verificación de IA. Soy tu asistente personal para completar tareas y ganar TON.",
+    "get_started": "Comenzar",
+    "how_it_works": "<b>Cómo funciona Aletheia:</b>\n\n1️⃣ <b>Explorar tareas</b> - Navega y selecciona tareas para verificar.\n\n2️⃣ <b>Realizar verificaciones</b> - Revisa el contenido y proporciona respuestas precisas.\n\n3️⃣ <b>Ganar TON</b> - Recibe pagos directamente en tu billetera TON.\n\n4️⃣ <b>Subir de nivel</b> - Desbloquea tareas mejor pagadas a medida que subes de nivel.",
+    "faq": "Preguntas frecuentes",
+    "faq_content": "<b>Preguntas frecuentes:</b>\n\n<b>¿Qué es Aletheia?</b>\nUna plataforma que conecta a desarrolladores de IA con verificadores humanos para mejorar los sistemas de IA.\n\n<b>¿Cuánto puedo ganar?</b>\nLos pagos dependen de la complejidad de las tareas, normalmente entre 0.1 y 1 TON por tarea.\n\n<b>¿Con qué frecuencia se realizan los pagos?</b>\nLos pagos son instantáneos después de completar una tarea.\n\n<b>¿Qué necesito para empezar?</b>\nSolo una cuenta de Telegram y una billetera TON."
+  },
+  "menu": {
+    "tasks": "Tareas disponibles",
+    "profile": "Mi perfil",
+    "wallet": "Billetera",
+    "settings": "Configuración",
+    "main": "📊 <b>Menú principal</b>\n\n¡Hola, ${username}!\n\nNivel: ${level} ⭐\nTareas: ${tasks}\nGanancias: ${earnings} TON"
+  },
+  "languages": {
+    "en": "Inglés",
+    "es": "Español",
+    "ru": "Ruso"
+  },
+  "common": {
+    "error": "😔 Ocurrió un error. Por favor, inténtalo de nuevo o contacta con soporte si el problema persiste.",
+    "error_short": "Error. Por favor, inténtalo de nuevo.",
+    "back": "Volver"
+  }
+} 

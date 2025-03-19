@@ -1,65 +1,136 @@
-// Core types
+// Export types
 export * from './types/core';
+export * from './utils/ton';
 
-// TON utilities
-export { ton } from './utils/ton';
-export type {
-  TransactionData,
-  ValidationResult as TONValidationResult,
-  TransactionType,
-  TransactionStatus,
-  Transaction,
-  TonNetworkConfig,
-} from './utils/ton';
-
-// Configuration utilities
+// Export config validators
 export {
   createConfigValidator,
   createEnvironmentTransformer,
   createSecurityValidator,
   createPerformanceValidator,
+  // Schemas
+  baseTaskSchema,
+  verificationTaskSchema,
+  workerTaskSchema,
+  baseVerificationResultSchema,
+  workerVerificationSchema,
+  workerProfileSchema,
+  transactionSchema,
+  paymentResultSchema,
+  // Validation helpers
+  validateTask,
+  validateVerificationTask,
+  validateWorkerTask,
+  validateWorkerProfile,
+  validateTransaction,
+  validatePaymentResult,
 } from './config/validator';
-export type {
-  ValidationResult as ConfigValidationResult,
-  ConfigValidator,
-  ConfigValidatorOptions,
-} from './config/validator';
 
-// Re-export commonly used dependencies to ensure version consistency
-export { Address } from '@ton/core';
-export { BigNumber } from 'bignumber.js';
-
-// Export logging utilities
-export { createLogger } from './utils/logging/logger';
-export type { LogContext } from './utils/logging/logger';
-
-// Export verification service
-export { VerificationService } from './services/verification';
-export type {
-  VerificationOptions,
-  VerificationRequest,
-  VerificationResult,
-} from './services/verification';
-
-// Export fraud detection
-export { FraudDetector } from './utils/fraud-detector';
-export type { FraudCheckOptions, FraudCheckResult } from './utils/fraud-detector';
-
-// Export TON service
-export { TonService, createTonService } from './services/ton';
-export type {
-  ILogger as TonServiceLogger,
-  PaymentContractInterface,
-  NetworkConfig as TonNetworkConfig,
-  TransactionHistoryItem,
+// Export services
+export {
+  createTonService,
+  TonService,
+  type ILogger,
+  type NetworkConfig,
+  type WalletConfig,
+  type PaymentContractInterface,
+  type SignedMessage,
+  type TransactionHistoryItem,
 } from './services/ton';
 
-// Payment types
-export interface PaymentResult {
-  success: boolean;
-  txId?: string;
-  amount?: BigNumber;
-  fee?: BigNumber;
-  status?: 'pending' | 'completed' | 'failed';
-  error?: string;
+export {
+  createDynamoDBService,
+  DynamoDBService,
+} from './services/dynamodb';
+
+export {
+  createRedisCache,
+  RedisCache,
+  type RedisCacheOptions,
+} from './services/redis';
+
+export {
+  createVerificationService,
+  VerificationService,
+  VerificationOutcome,
+  type VerificationAggregationResult,
+  type VerificationOptions,
+} from './services/verification';
+
+// Export logging utilities
+export {
+  createLogger,
+  logger as defaultLogger,
+  LogLevel,
+  type LoggerOptions,
+  type LogContext,
+  type CloudWatchOptions,
+} from './utils/logging/logger';
+
+// Export utility functions
+export { default as utils } from './utils';
+
+// Common factory function to create all services with one call
+export function createServices({
+  region,
+  credentials,
+  tonEndpoint,
+  tonApiKey,
+  tonNetwork = 'mainnet',
+  tablePrefix = '',
+  loggerOptions = {},
+  redisUrl,
+}: {
+  region: string;
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+  tonEndpoint: string;
+  tonApiKey?: string;
+  tonNetwork?: 'mainnet' | 'testnet';
+  tablePrefix?: string;
+  loggerOptions?: Partial<LoggerOptions>;
+  redisUrl?: string;
+}) {
+  // Create logger
+  const logger = createLogger(loggerOptions);
+  
+  // Create TON service
+  const tonService = createTonService(
+    {
+      endpoint: tonEndpoint,
+      apiKey: tonApiKey,
+      network: tonNetwork,
+    },
+    logger
+  );
+  
+  // Create DynamoDB service
+  const dynamoDBService = createDynamoDBService({
+    region,
+    credentials,
+    tablePrefix,
+    logger,
+  });
+  
+  // Create Verification service
+  const verificationService = createVerificationService(
+    dynamoDBService,
+    logger
+  );
+  
+  // Create Redis cache service if URL is provided
+  const redisCache = redisUrl ? createRedisCache({
+    url: redisUrl,
+    logger,
+  }) : null;
+  
+  return {
+    logger,
+    tonService,
+    dynamoDBService,
+    verificationService,
+    redisCache,
+  };
 }

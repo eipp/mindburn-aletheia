@@ -1,0 +1,86 @@
+{
+  "start": {
+    "greeting": "👋 Welcome to Aletheia Worker Bot! I'm your assistant for human verification tasks.",
+    "intro": "You can earn TON cryptocurrency by completing verification tasks for AI systems.",
+    "profile_created": "✅ Your profile has been created successfully!",
+    "profile_exists": "Welcome back! Your profile is already set up.",
+    "next_steps": "What would you like to do next?",
+    "help": "Use /help to see all available commands or click the menu button."
+  },
+  "profile": {
+    "title": "👤 Your Profile",
+    "stats": "Level: ${level} ⭐ | Rating: ${rating}/5.0 | Tasks: ${tasksCompleted}",
+    "earnings": "Total earnings: ${totalEarned} TON",
+    "wallet": "Wallet: ${walletAddress}",
+    "no_wallet": "No wallet connected. Use /wallet to connect.",
+    "task_preferences": "Task preferences:",
+    "update_profile": "Update Profile",
+    "view_stats": "View Detailed Stats",
+    "preferences": "Update Preferences"
+  },
+  "wallet": {
+    "not_connected": "💼 You don't have a wallet connected yet. Connect your TON wallet to receive payments for completed tasks.",
+    "status": "💼 <b>Wallet Status</b>\n\nAddress: ${address}\nBalance: ${balance} TON\nPending: ${pending} TON",
+    "last_withdrawal": "Last withdrawal: ${amount} TON on ${date}\nStatus: ${status}",
+    "min_withdrawal": "Minimum withdrawal amount: ${min} TON",
+    "connect_success": "✅ Wallet connected successfully! You can now receive rewards for completed tasks.",
+    "withdrawal_initiated": "💸 Withdrawal of ${amount} TON initiated. You'll receive a notification when the transaction is complete.",
+    "insufficient_balance": "⚠️ Insufficient balance. Your current balance is ${balance} TON.",
+    "connect_action": "Connect Wallet",
+    "help_action": "How to Connect",
+    "withdraw_action": "Withdraw",
+    "transactions_action": "Transaction History",
+    "settings_action": "Settings",
+    "status_pending": "Pending",
+    "status_completed": "Completed",
+    "status_failed": "Failed"
+  },
+  "tasks": {
+    "available": "Available Tasks (${count})",
+    "no_tasks": "No tasks available at the moment. I'll notify you when new tasks arrive! 🔔",
+    "no_tasks_available": "No tasks available",
+    "task_info": "Task #${id} | Reward: ${reward} TON | Estimated time: ${time} min",
+    "task_accepted": "✅ Task accepted! Let's start the verification process.",
+    "task_expired": "⚠️ This task is no longer available.",
+    "task_completed": "🎉 Great job! Task completed successfully.",
+    "task_failed": "❌ Task failed. Reason: ${reason}",
+    "task_reward": "Your reward: ${reward} TON",
+    "task_rating": "Please rate your experience with this task:",
+    "time_left": "⏱ Time left: ${time}",
+    "verification_guide": "I'll guide you through each step of the verification process.",
+    "start_verification": "▶️ Start Verification",
+    "status": "Status",
+    "status_pending": "Pending",
+    "status_in_progress": "In Progress",
+    "status_completed": "Completed",
+    "status_expired": "Expired",
+    "navigation": {
+      "prev": "⬅️ Previous",
+      "next": "➡️ Next", 
+      "refresh": "🔄 Refresh"
+    },
+    "actions": {
+      "accept": "✅ Accept Task",
+      "skip": "⏩ Skip",
+      "cancel": "❌ Cancel"
+    },
+    "types": {
+      "text_verification": "📝 Text Verification",
+      "image_verification": "🖼 Image Verification",
+      "audio_verification": "🎵 Audio Verification",
+      "video_verification": "🎬 Video Verification"
+    }
+  },
+  "errors": {
+    "general": "Sorry, something went wrong. Please try again.",
+    "task_unavailable": "This task is no longer available.",
+    "unauthorized": "You need to start the bot first. Use /start command.",
+    "rate_limited": "You're making too many requests. Please wait a moment and try again.",
+    "timeout": "Operation timed out. Please try again."
+  },
+  "help": {
+    "message": "<b>Available Commands:</b>\n\n/start - Initialize your profile\n/tasks - Browse available tasks\n/wallet - Manage your TON wallet\n/profile - View your profile and stats\n/help - Show this help message",
+    "task_help": "Here's how to complete a task:\n1. Review the content carefully\n2. Provide your verification\n3. Submit your answer\n4. Receive TON rewards",
+    "wallet_help": "To connect your wallet:\n1. Use /wallet command\n2. Click 'Connect Wallet'\n3. Open the link in TON Connect app\n4. Confirm the connection"
+  }
+} 

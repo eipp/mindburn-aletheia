@@ -1,0 +1,411 @@
+name: Blue-Green Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - prod
+      skipTests:
+        description: 'Skip pre-deployment tests'
+        required: false
+        default: false
+        type: boolean
+      forceCut:
+        description: 'Force traffic cutover without manual approval'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '8.x'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.environment.outputs.environment }}
+      deploymentId: ${{ steps.deployment-id.outputs.id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=0.0.0-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set environment
+        id: environment
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate deployment ID
+        id: deployment-id
+        run: |
+          echo "id=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ steps.environment.outputs.environment }}
+          ref: ${{ github.ref }}
+          
+  build-and-test:
+    name: Build and Test
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skipTests != 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build
+        run: pnpm turbo build
+        
+      - name: Run tests
+        run: pnpm turbo test
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            packages/*/dist
+            infrastructure/dist
+          retention-days: 7
+          
+  deploy-blue:
+    name: Deploy Blue Environment
+    needs: [prepare, build-and-test]
+    if: ${{ always() && (needs.build-and-test.result == 'success' || github.event.inputs.skipTests == 'true') }}
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    outputs:
+      blueStackName: ${{ steps.deploy.outputs.blueStackName }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          cd infrastructure
+          pnpm install
+          
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          
+      - name: Deploy blue environment
+        id: deploy
+        run: |
+          cd infrastructure
+          # Deploy blue environment with unique stack name
+          BLUE_STACK_NAME="AletheiaMindburn${{ needs.prepare.outputs.environment }}-blue-${{ needs.prepare.outputs.deploymentId }}"
+          echo "blueStackName=${BLUE_STACK_NAME}" >> $GITHUB_OUTPUT
+          
+          # Deploy with context parameters
+          pnpm cdk deploy ${BLUE_STACK_NAME} \
+            --require-approval never \
+            --context env=${{ needs.prepare.outputs.environment }} \
+            --context deploymentId=${{ needs.prepare.outputs.deploymentId }} \
+            --context version=${{ needs.prepare.outputs.version }} \
+            --context color=blue
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          
+      - name: Update deployment status
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: "in_progress"
+          deployment-id: ${{ needs.prepare.outputs.deploymentId }}
+          description: "Blue environment deployed, running smoke tests"
+          
+  smoke-test:
+    name: Run Smoke Tests
+    needs: [prepare, deploy-blue]
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Run smoke tests
+        run: |
+          cd tests
+          pnpm install
+          pnpm test:smoke
+        env:
+          BASE_URL: ${{ needs.deploy-blue.outputs.blueApiUrl }}
+          
+      - name: Notify smoke test results
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,workflow
+          text: "Smoke tests for Blue environment ${{ needs.prepare.outputs.environment }} - ${{ job.status }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+          
+  traffic-switch-approval:
+    name: Traffic Switch Approval
+    needs: [prepare, smoke-test]
+    if: ${{ needs.smoke-test.result == 'success' && github.event.inputs.forceCut != 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.prepare.outputs.environment }}-approval
+    steps:
+      - name: Awaiting approval
+        run: |
+          echo "Awaiting manual approval to cut over traffic to blue environment"
+          echo "Environment: ${{ needs.prepare.outputs.environment }}"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          echo "Deployment ID: ${{ needs.prepare.outputs.deploymentId }}"
+          
+  traffic-cutover:
+    name: Traffic Cutover
+    needs: [prepare, deploy-blue, smoke-test, traffic-switch-approval]
+    if: ${{ always() && (needs.smoke-test.result == 'success') && (needs.traffic-switch-approval.result == 'success' || needs.traffic-switch-approval.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install CDK
+        run: npm install -g aws-cdk
+        
+      - name: Install dependencies
+        run: |
+          cd infrastructure
+          pnpm install
+          
+      - name: Update traffic routing
+        run: |
+          cd infrastructure
+          # Switch traffic to blue environment
+          pnpm cdk deploy AletheiaMindburnTrafficRouter-${{ needs.prepare.outputs.environment }} \
+            --require-approval never \
+            --context env=${{ needs.prepare.outputs.environment }} \
+            --context targetStack=${{ needs.deploy-blue.outputs.blueStackName }} \
+            --context version=${{ needs.prepare.outputs.version }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          
+      - name: Update deployment status
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: "success"
+          deployment-id: ${{ needs.prepare.outputs.deploymentId }}
+          environment-url: ${{ env.DEPLOYMENT_URL }}
+          description: "Deployment complete, traffic routed to new version"
+          
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,workflow
+          text: "✅ Successfully deployed ${{ needs.prepare.outputs.environment }} environment - version ${{ needs.prepare.outputs.version }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: success() && env.SLACK_WEBHOOK_URL != ''
+          
+  cleanup-green:
+    name: Cleanup Green Environment
+    needs: [prepare, deploy-blue, traffic-cutover]
+    if: ${{ always() && needs.traffic-cutover.result == 'success' }}
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install CDK
+        run: npm install -g aws-cdk
+        
+      - name: Install dependencies
+        run: |
+          cd infrastructure
+          pnpm install
+          
+      - name: Find and destroy green environment
+        run: |
+          cd infrastructure
+          
+          # Find the current green environment (previous blue)
+          GREEN_STACK=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE | \
+            jq -r '.StackSummaries[] | select(.StackName | contains("AletheiaMindburn${{ needs.prepare.outputs.environment }}-blue") and (.StackName != "${{ needs.deploy-blue.outputs.blueStackName }}")) | .StackName' | \
+            sort -r | head -1)
+            
+          if [ -n "$GREEN_STACK" ]; then
+            echo "Found previous environment: $GREEN_STACK"
+            echo "Destroying previous environment..."
+            
+            # Only destroy after successful deployment and traffic cutover
+            pnpm cdk destroy $GREEN_STACK --force
+          else
+            echo "No previous environment found to clean up"
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          
+  rollback:
+    name: Rollback Deployment
+    needs: [prepare, deploy-blue, smoke-test]
+    if: ${{ failure() && needs.deploy-blue.result == 'success' && needs.smoke-test.result == 'failure' }}
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          cd infrastructure
+          pnpm install
+          
+      - name: Rollback deployment
+        run: |
+          cd infrastructure
+          # Don't switch traffic, keep existing routing
+          # Destroy the failed blue environment
+          pnpm cdk destroy ${{ needs.deploy-blue.outputs.blueStackName }} --force
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          
+      - name: Update deployment status
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: "failure"
+          deployment-id: ${{ needs.prepare.outputs.deploymentId }}
+          description: "Deployment failed, rolled back to previous version"
+          
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,workflow
+          text: "⚠️ Deployment failed. Rolled back ${{ needs.prepare.outputs.environment }} to previous version."
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != '' 

@@ -33,6 +33,20 @@ export class PaymentBatchesTable extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // Add GSI for querying by processedAt
+    this.table.addGlobalSecondaryIndex({
+      indexName: 'ProcessedAtIndex',
+      partitionKey: {
+        name: 'processedAt',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'batchId',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // Add tags
     cdk.Tags.of(this.table).add('Service', 'PaymentSystem');
     cdk.Tags.of(this.table).add('Environment', process.env.ENVIRONMENT || 'development');

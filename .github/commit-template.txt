@@ -1,0 +1,32 @@
+type: subject
+
+body
+
+footer
+
+# Commit message format guidelines:
+# 
+# type: subject (50 chars max)
+# 
+# Longer description and context (72 chars per line)
+# Wrap text to maintain readability
+# 
+# References #issue_number
+# 
+# ------------ Types ------------
+# feat:     A new feature
+# fix:      A bug fix
+# docs:     Documentation changes
+# style:    Formatting, missing semicolons, etc; no code change
+# refactor: Code change that neither fixes a bug nor adds a feature
+# perf:     A code change that improves performance
+# test:     Adding missing tests
+# chore:    Changes to the build process or auxiliary tools/libraries
+# security: Security-related changes
+# deps:     Dependency updates
+# 
+# ------------ Examples ------------ 
+# feat: add JWT authentication to API endpoints
+# fix: prevent race condition in worker assignment
+# refactor: convert MigrationManager to TypeScript
+# security: sanitize user input in verification form 
