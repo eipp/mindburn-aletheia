@@ -1,0 +1,45 @@
+{
+  "TableName": "aletheia-dev-tasks",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "S" },
+    { "AttributeName": "GSI2PK", "AttributeType": "S" },
+    { "AttributeName": "GSI2SK", "AttributeType": "N" },
+    { "AttributeName": "TaskStatus", "AttributeType": "S" },
+    { "AttributeName": "CreatedAt", "AttributeType": "N" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "GSI1",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "GSI2",
+      "KeySchema": [
+        { "AttributeName": "GSI2PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI2SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "StatusCreatedIndex",
+      "KeySchema": [
+        { "AttributeName": "TaskStatus", "KeyType": "HASH" },
+        { "AttributeName": "CreatedAt", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "DeletionProtectionEnabled": true
+} 

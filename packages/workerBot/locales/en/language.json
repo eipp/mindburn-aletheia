@@ -1,0 +1,8 @@
+{
+  "language": {
+    "changed": "Language changed to English successfully!",
+    "not_supported": "Sorry, language '${language}' is not supported. Available languages: ${supported}",
+    "select": "Please select your preferred language:",
+    "current": "Your current language is English."
+  }
+} 

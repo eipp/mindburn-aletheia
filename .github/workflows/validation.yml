@@ -1,0 +1,71 @@
+name: Validation
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+env:
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '10.x'
+
+jobs:
+  validate:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run turbo lint
+        run: pnpm turbo run lint
+
+      - name: Run turbo test
+        run: pnpm turbo run test
+
+      - name: Post validation status
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.sha;
+            const jobStatus = '${{ job.status }}';
+            
+            if (context.eventName === 'pull_request') {
+              const prNumber = context.payload.pull_request.number;
+              
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `## Validation Results\n\n**Status:** ${jobStatus}\n\nRan \`turbo run lint test\` with the above results.\n\nSee [workflow run](${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}) for details.`
+              });
+            } 

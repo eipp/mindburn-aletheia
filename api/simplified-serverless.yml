@@ -1,0 +1,181 @@
+service: mindburn-api
+
+frameworkVersion: '>=3.0.0 <4.0.0'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    JWT_SECRET: 'local-development-jwt-secret-key-for-testing-only'
+
+package:
+  individually: true
+  patterns:
+    - "src/**"
+
+functions:
+  # Welcome endpoint
+  hello:
+    handler: src/hello.handler
+    events:
+      - http:
+          path: /hello
+          method: get
+          cors: true
+          
+  # Developer registration and login
+  register:
+    handler: src/register.handler
+    events:
+      - http:
+          path: /developers/register
+          method: post
+          cors: true
+          
+  login:
+    handler: src/login.handler
+    events:
+      - http:
+          path: /developers/login
+          method: post
+          cors: true
+          
+  # API key management
+  listApiKeys:
+    handler: src/apiKeys.listApiKeys
+    events:
+      - http:
+          path: /developers/api-keys
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+  
+  generateApiKey:
+    handler: src/apiKeys.generateApiKey
+    events:
+      - http:
+          path: /developers/api-keys
+          method: post
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+            
+  revokeApiKey:
+    handler: src/apiKeys.revokeApiKey
+    events:
+      - http:
+          path: /developers/api-keys/{apiKeyId}
+          method: delete
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+            
+  # Usage analytics
+  getUsageStats:
+    handler: src/analytics.getUsageStats
+    events:
+      - http:
+          path: /developers/analytics/usage
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+            
+  getBillingUsage:
+    handler: src/analytics.getBillingUsage
+    events:
+      - http:
+          path: /developers/analytics/billing
+          method: get
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+            
+  # OAuth2 endpoints
+  oauthAuthorize:
+    handler: src/oauth.authorize
+    events:
+      - http:
+          path: /oauth/authorize
+          method: get
+          cors: true
+            
+  oauthToken:
+    handler: src/oauth.token
+    events:
+      - http:
+          path: /oauth/token
+          method: post
+          cors: true
+            
+  registerOAuthClient:
+    handler: src/oauth.registerClient
+    events:
+      - http:
+          path: /developers/oauth-clients
+          method: post
+          cors: true
+          authorizer:
+            name: jwtAuthorizer
+            type: token
+            identitySource: method.request.header.Authorization
+            
+  # JWT Authorizer
+  jwtAuthorizer:
+    handler: src/authorizer.jwtAuthorizer
+    
+  # WebSocket handler
+  websocketHandler:
+    handler: src/websocket-handler.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: subscribe
+      - websocket:
+          route: unsubscribe
+      - websocket:
+          route: ping
+            
+  # WebSocket broadcast handler
+  websocketBroadcast:
+    handler: src/websocket-handler.broadcastHandler
+    events:
+      - sqs:
+          arn: !GetAtt WebSocketEventsQueue.Arn
+          batchSize: 10
+          
+resources:
+  Resources:
+    # SQS Queue for WebSocket events
+    WebSocketEventsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-websocket-events
+        VisibilityTimeout: 60
+        MessageRetentionPeriod: 1209600 # 14 days
+        
+    # WebSocket API
+    WebSocketApi:
+      Type: AWS::ApiGatewayV2::Api
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-websocket-api
+        ProtocolType: WEBSOCKET
+        RouteSelectionExpression: $request.body.action 

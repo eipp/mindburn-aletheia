@@ -1,0 +1,457 @@
+#pragma version >=0.4.0;
+
+#include "imports/stdlib.fc";
+
+;; MindBurnGovernance Contract
+;; Handles governance proposals and voting for the Aletheia platform
+;; Allows token holders to propose and vote on protocol changes
+
+;; Storage Structure
+;; storage::admin: Address of the admin
+;; storage::proposal_threshold: Minimum tokens required to create proposal
+;; storage::voting_period: Voting period in seconds
+;; storage::execution_delay: Delay before execution in seconds
+;; storage::quorum_threshold: Required quorum in basis points (e.g., 4000 = 40%)
+;; storage::next_proposal_id: Next proposal ID counter
+;; storage::proposals: Dict of proposal ID -> proposal data
+;; storage::votes: Dict of proposal ID -> Dict of voter address -> vote
+
+global int ctx_storage::admin;
+global int ctx_storage::proposal_threshold;
+global int ctx_storage::voting_period;
+global int ctx_storage::execution_delay;
+global int ctx_storage::quorum_threshold;
+global int ctx_storage::next_proposal_id;
+global cell ctx_storage::proposals;
+global cell ctx_storage::votes;
+global cell ctx_storage::token_contract;  ;; MindBurn token contract address
+
+const int op::create_proposal = 1;
+const int op::cast_vote = 2;
+const int op::execute_proposal = 3;
+const int op::transfer_admin = 4;
+const int op::update_config = 5;
+const int op::set_token_contract = 6;
+
+const int state::pending = 0;
+const int state::active = 1;
+const int state::succeeded = 2;
+const int state::defeated = 3;
+const int state::executed = 4;
+const int state::canceled = 5;
+
+() load_data() impure {
+    slice ds = get_data().begin_parse();
+    ctx_storage::admin = ds~load_uint(256);
+    ctx_storage::proposal_threshold = ds~load_uint(64);
+    ctx_storage::voting_period = ds~load_uint(32);
+    ctx_storage::execution_delay = ds~load_uint(32);
+    ctx_storage::quorum_threshold = ds~load_uint(16);
+    ctx_storage::next_proposal_id = ds~load_uint(32);
+    
+    if (ds.slice_bits() > 0) {
+        ctx_storage::proposals = ds~load_dict();
+        if (ds.slice_bits() > 0) {
+            ctx_storage::votes = ds~load_dict();
+            if (ds.slice_bits() > 0) {
+                ctx_storage::token_contract = ds~load_ref();
+            } else {
+                ctx_storage::token_contract = begin_cell().end_cell();
+            }
+        } else {
+            ctx_storage::votes = new_dict();
+            ctx_storage::token_contract = begin_cell().end_cell();
+        }
+    } else {
+        ctx_storage::proposals = new_dict();
+        ctx_storage::votes = new_dict();
+        ctx_storage::token_contract = begin_cell().end_cell();
+    }
+}
+
+() save_data() impure {
+    set_data(
+        begin_cell()
+        .store_uint(ctx_storage::admin, 256)
+        .store_uint(ctx_storage::proposal_threshold, 64)
+        .store_uint(ctx_storage::voting_period, 32)
+        .store_uint(ctx_storage::execution_delay, 32)
+        .store_uint(ctx_storage::quorum_threshold, 16)
+        .store_uint(ctx_storage::next_proposal_id, 32)
+        .store_dict(ctx_storage::proposals)
+        .store_dict(ctx_storage::votes)
+        .store_ref(ctx_storage::token_contract)
+        .end_cell()
+    );
+}
+
+cell create_proposal_cell(slice proposer, slice description, slice type, cell parameters, int start_time, int end_time) {
+    return begin_cell()
+        .store_slice(proposer)
+        .store_ref(begin_cell().store_slice(description).end_cell())
+        .store_ref(begin_cell().store_slice(type).end_cell())
+        .store_ref(parameters)
+        .store_uint(start_time, 32)
+        .store_uint(end_time, 32)
+        .store_uint(state::pending, 8)
+        .store_uint(0, 64)  ;; for_votes
+        .store_uint(0, 64)  ;; against_votes
+        .store_uint(0, 32)  ;; execution_time
+        .end_cell();
+}
+
+int get_proposal_state(int proposal_id) impure {
+    (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+    if (~ found) {
+        return -1; ;; Not found
+    }
+    
+    ;; Skip to the state field
+    slice proposer = proposal_data~load_slice();
+    cell description_cell = proposal_data~load_ref();
+    cell type_cell = proposal_data~load_ref();
+    cell parameters = proposal_data~load_ref();
+    int start_time = proposal_data~load_uint(32);
+    int end_time = proposal_data~load_uint(32);
+    int state = proposal_data~load_uint(8);
+    int for_votes = proposal_data~load_uint(64);
+    int against_votes = proposal_data~load_uint(64);
+    
+    ;; If already in terminal state, return as is
+    if ((state == state::executed) | (state == state::canceled)) {
+        return state;
+    }
+    
+    ;; If before start time, it's pending
+    if (now() < start_time) {
+        return state::pending;
+    }
+    
+    ;; If within voting period, it's active
+    if ((now() >= start_time) & (now() <= end_time)) {
+        return state::active;
+    }
+    
+    ;; If after voting period, check results
+    int total_votes = for_votes + against_votes;
+    int quorum_met = total_votes >= ctx_storage::proposal_threshold;
+    int majority_support = for_votes > against_votes;
+    
+    if (quorum_met & majority_support) {
+        return state::succeeded;
+    } else {
+        return state::defeated;
+    }
+}
+
+() update_proposal_state(int proposal_id, int new_state) impure {
+    (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+    if (found) {
+        ;; Extract all data
+        slice proposer = proposal_data~load_slice();
+        cell description_cell = proposal_data~load_ref();
+        cell type_cell = proposal_data~load_ref();
+        cell parameters = proposal_data~load_ref();
+        int start_time = proposal_data~load_uint(32);
+        int end_time = proposal_data~load_uint(32);
+        proposal_data~load_uint(8);  ;; Skip old state
+        int for_votes = proposal_data~load_uint(64);
+        int against_votes = proposal_data~load_uint(64);
+        int execution_time = proposal_data~load_uint(32);
+        
+        ;; Update state
+        cell new_proposal_data = begin_cell()
+            .store_slice(proposer)
+            .store_ref(description_cell)
+            .store_ref(type_cell)
+            .store_ref(parameters)
+            .store_uint(start_time, 32)
+            .store_uint(end_time, 32)
+            .store_uint(new_state, 8)
+            .store_uint(for_votes, 64)
+            .store_uint(against_votes, 64)
+            .store_uint(new_state == state::succeeded ? now() + ctx_storage::execution_delay : execution_time, 32)
+            .end_cell();
+            
+        ctx_storage::proposals~udict_set(32, proposal_id, new_proposal_data.begin_parse());
+    }
+}
+
+() cast_vote_internal(slice voter, int proposal_id, int support) impure {
+    ;; Check if proposal exists and is active
+    int current_state = get_proposal_state(proposal_id);
+    throw_unless(404, current_state >= 0);
+    throw_unless(405, current_state == state::active);
+    
+    ;; Check if voter has already voted
+    cell proposal_votes = new_dict();
+    (cell existing_votes, int found) = ctx_storage::votes.udict_get_ref?(32, proposal_id);
+    if (found) {
+        proposal_votes = existing_votes;
+    }
+    
+    (_, int already_voted) = proposal_votes.udict_get?(256, voter.preload_uint(256));
+    throw_unless(406, ~ already_voted);
+    
+    ;; Get voter's voting power from token contract
+    int voting_power = 0;
+    ;; TODO: Implement call to token contract to get balance
+    ;; For now, using a mock value for testing
+    voting_power = 1000000;
+    
+    ;; Record the vote
+    proposal_votes~udict_set(256, voter.preload_uint(256), begin_cell().store_uint(support, 1).store_uint(voting_power, 64).end_cell().begin_parse());
+    ctx_storage::votes~udict_set_ref(32, proposal_id, proposal_votes);
+    
+    ;; Update vote tallies
+    (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+    if (found) {
+        ;; Extract all data
+        slice proposer = proposal_data~load_slice();
+        cell description_cell = proposal_data~load_ref();
+        cell type_cell = proposal_data~load_ref();
+        cell parameters = proposal_data~load_ref();
+        int start_time = proposal_data~load_uint(32);
+        int end_time = proposal_data~load_uint(32);
+        int state = proposal_data~load_uint(8);
+        int for_votes = proposal_data~load_uint(64);
+        int against_votes = proposal_data~load_uint(64);
+        int execution_time = proposal_data~load_uint(32);
+        
+        ;; Update vote counts
+        if (support) {
+            for_votes += voting_power;
+        } else {
+            against_votes += voting_power;
+        }
+        
+        ;; Save updated proposal
+        cell new_proposal_data = begin_cell()
+            .store_slice(proposer)
+            .store_ref(description_cell)
+            .store_ref(type_cell)
+            .store_ref(parameters)
+            .store_uint(start_time, 32)
+            .store_uint(end_time, 32)
+            .store_uint(state, 8)
+            .store_uint(for_votes, 64)
+            .store_uint(against_votes, 64)
+            .store_uint(execution_time, 32)
+            .end_cell();
+            
+        ctx_storage::proposals~udict_set(32, proposal_id, new_proposal_data.begin_parse());
+    }
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { ;; ignore bounce messages
+        return ();
+    }
+    
+    slice sender_addr = cs~load_msg_addr();
+    int op = in_msg_body~load_uint(32);
+    
+    load_data();
+    int is_admin = equal_slices(sender_addr, begin_cell().store_uint(ctx_storage::admin, 256).end_cell().begin_parse());
+    
+    if (op == op::create_proposal) {
+        ;; Get proposal details
+        slice description = in_msg_body~load_ref().begin_parse();
+        slice prop_type = in_msg_body~load_ref().begin_parse();
+        cell parameters = in_msg_body~load_ref();
+        
+        ;; Check proposer has enough tokens
+        int voting_power = 0;
+        ;; TODO: Implement call to token contract to get balance
+        ;; For now, using a mock value for testing or require admin
+        if (is_admin) {
+            voting_power = ctx_storage::proposal_threshold;
+        } else {
+            voting_power = 0; ;; This should be replaced with actual token balance check
+        }
+        
+        throw_unless(403, voting_power >= ctx_storage::proposal_threshold);
+        
+        ;; Create new proposal
+        int proposal_id = ctx_storage::next_proposal_id;
+        int start_time = now();
+        int end_time = start_time + ctx_storage::voting_period;
+        
+        cell proposal_data = create_proposal_cell(sender_addr, description, prop_type, parameters, start_time, end_time);
+        ctx_storage::proposals~udict_set(32, proposal_id, proposal_data.begin_parse());
+        
+        ;; Increment proposal ID counter
+        ctx_storage::next_proposal_id += 1;
+        
+        save_data();
+        return ();
+    }
+    
+    if (op == op::cast_vote) {
+        int proposal_id = in_msg_body~load_uint(32);
+        int support = in_msg_body~load_uint(1);
+        
+        cast_vote_internal(sender_addr, proposal_id, support);
+        
+        save_data();
+        return ();
+    }
+    
+    if (op == op::execute_proposal) {
+        int proposal_id = in_msg_body~load_uint(32);
+        
+        ;; Check proposal state is ready for execution
+        int current_state = get_proposal_state(proposal_id);
+        throw_unless(404, current_state == state::succeeded);
+        
+        ;; Check execution delay has passed
+        (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+        throw_unless(404, found);
+        
+        ;; Skip to execution time
+        slice proposer = proposal_data~load_slice();
+        cell description_cell = proposal_data~load_ref();
+        cell type_cell = proposal_data~load_ref();
+        cell parameters = proposal_data~load_ref();
+        int start_time = proposal_data~load_uint(32);
+        int end_time = proposal_data~load_uint(32);
+        int state = proposal_data~load_uint(8);
+        int for_votes = proposal_data~load_uint(64);
+        int against_votes = proposal_data~load_uint(64);
+        int execution_time = proposal_data~load_uint(32);
+        
+        throw_unless(407, now() >= execution_time);
+        
+        ;; Execute the proposal (this would trigger the appropriate contract call)
+        ;; For now, just mark as executed
+        update_proposal_state(proposal_id, state::executed);
+        
+        save_data();
+        return ();
+    }
+    
+    if (op == op::transfer_admin) {
+        ;; Only admin can transfer admin rights
+        throw_unless(401, is_admin);
+        
+        slice new_admin = in_msg_body~load_msg_addr();
+        ctx_storage::admin = new_admin.preload_uint(256);
+        
+        save_data();
+        return ();
+    }
+    
+    if (op == op::update_config) {
+        ;; Only admin can update config
+        throw_unless(401, is_admin);
+        
+        ctx_storage::proposal_threshold = in_msg_body~load_uint(64);
+        ctx_storage::voting_period = in_msg_body~load_uint(32);
+        ctx_storage::execution_delay = in_msg_body~load_uint(32);
+        ctx_storage::quorum_threshold = in_msg_body~load_uint(16);
+        
+        save_data();
+        return ();
+    }
+    
+    if (op == op::set_token_contract) {
+        ;; Only admin can set token contract
+        throw_unless(401, is_admin);
+        
+        ctx_storage::token_contract = in_msg_body~load_ref();
+        
+        save_data();
+        return ();
+    }
+    
+    throw(0xffff); ;; Unsupported operation
+}
+
+;; Get methods
+
+(int, int, slice, slice, cell, int, int, int, int, int, int) get_proposal(int proposal_id) method_id {
+    load_data();
+    (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+    if (~ found) {
+        return (0, -1, null(), null(), null(), 0, 0, 0, 0, 0, 0);
+    }
+    
+    slice proposer = proposal_data~load_slice();
+    cell description_cell = proposal_data~load_ref();
+    cell type_cell = proposal_data~load_ref();
+    cell parameters = proposal_data~load_ref();
+    int start_time = proposal_data~load_uint(32);
+    int end_time = proposal_data~load_uint(32);
+    int state = proposal_data~load_uint(8);
+    int for_votes = proposal_data~load_uint(64);
+    int against_votes = proposal_data~load_uint(64);
+    int execution_time = proposal_data~load_uint(32);
+    
+    slice description = description_cell.begin_parse();
+    slice prop_type = type_cell.begin_parse();
+    
+    ;; Get current state (may have changed)
+    int current_state = get_proposal_state(proposal_id);
+    
+    return (1, proposal_id, proposer, description, parameters, start_time, end_time, current_state, for_votes, against_votes, execution_time);
+}
+
+(int) get_proposal_state(int proposal_id) method_id {
+    load_data();
+    return get_proposal_state(proposal_id);
+}
+
+(int, int) get_proposal_votes(int proposal_id) method_id {
+    load_data();
+    (slice proposal_data, int found) = ctx_storage::proposals.udict_get?(32, proposal_id);
+    if (~ found) {
+        return (0, 0);
+    }
+    
+    ;; Skip to vote counts
+    slice proposer = proposal_data~load_slice();
+    cell description_cell = proposal_data~load_ref();
+    cell type_cell = proposal_data~load_ref();
+    cell parameters = proposal_data~load_ref();
+    int start_time = proposal_data~load_uint(32);
+    int end_time = proposal_data~load_uint(32);
+    int state = proposal_data~load_uint(8);
+    int for_votes = proposal_data~load_uint(64);
+    int against_votes = proposal_data~load_uint(64);
+    
+    return (for_votes, against_votes);
+}
+
+(int) get_voting_power(slice voter) method_id {
+    load_data();
+    ;; In a real implementation, this would query the token contract
+    ;; For testing, return a mock value
+    return 1000000;
+}
+
+(int) get_proposal_threshold() method_id {
+    load_data();
+    return ctx_storage::proposal_threshold;
+}
+
+(int) get_quorum_threshold() method_id {
+    load_data();
+    return ctx_storage::quorum_threshold;
+}
+
+(int) get_voting_period() method_id {
+    load_data();
+    return ctx_storage::voting_period;
+}
+
+(int) get_execution_delay() method_id {
+    load_data();
+    return ctx_storage::execution_delay;
+}
+
+(int) get_admin() method_id {
+    load_data();
+    return ctx_storage::admin;
+} 

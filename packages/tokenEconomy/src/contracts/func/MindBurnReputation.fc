@@ -1,0 +1,226 @@
+#pragma version >=0.4.0;
+
+#include "imports/stdlib.fc";
+
+;; MindBurnReputation Contract
+;; Tracks reputation scores for workers in the Aletheia platform
+;; Reputation is gained through quality verifications and decays over time
+
+;; Storage Structure
+;; storage::admin: Address of the admin (verified at boot)
+;; storage::decay_rate: Monthly decay rate in basis points (e.g., 500 = 5%)
+;; storage::min_verification_score: Minimum score to earn reputation (e.g., 75)
+;; storage::worker_scores: Dict of worker addresses -> reputation scores
+;; storage::worker_history: Dict of worker addresses -> verification history
+
+global int ctx_storage::admin;
+global int ctx_storage::decay_rate;
+global int ctx_storage::min_verification_score;
+global cell ctx_storage::worker_scores;
+global cell ctx_storage::worker_history;
+
+const int op::update_reputation = 1;
+const int op::apply_decay = 2;
+const int op::transfer_admin = 3;
+const int op::update_config = 4;
+
+const int MAX_REPUTATION = 5000;
+
+() load_data() impure {
+    slice ds = get_data().begin_parse();
+    ctx_storage::admin = ds~load_uint(256);
+    ctx_storage::decay_rate = ds~load_uint(16);
+    ctx_storage::min_verification_score = ds~load_uint(8);
+
+    if (ds.slice_bits() > 0) {
+        ctx_storage::worker_scores = ds~load_dict();
+        if (ds.slice_bits() > 0) {
+            ctx_storage::worker_history = ds~load_dict();
+        } else {
+            ctx_storage::worker_history = new_dict();
+        }
+    } else {
+        ctx_storage::worker_scores = new_dict();
+        ctx_storage::worker_history = new_dict();
+    }
+}
+
+() save_data() impure {
+    set_data(
+        begin_cell()
+        .store_uint(ctx_storage::admin, 256)
+        .store_uint(ctx_storage::decay_rate, 16)
+        .store_uint(ctx_storage::min_verification_score, 8)
+        .store_dict(ctx_storage::worker_scores)
+        .store_dict(ctx_storage::worker_history)
+        .end_cell()
+    );
+}
+
+int calculate_reputation_change(int curr_score, int verification_score) {
+    int min_score = ctx_storage::min_verification_score;
+    if (verification_score < min_score) {
+        return -10; ;; Penalty for low scores
+    }
+    
+    ;; Base reward based on score
+    int base_points = 10;
+    int accuracy_factor = (verification_score - min_score) * 100 / (100 - min_score);
+    
+    ;; Calculate final change (more accurate = more points)
+    return base_points + (accuracy_factor * 40 / 100);
+}
+
+() update_worker_reputation(slice worker_addr, int verification_score) impure {
+    ;; Get current reputation or start at 0
+    (slice value, int found) = ctx_storage::worker_scores.udict_get?(256, worker_addr.preload_uint(256));
+    int curr_score = 0;
+    if (found) {
+        curr_score = value~load_uint(16);
+    }
+    
+    ;; Calculate change in reputation
+    int change = calculate_reputation_change(curr_score, verification_score);
+    
+    ;; Apply change
+    int new_score = min(MAX_REPUTATION, max(0, curr_score + change));
+    
+    ;; Store updated score
+    ctx_storage::worker_scores~udict_set(256, worker_addr.preload_uint(256), 
+        begin_cell().store_uint(new_score, 16).end_cell().begin_parse());
+        
+    ;; Update history
+    (slice history, int found) = ctx_storage::worker_history.udict_get?(256, worker_addr.preload_uint(256));
+    cell updated_history = begin_cell()
+        .store_uint(now(), 32)  ;; timestamp
+        .store_uint(verification_score, 8)  ;; score
+        .store_int(change, 16)  ;; change in reputation
+        .end_cell();
+    
+    if (found) {
+        ;; Append to existing history, limit to last 10 entries
+        cell prev_history = history~load_ref();
+        cell new_history = begin_cell()
+            .store_ref(updated_history)
+            .store_ref(prev_history)
+            .end_cell();
+        ctx_storage::worker_history~udict_set(256, worker_addr.preload_uint(256), 
+            begin_cell().store_ref(new_history).end_cell().begin_parse());
+    } else {
+        ;; Create new history
+        ctx_storage::worker_history~udict_set(256, worker_addr.preload_uint(256), 
+            begin_cell().store_ref(updated_history).end_cell().begin_parse());
+    }
+}
+
+() apply_decay_to_all() impure {
+    ;; Apply decay to all workers
+    int decay_rate = ctx_storage::decay_rate;
+    cell new_scores = new_dict();
+    
+    int key = -1;
+    do {
+        (key, slice cs, int f) = ctx_storage::worker_scores.udict_get_next?(256, key);
+        if (f) {
+            int score = cs~load_uint(16);
+            ;; Apply decay (decay_rate is in basis points)
+            int decay_amount = (score * decay_rate) / 10000;
+            int new_score = max(0, score - decay_amount);
+            new_scores~udict_set(256, key, begin_cell().store_uint(new_score, 16).end_cell().begin_parse());
+        }
+    } until (~ f);
+    
+    ctx_storage::worker_scores = new_scores;
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { ;; ignore bounce messages
+        return ();
+    }
+    
+    slice sender_addr = cs~load_msg_addr();
+    int op = in_msg_body~load_uint(32);
+    
+    load_data();
+    int is_admin = equal_slices(sender_addr, begin_cell().store_uint(ctx_storage::admin, 256).end_cell().begin_parse());
+    
+    if (op == op::update_reputation) {
+        ;; Only admin can update reputation
+        throw_unless(401, is_admin);
+        
+        slice worker_addr = in_msg_body~load_msg_addr();
+        int verification_score = in_msg_body~load_uint(8);
+        
+        update_worker_reputation(worker_addr, verification_score);
+        save_data();
+        return ();
+    }
+    
+    if (op == op::apply_decay) {
+        ;; Only admin can apply decay
+        throw_unless(401, is_admin);
+        
+        apply_decay_to_all();
+        save_data();
+        return ();
+    }
+    
+    if (op == op::transfer_admin) {
+        ;; Only admin can transfer admin rights
+        throw_unless(401, is_admin);
+        
+        slice new_admin = in_msg_body~load_msg_addr();
+        ctx_storage::admin = new_admin.preload_uint(256);
+        save_data();
+        return ();
+    }
+    
+    if (op == op::update_config) {
+        ;; Only admin can update config
+        throw_unless(401, is_admin);
+        
+        ctx_storage::decay_rate = in_msg_body~load_uint(16);
+        ctx_storage::min_verification_score = in_msg_body~load_uint(8);
+        save_data();
+        return ();
+    }
+    
+    throw(0xffff); ;; Unsupported operation
+}
+
+;; Get methods
+
+(int) get_worker_reputation(slice worker_addr) method_id {
+    load_data();
+    (slice value, int found) = ctx_storage::worker_scores.udict_get?(256, worker_addr.preload_uint(256));
+    if (found) {
+        return value~load_uint(16);
+    }
+    return 0;
+}
+
+(int) get_admin() method_id {
+    load_data();
+    return ctx_storage::admin;
+}
+
+(int) get_decay_rate() method_id {
+    load_data();
+    return ctx_storage::decay_rate;
+}
+
+(int) get_min_verification_score() method_id {
+    load_data();
+    return ctx_storage::min_verification_score;
+}
+
+(cell) get_verification_history(slice worker_addr) method_id {
+    load_data();
+    (slice value, int found) = ctx_storage::worker_history.udict_get?(256, worker_addr.preload_uint(256));
+    if (found) {
+        return value~load_ref();
+    }
+    return begin_cell().end_cell();
+} 
