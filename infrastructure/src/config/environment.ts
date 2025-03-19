@@ -27,4 +27,4 @@ export const environments: Record<Environment, Omit<EnvironmentConfig, 'environm
     domainName: 'aletheia.mindburn.org',
     certificateArn: process.env.PROD_CERTIFICATE_ARN!,
   },
-}; 
+};

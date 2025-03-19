@@ -1,5 +1,11 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument, GetCommandInput, PutCommandInput, QueryCommandInput, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocument,
+  GetCommandInput,
+  PutCommandInput,
+  QueryCommandInput,
+  UpdateCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { WorkerProfile, Transaction, BaseTask } from '../types';
 
 export class DynamoDBService {
@@ -16,7 +22,7 @@ export class DynamoDBService {
   }) {
     const client = new DynamoDBClient({
       region: config.region,
-      credentials: config.credentials
+      credentials: config.credentials,
     });
 
     this.client = DynamoDBDocument.from(client);
@@ -31,19 +37,21 @@ export class DynamoDBService {
   async getWorkerProfile(userId: string): Promise<WorkerProfile | null> {
     const params: GetCommandInput = {
       TableName: this.getTableName('users'),
-      Key: { userId }
+      Key: { userId },
     };
 
     try {
       const result = await this.client.get(params);
-      return result.Item as WorkerProfile || null;
+      return (result.Item as WorkerProfile) || null;
     } catch (error) {
       console.error('Error getting worker profile:', error);
       return null;
     }
   }
 
-  async updateWorkerProfile(profile: Partial<WorkerProfile> & { userId: string }): Promise<boolean> {
+  async updateWorkerProfile(
+    profile: Partial<WorkerProfile> & { userId: string }
+  ): Promise<boolean> {
     const updateExpressions: string[] = [];
     const expressionAttributeNames: Record<string, string> = {};
     const expressionAttributeValues: Record<string, any> = {};
@@ -61,7 +69,7 @@ export class DynamoDBService {
       Key: { userId: profile.userId },
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: expressionAttributeValues,
     };
 
     try {
@@ -76,7 +84,7 @@ export class DynamoDBService {
   async createWorkerProfile(profile: WorkerProfile): Promise<boolean> {
     const params: PutCommandInput = {
       TableName: this.getTableName('users'),
-      Item: profile
+      Item: profile,
     };
 
     try {
@@ -92,12 +100,12 @@ export class DynamoDBService {
   async getTask(taskId: string): Promise<BaseTask | null> {
     const params: GetCommandInput = {
       TableName: this.getTableName('tasks'),
-      Key: { id: taskId }
+      Key: { id: taskId },
     };
 
     try {
       const result = await this.client.get(params);
-      return result.Item as BaseTask || null;
+      return (result.Item as BaseTask) || null;
     } catch (error) {
       console.error('Error getting task:', error);
       return null;
@@ -122,7 +130,7 @@ export class DynamoDBService {
       Key: { id: taskId },
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: expressionAttributeValues,
     };
 
     try {
@@ -140,15 +148,15 @@ export class DynamoDBService {
       TableName: this.getTableName('transactions'),
       KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
-        ':userId': userId
+        ':userId': userId,
       },
       Limit: limit,
-      ScanIndexForward: false
+      ScanIndexForward: false,
     };
 
     try {
       const result = await this.client.query(params);
-      return result.Items as Transaction[] || [];
+      return (result.Items as Transaction[]) || [];
     } catch (error) {
       console.error('Error getting transactions:', error);
       return [];
@@ -158,7 +166,7 @@ export class DynamoDBService {
   async createTransaction(transaction: Transaction): Promise<boolean> {
     const params: PutCommandInput = {
       TableName: this.getTableName('transactions'),
-      Item: transaction
+      Item: transaction,
     };
 
     try {
@@ -169,4 +177,4 @@ export class DynamoDBService {
       return false;
     }
   }
-} 
+}

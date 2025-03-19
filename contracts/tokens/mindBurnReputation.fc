@@ -1,0 +1,81 @@
+;; MindBurn Reputation Token (MBR)
+;; SPDX-License-Identifier: MIT
+#include "stdlib.fc";
+
+const int DECIMALS = 2;
+const int MIN_VERIFICATION_SCORE = 75; ;; Minimum score to earn reputation
+
+;; Storage variables
+global cell workers_reputation;
+global cell verification_history;
+global cell admin_address;
+
+;; Reputation data structure
+(cell, cell, slice) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_ref(),     ;; workers_reputation
+        ds~load_ref(),     ;; verification_history
+        ds~load_msg_addr() ;; admin_address
+    );
+}
+
+() save_data(cell workers_reputation, cell verification_history, slice admin_address) impure inline {
+    set_data(begin_cell()
+        .store_ref(workers_reputation)
+        .store_ref(verification_history)
+        .store_slice(admin_address)
+        .end_cell());
+}
+
+;; Reputation calculation
+int calculate_reputation(slice worker_address, int verification_score) inline {
+    if (verification_score < MIN_VERIFICATION_SCORE) {
+        return 0;
+    }
+    
+    ;; Progressive reputation formula
+    int base_points = verification_score - MIN_VERIFICATION_SCORE;
+    int multiplier = get_worker_level(worker_address);
+    return base_points * multiplier;
+}
+
+;; Update worker reputation
+() update_reputation(slice worker_address, int verification_score) impure {
+    throw_unless(100, equal_slices(msg.sender, admin_address));
+    
+    int reputation_points = calculate_reputation(worker_address, verification_score);
+    cell updated_reputation = update_worker_reputation(workers_reputation, worker_address, reputation_points);
+    
+    save_data(updated_reputation, verification_history, admin_address);
+}
+
+;; Decay mechanism to ensure active participation
+() apply_reputation_decay() impure {
+    throw_unless(101, equal_slices(msg.sender, admin_address));
+    
+    cell updated_reputation = apply_decay_to_all_workers(workers_reputation);
+    save_data(updated_reputation, verification_history, admin_address);
+}
+
+;; Get methods
+int get_worker_reputation(slice worker_address) method_id {
+    (cell reputation_dict, _, _) = load_data();
+    return get_reputation_from_dict(reputation_dict, worker_address);
+}
+
+int get_worker_level(slice worker_address) method_id {
+    int reputation = get_worker_reputation(worker_address);
+    
+    ;; Level thresholds
+    if (reputation < 100) { return 1; }
+    if (reputation < 500) { return 2; }
+    if (reputation < 2000) { return 3; }
+    if (reputation < 5000) { return 4; }
+    return 5;
+}
+
+cell get_verification_history(slice worker_address) method_id {
+    (_, cell history, _) = load_data();
+    return get_worker_history(history, worker_address);
+} 

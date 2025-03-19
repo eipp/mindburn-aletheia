@@ -1,0 +1,91 @@
+{
+  "TableName": "Verifications",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "N" },
+    { "AttributeName": "GSI2PK", "AttributeType": "S" },
+    { "AttributeName": "GSI2SK", "AttributeType": "N" },
+    { "AttributeName": "TaskId", "AttributeType": "S" },
+    { "AttributeName": "CreatedAt", "AttributeType": "N" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "WorkerIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "ConfidenceIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI2PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI2SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "TaskTimeIndex",
+      "KeySchema": [
+        { "AttributeName": "TaskId", "KeyType": "HASH" },
+        { "AttributeName": "CreatedAt", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "TimeToLiveSpecification": {
+    "AttributeName": "TTL",
+    "Enabled": true
+  },
+  "AttributePatterns": {
+    "Verification": {
+      "PK": "TASK#<taskId>",
+      "SK": "VER#<verificationId>",
+      "GSI1PK": "WORKER#<workerId>",
+      "GSI1SK": "<timestamp>",
+      "GSI2PK": "TYPE#<taskType>",
+      "GSI2SK": "<confidence>",
+      "TaskId": "string",
+      "WorkerId": "string",
+      "Strategy": "string",
+      "Decision": "string",
+      "Confidence": "number",
+      "Explanation": "string",
+      "ProcessingTime": "number",
+      "Metadata": "map",
+      "CreatedAt": "number",
+      "TTL": "number"
+    },
+    "ConsolidatedResult": {
+      "PK": "TASK#<taskId>",
+      "SK": "RESULT",
+      "FinalDecision": "string",
+      "Confidence": "number",
+      "VerificationCount": "number",
+      "ApprovedCount": "number",
+      "RejectedCount": "number",
+      "Explanation": "string",
+      "Contributors": "list",
+      "CreatedAt": "number",
+      "UpdatedAt": "number"
+    },
+    "VerificationMetrics": {
+      "PK": "TASK#<taskId>",
+      "SK": "METRICS",
+      "AverageConfidence": "number",
+      "AverageProcessingTime": "number",
+      "ConsensusLevel": "number",
+      "DisagreementRate": "number",
+      "FraudScore": "number",
+      "UpdatedAt": "number"
+    }
+  }
+} 

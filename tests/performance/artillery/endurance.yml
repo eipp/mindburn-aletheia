@@ -1,0 +1,37 @@
+config:
+  phases:
+    - name: "Ramp to baseline"
+      duration: 300
+      arrivalRate: 1
+      rampTo: 20
+    - name: "Sustained load - 4 hours"
+      duration: 14400
+      arrivalRate: 20
+    - name: "Ramp down"
+      duration: 300
+      arrivalRate: 20
+      rampTo: 1
+
+  plugins:
+    ensure:
+      thresholds:
+        - http.response_time.p95: 500
+        - http.response_time.p99: 1000
+        - http.requests.rate: 20
+        - errors.rate: 1
+        - http.codes.500: 10
+    systeminfo:
+      enabled: true
+    metrics-by-endpoint:
+      enabled: true
+
+  ensure:
+    maxErrorRate: 1
+    max95ResponseTime: 500
+    maxLatencyDeviation: 100
+
+  reporting:
+    - type: "json"
+      filename: "endurance-test-report.json"
+    - type: "cloudwatch"
+      namespace: "MindBurnAletheia/EnduranceTest" 

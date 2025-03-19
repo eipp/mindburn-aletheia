@@ -1,0 +1,222 @@
+openapi: 3.0.0
+info:
+  title: Mindburn Aletheia API
+  version: 1.0.0
+  description: API for Mindburn Aletheia human-in-the-loop AI verification platform
+
+servers:
+  - url: https://api.mindburn.org/{stage}
+    variables:
+      stage:
+        default: dev
+        enum:
+          - dev
+          - staging
+          - prod
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+    ApiKeyAuth:
+      type: apiKey
+      name: x-api-key
+      in: header
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    Task:
+      type: object
+      required:
+        - id
+        - type
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [verification, validation, annotation]
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed]
+        data:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Verification:
+      type: object
+      required:
+        - task_id
+        - worker_id
+        - result
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        worker_id:
+          type: string
+        result:
+          type: object
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        time_taken:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /workers:
+    get:
+      summary: List available workers
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: List of workers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    status:
+                      type: string
+                    skills:
+                      type: array
+                      items:
+                        type: string
+    post:
+      summary: Register new worker
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegram_id
+                - skills
+              properties:
+                telegram_id:
+                  type: string
+                skills:
+                  type: array
+                  items:
+                    type: string
+
+  /tasks:
+    get:
+      summary: List tasks
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      summary: Create new task
+      security:
+        - CognitoAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+
+  /verifications:
+    post:
+      summary: Submit verification result
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Verification'
+
+  /payments:
+    get:
+      summary: Get payment history
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    amount:
+                      type: number
+                    status:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+    post:
+      summary: Create payment request
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - wallet_address
+              properties:
+                amount:
+                  type: number
+                wallet_address:
+                  type: string 

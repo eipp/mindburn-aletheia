@@ -1,0 +1,223 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Rules
+
+## Core Principles
+
+1. **Single Source of Truth**
+   - All shared utilities MUST be in `packages/shared`
+   - Never duplicate functionality across packages
+   - Always use factory functions for service instantiation
+   - Document any package-specific customizations
+
+2. **Code Organization**
+   - Use camelCase for file names (e.g., `tonService.ts`)
+   - Use PascalCase for React components (e.g., `UserProfile.tsx`)
+   - Keep `__tests__` directories adjacent to tested code
+   - Maintain a flat directory structure, max 3 levels deep
+
+3. **Service Implementation**
+   - Always extend or wrap shared services instead of duplicating
+   - Use dependency injection for service configuration
+   - Implement proper error handling and logging
+   - Follow the factory pattern for service creation
+
+## Mandatory Practices
+
+### TON Integration
+```typescript
+// ✅ DO: Use shared TON service
+import { createTonService } from '@mindburn/shared';
+const tonService = createTonService(config, logger);
+
+// ❌ DON'T: Create package-specific implementations
+class CustomTonService { ... }
+```
+
+### Logging
+```typescript
+// ✅ DO: Use shared logger
+import { createLogger } from '@mindburn/shared';
+const logger = createLogger('component-name');
+
+// ❌ DON'T: Use console.log or custom loggers
+console.log('Debug message');
+```
+
+### Configuration
+```typescript
+// ✅ DO: Use environment transformers
+import { createEnvironmentTransformer } from '@mindburn/shared';
+const config = createEnvironmentTransformer(process.env);
+
+// ❌ DON'T: Access process.env directly
+const apiKey = process.env.API_KEY;
+```
+
+## Code Quality Rules
+
+1. **Dependency Management**
+   - All shared dependencies MUST be in `packages/shared/package.json`
+   - Version numbers MUST be exact (no ^ or ~)
+   - Use peerDependencies for framework dependencies
+   - Document any breaking changes in dependencies
+
+2. **TypeScript Configuration**
+   - All packages MUST extend `tsconfig.base.json`
+   - Enable strict mode in all TypeScript configurations
+   - Use path aliases for internal imports
+   - Maintain consistent compiler options
+
+3. **Testing Requirements**
+   - Minimum 80% test coverage for shared utilities
+   - Integration tests for all service wrappers
+   - E2E tests for critical user flows
+   - Mock external services in unit tests
+
+## Verification Process
+
+1. **Pre-commit Checks**
+   ```bash
+   # Run before every commit
+   npm run verify-codebase
+   npm run test
+   npm run lint
+   ```
+
+2. **Code Review Requirements**
+   - Verify shared utility usage
+   - Check for potential duplications
+   - Ensure proper error handling
+   - Validate TypeScript types
+
+## Common Mistakes to Avoid
+
+1. **Service Implementation**
+   - ❌ Creating new service classes instead of extending shared ones
+   - ❌ Implementing custom validation logic
+   - ❌ Direct blockchain interactions without shared utilities
+   - ❌ Hardcoding configuration values
+
+2. **Code Organization**
+   - ❌ Using kebab-case for file names
+   - ❌ Deep nesting of directories
+   - ❌ Mixing business logic with UI components
+   - ❌ Duplicating types across packages
+
+3. **Error Handling**
+   - ❌ Using console.log for errors
+   - ❌ Swallowing errors without logging
+   - ❌ Not providing error context
+   - ❌ Inconsistent error formats
+
+## Best Practices
+
+1. **Service Wrappers**
+   ```typescript
+   // ✅ DO: Create thin wrappers with specific functionality
+   export class WorkerTonService {
+     private tonService: TonService;
+     
+     constructor(config: TonConfig) {
+       this.tonService = createTonService(config, logger);
+     }
+     
+     // Add only worker-specific methods
+     async processWorkerPayment(workerId: string) {
+       // Use shared utilities
+       return this.tonService.sendPayment(...);
+     }
+   }
+   ```
+
+2. **Configuration Management**
+   ```typescript
+   // ✅ DO: Use configuration validators
+   export const config = createConfigValidator({
+     required: ['TON_ENDPOINT', 'TON_API_KEY'],
+     optional: ['TON_NETWORK']
+   });
+   ```
+
+3. **Error Handling**
+   ```typescript
+   // ✅ DO: Use structured error handling
+   try {
+     await tonService.sendPayment(address, amount);
+   } catch (error) {
+     logger.error('Payment failed', {
+       error,
+       address,
+       amount,
+       service: 'WorkerPayment'
+     });
+     throw new PaymentError('Failed to send payment', { cause: error });
+   }
+   ```
+
+## Continuous Integration
+
+1. **Required Checks**
+   - Verify no duplicate implementations
+   - Validate shared utility usage
+   - Check naming conventions
+   - Verify TypeScript configurations
+
+2. **Performance Metrics**
+   - Monitor bundle sizes
+   - Track build times
+   - Measure test coverage
+   - Check for code duplication
+
+## Documentation Requirements
+
+1. **Code Documentation**
+   - Document all public APIs
+   - Include usage examples
+   - Explain configuration options
+   - Document error scenarios
+
+2. **Package Documentation**
+   - Maintain up-to-date README files
+   - Document package dependencies
+   - Include setup instructions
+   - List common issues and solutions
+
+## Security Guidelines
+
+1. **API Keys and Secrets**
+   - Never commit secrets to repository
+   - Use environment variables
+   - Implement proper secret rotation
+   - Document security requirements
+
+2. **Input Validation**
+   - Always validate blockchain addresses
+   - Verify transaction amounts
+   - Validate user input
+   - Use shared validation utilities
+
+## Review Process
+
+Before submitting a PR, ensure:
+
+1. **Code Quality**
+   - No duplicate implementations
+   - Proper use of shared utilities
+   - Consistent error handling
+   - Adequate test coverage
+
+2. **Documentation**
+   - Updated relevant documentation
+   - Added inline comments
+   - Updated change logs
+   - Added usage examples
+
+3. **Testing**
+   - Unit tests pass
+   - Integration tests pass
+   - No regression issues
+   - Performance impact assessed 

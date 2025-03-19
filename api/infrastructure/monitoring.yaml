@@ -1,0 +1,191 @@
+Resources:
+  ApiDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: mindburn-api-metrics
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiId", "${ApiGatewayRestApi}", {"stat": "Sum"}],
+                  [".", "4XXError", ".", ".", {"stat": "Sum"}],
+                  [".", "5XXError", ".", ".", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "title": "API Requests and Errors"
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGateway", "Latency", "ApiId", "${ApiGatewayRestApi}", {"stat": "p95"}],
+                  [".", "IntegrationLatency", ".", ".", {"stat": "p95"}]
+                ],
+                "period": 300,
+                "title": "API Latency"
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AWS/ApiGatewayV2", "ConnectCount", "ApiId", "${WebSocketApi}", {"stat": "Sum"}],
+                  [".", "MessageCount", ".", ".", {"stat": "Sum"}],
+                  [".", "DisconnectCount", ".", ".", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "title": "WebSocket Metrics"
+              }
+            }
+          ]
+        }
+
+  HighErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mindburn-api-high-error-rate
+      AlarmDescription: High error rate detected in API Gateway
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref ApiGatewayRestApi
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref AlertingTopic
+
+  HighLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mindburn-api-high-latency
+      AlarmDescription: High latency detected in API Gateway
+      MetricName: Latency
+      Namespace: AWS/ApiGateway
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref ApiGatewayRestApi
+      Statistic: p95
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref AlertingTopic
+
+  WebSocketConnectionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mindburn-websocket-connection-drop
+      AlarmDescription: Sudden drop in WebSocket connections
+      MetricName: ConnectCount
+      Namespace: AWS/ApiGatewayV2
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref WebSocketApi
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 100
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - !Ref AlertingTopic
+
+  AlertingTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: mindburn-alerts
+      KmsMasterKeyId: alias/aws/sns
+
+  AlertingTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref AlertingTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudwatch.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref AlertingTopic
+
+  XRayTracing:
+    Type: AWS::XRay::Group
+    Properties:
+      GroupName: mindburn-api
+      FilterExpression: "service(\"mindburn-api\")"
+      InsightsConfiguration:
+        InsightsEnabled: true
+        NotificationsEnabled: true
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/mindburn/api
+      RetentionInDays: 30
+
+  LogMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref LogGroup
+      FilterPattern: '[timestamp, requestId, level="ERROR", message]'
+      MetricTransformations:
+        - MetricName: ErrorCount
+          MetricNamespace: Mindburn/API
+          MetricValue: '1'
+
+  LogMetricAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mindburn-api-error-logs
+      AlarmDescription: High number of error logs detected
+      MetricName: ErrorCount
+      Namespace: Mindburn/API
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 50
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref AlertingTopic
+
+  HealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: mindburn-api-health-check
+      AlarmDescription: API health check failing
+      MetricName: HealthCheckStatus
+      Namespace: AWS/Route53
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref HealthCheck
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - !Ref AlertingTopic
+
+  HealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        Port: 443
+        Type: HTTPS
+        ResourcePath: /health
+        FullyQualifiedDomainName: api.mindburn.org
+        RequestInterval: 30
+        FailureThreshold: 3
+      HealthCheckTags:
+        - Key: Name
+          Value: mindburn-api-health 

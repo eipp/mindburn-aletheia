@@ -1,0 +1,72 @@
+{
+  "TableName": "Companies",
+  "BillingMode": "PAY_PER_REQUEST",
+  "AttributeDefinitions": [
+    { "AttributeName": "PK", "AttributeType": "S" },
+    { "AttributeName": "SK", "AttributeType": "S" },
+    { "AttributeName": "GSI1PK", "AttributeType": "S" },
+    { "AttributeName": "GSI1SK", "AttributeType": "N" },
+    { "AttributeName": "ApiKey", "AttributeType": "S" }
+  ],
+  "KeySchema": [
+    { "AttributeName": "PK", "KeyType": "HASH" },
+    { "AttributeName": "SK", "KeyType": "RANGE" }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "UsageIndex",
+      "KeySchema": [
+        { "AttributeName": "GSI1PK", "KeyType": "HASH" },
+        { "AttributeName": "GSI1SK", "KeyType": "RANGE" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    },
+    {
+      "IndexName": "ApiKeyIndex",
+      "KeySchema": [
+        { "AttributeName": "ApiKey", "KeyType": "HASH" }
+      ],
+      "Projection": { "ProjectionType": "ALL" }
+    }
+  ],
+  "AttributePatterns": {
+    "Company": {
+      "PK": "COMPANY#<companyId>",
+      "SK": "METADATA",
+      "Name": "string",
+      "Email": "string",
+      "ApiKey": "string",
+      "Status": "string",
+      "Plan": "string",
+      "WalletAddress": "string",
+      "Balance": "number",
+      "TaskQuota": "number",
+      "TasksSubmitted": "number",
+      "CreatedAt": "number",
+      "UpdatedAt": "number"
+    },
+    "ApiUsage": {
+      "PK": "COMPANY#<companyId>",
+      "SK": "USAGE#<yyyy-mm>",
+      "GSI1PK": "USAGE#<yyyy-mm>",
+      "GSI1SK": "<tasksCount>",
+      "TasksCount": "number",
+      "TokensUsed": "number",
+      "CostInTON": "number",
+      "AverageResponseTime": "number",
+      "SuccessRate": "number"
+    },
+    "BillingCycle": {
+      "PK": "COMPANY#<companyId>",
+      "SK": "BILLING#<yyyy-mm>",
+      "StartDate": "number",
+      "EndDate": "number",
+      "Plan": "string",
+      "BaseAmount": "number",
+      "UsageAmount": "number",
+      "TotalAmount": "number",
+      "Status": "string",
+      "LastPaymentDate": "number"
+    }
+  }
+} 

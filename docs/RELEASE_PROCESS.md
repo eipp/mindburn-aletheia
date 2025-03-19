@@ -5,6 +5,7 @@ This document outlines the release process for Mindburn Aletheia.
 ## Version Management
 
 We follow [Semantic Versioning](https://semver.org/):
+
 - MAJOR version for incompatible API changes
 - MINOR version for new features in a backward-compatible manner
 - PATCH version for backward-compatible bug fixes
@@ -12,16 +13,19 @@ We follow [Semantic Versioning](https://semver.org/):
 ## Release Flow
 
 1. **Development**
+
    - All development happens in feature branches
    - PRs are merged into `main` after review
    - CI pipeline runs tests and checks
 
 2. **Release Preparation**
+
    - Ensure all tests pass on `main`
    - Update dependencies if needed
    - Review and update documentation
 
 3. **Creating a Release**
+
    - Go to Actions > Release workflow
    - Input the new version number (e.g., 1.2.3)
    - Select release type (patch/minor/major)
@@ -33,6 +37,7 @@ We follow [Semantic Versioning](https://semver.org/):
      - Trigger deployment to staging
 
 4. **Staging Deployment**
+
    - Automated deployment to staging environment
    - Run integration tests
    - Manual QA verification
@@ -50,6 +55,7 @@ We follow [Semantic Versioning](https://semver.org/):
 If issues are detected after deployment:
 
 1. **Immediate Actions**
+
    - Go to Actions > Rollback workflow
    - Select environment (staging/prod)
    - Input the version to rollback to
@@ -63,16 +69,19 @@ If issues are detected after deployment:
 ## Environment Management
 
 ### Development (dev)
+
 - Automatic deployments from `main`
 - Used for feature testing
 - No approval required
 
 ### Staging
+
 - Deployment triggered by releases
 - Used for pre-production verification
 - Requires QA approval
 
 ### Production (prod)
+
 - Manual deployment after staging verification
 - Requires senior team approval
 - Monitored deployment
@@ -80,6 +89,7 @@ If issues are detected after deployment:
 ## Security Considerations
 
 1. **Secrets Management**
+
    - AWS credentials in GitHub Secrets
    - Environment-specific variables
    - Rotation schedule for keys
@@ -92,6 +102,7 @@ If issues are detected after deployment:
 ## Monitoring
 
 1. **Deployment Health**
+
    - Automated health checks
    - Performance metrics
    - Error tracking
@@ -106,18 +117,21 @@ If issues are detected after deployment:
 ## Checklist
 
 ### Pre-Release
+
 - [ ] All tests passing
 - [ ] Documentation updated
 - [ ] Dependencies reviewed
 - [ ] Breaking changes documented
 
 ### Release
+
 - [ ] Version bumped
 - [ ] Changelog generated
 - [ ] Release notes reviewed
 - [ ] Tags created
 
 ### Post-Release
+
 - [ ] Staging deployment successful
 - [ ] QA verification completed
 - [ ] Production deployment approved
@@ -128,11 +142,13 @@ If issues are detected after deployment:
 ### Common Issues
 
 1. **Failed Deployment**
+
    - Check logs in GitHub Actions
    - Verify AWS credentials
    - Check resource limits
 
 2. **Failed Health Checks**
+
    - Verify service endpoints
    - Check error logs
    - Monitor resource usage
@@ -145,6 +161,7 @@ If issues are detected after deployment:
 ## Contact
 
 For release-related issues:
+
 - **Technical Lead**: @tech-lead
 - **DevOps Team**: @devops-team
-- **Emergency Contact**: @on-call-engineer 
+- **Emergency Contact**: @on-call-engineer

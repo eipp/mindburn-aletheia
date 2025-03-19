@@ -7,6 +7,7 @@
 #### Node.js and pnpm Issues
 
 1. **pnpm install fails**
+
 ```bash
 # Clear pnpm store
 pnpm store prune
@@ -20,6 +21,7 @@ pnpm install
 ```
 
 2. **TypeScript compilation errors**
+
 ```bash
 # Clear TypeScript cache
 rm -rf packages/*/dist
@@ -30,6 +32,7 @@ pnpm build
 ```
 
 3. **Vite dev server issues**
+
 ```bash
 # Clear Vite cache
 rm -rf packages/worker-webapp/node_modules/.vite
@@ -43,12 +46,14 @@ pnpm dev
 #### CDK Deployment Failures
 
 1. **Stack deployment fails**
+
    - Check AWS credentials
    - Verify IAM permissions
    - Review CloudFormation events
    - Check resource limits
 
 2. **Resource conflicts**
+
 ```bash
 # Remove stack
 cdk destroy
@@ -71,12 +76,14 @@ cdk deploy
 #### Lambda Function Issues
 
 1. **Function timeouts**
+
    - Check memory allocation
    - Review execution time limits
    - Monitor CPU/memory usage
    - Optimize database queries
 
 2. **Cold start latency**
+
    - Use provisioned concurrency
    - Optimize dependencies
    - Implement warm-up
@@ -91,6 +98,7 @@ cdk deploy
 #### Database Issues
 
 1. **Connection timeouts**
+
 ```bash
 # Check connectivity
 aws dynamodb list-tables
@@ -113,6 +121,7 @@ aws dynamodb scan --table-name Tasks --max-items 1
 #### Build Issues
 
 1. **Bundle size warnings**
+
 ```bash
 # Analyze bundle
 pnpm analyze
@@ -125,6 +134,7 @@ import { Button } from '@mantine/core/Button'
 ```
 
 2. **React performance**
+
    - Use React DevTools
    - Profile component renders
    - Implement memoization
@@ -141,12 +151,14 @@ import { Button } from '@mantine/core/Button'
 #### JWT Issues
 
 1. **Token validation fails**
+
    - Check token expiration
    - Verify signature
    - Validate issuer
    - Review audience claims
 
 2. **Cognito authentication**
+
 ```bash
 # Test Cognito setup
 aws cognito-idp describe-user-pool \
@@ -163,6 +175,7 @@ aws cognito-idp admin-get-user \
 #### CloudWatch Issues
 
 1. **Missing logs**
+
    - Check log group retention
    - Verify IAM permissions
    - Review log levels
@@ -179,12 +192,14 @@ aws cognito-idp admin-get-user \
 #### CI/CD Pipeline Issues
 
 1. **GitHub Actions failures**
+
    - Check workflow syntax
    - Verify secrets
    - Review environment variables
    - Check action versions
 
 2. **Rollback issues**
+
 ```bash
 # View deployment history
 aws deploy get-deployment \
@@ -201,6 +216,7 @@ aws deploy stop-deployment \
 ### Local Development
 
 1. **VS Code Debug Configuration**
+
 ```json
 {
   "version": "0.2.0",
@@ -227,6 +243,7 @@ aws deploy stop-deployment \
 ### Production
 
 1. **AWS CloudWatch Insights**
+
 ```
 fields @timestamp, @message
 | filter @message like /error/
@@ -243,6 +260,7 @@ fields @timestamp, @message
 ## Performance Optimization
 
 1. **API Response Times**
+
    - Implement caching
    - Optimize queries
    - Use connection pooling
@@ -260,4 +278,4 @@ fields @timestamp, @message
 - [Telegram Bot API](https://core.telegram.org/bots/api)
 - [TON Documentation](https://ton.org/docs)
 - [Developer Discord](https://discord.gg/mindburn)
-- Email: support@mindburn.org 
+- Email: support@mindburn.org

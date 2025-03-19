@@ -1,0 +1,268 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia Developer API
+  version: 1.0.0
+  description: API for AI developers to submit verification tasks and retrieve results
+
+servers:
+  - url: https://api.mindburn.org/v1
+    description: Production server
+  - url: https://staging-api.mindburn.org/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Task:
+      type: object
+      required:
+        - taskType
+        - prompt
+        - expectedResult
+        - verificationCriteria
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        taskType:
+          type: string
+          enum: [TEXT_VERIFICATION, IMAGE_VERIFICATION, CODE_VERIFICATION]
+        prompt:
+          type: string
+          maxLength: 5000
+        expectedResult:
+          type: object
+        verificationCriteria:
+          type: object
+          properties:
+            accuracy:
+              type: number
+              minimum: 0
+              maximum: 1
+            requiredWorkers:
+              type: integer
+              minimum: 1
+              maximum: 100
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED, FAILED]
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        completedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TaskResult:
+      type: object
+      properties:
+        taskId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED, FAILED]
+        verificationResults:
+          type: array
+          items:
+            type: object
+            properties:
+              workerId:
+                type: string
+              result:
+                type: object
+              confidence:
+                type: number
+              timestamp:
+                type: string
+                format: date-time
+        aggregatedResult:
+          type: object
+        completionRate:
+          type: number
+          
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+paths:
+  /tasks:
+    post:
+      summary: Submit a new verification task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+      x-rateLimit:
+        requests: 100
+        period: 60
+
+    get:
+      summary: List all tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, IN_PROGRESS, COMPLETED, FAILED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+                      current:
+                        type: integer
+                      hasNext:
+                        type: boolean
+        '429':
+          description: Rate limit exceeded
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /tasks/{taskId}:
+    get:
+      summary: Get task details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /tasks/{taskId}/results:
+    get:
+      summary: Get task results
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResult'
+        '404':
+          description: Task not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /webhooks:
+    post:
+      summary: Register a webhook for task updates
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [TASK_COMPLETED, TASK_FAILED, VERIFICATION_SUBMITTED]
+                secret:
+                  type: string
+      responses:
+        '201':
+          description: Webhook registered successfully
+        '400':
+          description: Invalid request
+      x-rateLimit:
+        requests: 100
+        period: 3600 

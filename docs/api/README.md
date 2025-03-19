@@ -30,6 +30,7 @@ Authorization: Bearer <your_jwt_token>
 ## OpenAPI Specification
 
 The complete API specification is available in [openapi.yaml](./openapi.yaml). You can view it using:
+
 - [Swagger UI](https://api.aletheia.mindburn.org/docs)
 - [Redoc](https://api.aletheia.mindburn.org/redoc)
 
@@ -41,18 +42,18 @@ The complete API specification is available in [openapi.yaml](./openapi.yaml). Y
 const response = await fetch('https://api.aletheia.mindburn.org/v1/tasks', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     type: 'classification',
     data: {
       text: 'Sample text for classification',
-      options: ['positive', 'negative', 'neutral']
+      options: ['positive', 'negative', 'neutral'],
     },
     reward: 0.1,
-    instructions: 'Classify the sentiment of the text'
-  })
+    instructions: 'Classify the sentiment of the text',
+  }),
 });
 
 const task = await response.json();
@@ -61,21 +62,24 @@ const task = await response.json();
 ### Verification Submission Example
 
 ```typescript
-const response = await fetch('https://api.aletheia.mindburn.org/v1/verification/submit', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    taskId: 'task_123',
-    result: {
-      classification: 'positive',
-      explanation: 'The text contains positive sentiment'
+const response = await fetch(
+  'https://api.aletheia.mindburn.org/v1/verification/submit',
+  {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
-    confidence: 0.95
-  })
-});
+    body: JSON.stringify({
+      taskId: 'task_123',
+      result: {
+        classification: 'positive',
+        explanation: 'The text contains positive sentiment',
+      },
+      confidence: 0.95,
+    }),
+  }
+);
 
 const result = await response.json();
 ```
@@ -96,6 +100,7 @@ The API uses standard HTTP status codes and returns errors in a consistent forma
 ```
 
 Common error codes:
+
 - `400`: Bad Request - Invalid input
 - `401`: Unauthorized - Missing or invalid token
 - `403`: Forbidden - Insufficient permissions
@@ -117,4 +122,4 @@ The API is versioned through the URL path. The current version is `v1`. Breaking
 
 - [API Status Page](https://status.aletheia.mindburn.org)
 - [Developer Discord](https://discord.gg/mindburn)
-- Email: api@mindburn.org 
+- Email: api@mindburn.org

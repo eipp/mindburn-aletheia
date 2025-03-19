@@ -1,0 +1,127 @@
+---
+title: 'Real-time Events with WebSocket'
+description: 'Learn how to use WebSocket connections for real-time updates'
+---
+
+# Real-time Events with WebSocket
+
+The Mindburn Aletheia platform supports real-time event streaming through WebSocket connections. This guide explains how to establish connections, subscribe to events, and handle real-time updates.
+
+## Connection Details
+
+```typescript
+const ws = new MindburnClient({
+  apiKey: 'your-api-key',
+  endpoint: 'https://api.mindburn.org',
+  websocket: {
+    enabled: true,
+    reconnect: true,
+    pingInterval: 30000
+  }
+});
+
+await ws.connectWebSocket();
+```
+
+## Event Types
+
+| Event Type | Description |
+|------------|-------------|
+| TASK_CREATED | New verification task created |
+| TASK_ASSIGNED | Task assigned to worker |
+| TASK_COMPLETED | Verification completed |
+| TASK_REJECTED | Task rejected by worker |
+| PAYMENT_PROCESSED | TON payment processed |
+
+## Subscribing to Events
+
+```typescript
+const subscription = await ws.subscribeToEvents(['TASK_CREATED', 'TASK_COMPLETED'], (event) => {
+  console.log('Received event:', event);
+});
+
+// Later, unsubscribe when done
+await ws.unsubscribeFromEvents(subscription.id);
+```
+
+## Error Handling
+
+The WebSocket client automatically handles:
+- Connection drops with exponential backoff retry
+- Authentication refresh
+- Ping/pong keep-alive
+- Message queue during reconnection
+
+```typescript
+ws.on('error', (error) => {
+  console.error('WebSocket error:', error);
+});
+
+ws.on('reconnect', () => {
+  console.log('Reconnecting...');
+});
+```
+
+## Rate Limits
+
+- Maximum 100 concurrent connections per API key
+- Maximum 1000 messages per minute per connection
+- Maximum 10 subscriptions per connection
+
+## Best Practices
+
+1. Enable automatic reconnection
+2. Implement proper error handling
+3. Clean up subscriptions when no longer needed
+4. Use appropriate event filters
+5. Handle backpressure for high-volume events
+
+## Example: Task Monitoring
+
+```typescript
+async function monitorTasks() {
+  const client = new MindburnClient({
+    apiKey: process.env.MINDBURN_API_KEY,
+    endpoint: 'https://api.mindburn.org',
+    websocket: { enabled: true }
+  });
+
+  await client.connectWebSocket();
+  
+  const subscription = await client.subscribeToEvents(
+    ['TASK_CREATED', 'TASK_COMPLETED'], 
+    async (event) => {
+      if (event.type === 'TASK_COMPLETED') {
+        const result = await client.getTaskResult(event.taskId);
+        await processVerificationResult(result);
+      }
+    }
+  );
+
+  // Cleanup on shutdown
+  process.on('SIGTERM', async () => {
+    await client.unsubscribeFromEvents(subscription.id);
+    await client.disconnectWebSocket();
+  });
+}
+```
+
+## Security
+
+All WebSocket connections require:
+- Valid API key or OAuth2 token
+- TLS 1.2 or higher
+- Origin verification
+- Rate limiting compliance
+
+## Monitoring
+
+Monitor your WebSocket connections using CloudWatch metrics:
+- ConnectionCount
+- MessageCount
+- ErrorRate
+- Latency
+
+## SDK Reference
+
+For detailed SDK documentation, see the [TypeScript SDK Reference](/sdk/typescript/websocket). 

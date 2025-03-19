@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia Task Distribution API
+  version: 1.0.0
+  description: Internal API for task distribution and worker assignment
+
+servers:
+  - url: https://task-api.mindburn.org/v1
+    description: Production server
+  - url: https://staging-task-api.mindburn.org/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    internalApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    TaskAssignment:
+      type: object
+      required:
+        - taskId
+        - workerId
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        taskId:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ASSIGNED, ACCEPTED, REJECTED, IN_PROGRESS, COMPLETED, EXPIRED]
+        assignedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    WorkerAvailability:
+      type: object
+      properties:
+        workerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [AVAILABLE, BUSY, OFFLINE]
+        taskTypes:
+          type: array
+          items:
+            type: string
+        currentLoad:
+          type: integer
+        performance:
+          type: object
+          properties:
+            accuracy:
+              type: number
+            responseTime:
+              type: number
+            completionRate:
+              type: number
+
+paths:
+  /assignments:
+    post:
+      summary: Create a new task assignment
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+                  format: uuid
+                preferredWorkers:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                taskType:
+                  type: string
+                priority:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+      responses:
+        '201':
+          description: Assignment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskAssignment'
+        '400':
+          description: Invalid request
+        '404':
+          description: Task or worker not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /assignments/{assignmentId}:
+    put:
+      summary: Update assignment status
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, REJECTED, IN_PROGRESS, COMPLETED]
+      responses:
+        '200':
+          description: Assignment updated successfully
+        '400':
+          description: Invalid request
+        '404':
+          description: Assignment not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /workers/availability:
+    get:
+      summary: Get available workers for task type
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: taskType
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: minAccuracy
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: maxLoad
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of available workers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkerAvailability'
+      x-rateLimit:
+        requests: 500
+        period: 60
+
+  /workers/{workerId}/load:
+    get:
+      summary: Get worker's current task load
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Worker's current load
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activeAssignments:
+                    type: integer
+                  pendingAssignments:
+                    type: integer
+                  availableCapacity:
+                    type: integer
+        '404':
+          description: Worker not found
+      x-rateLimit:
+        requests: 1000
+        period: 60 

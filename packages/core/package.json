@@ -1,0 +1,20 @@
+{
+  "name": "@mindburn/core",
+  "version": "0.1.0",
+  "description": "Core functionality for Mindburn Aletheia",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@mindburn/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.16",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  }
+}

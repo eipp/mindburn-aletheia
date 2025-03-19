@@ -1,0 +1,87 @@
+;; MindBurn Governance Token (MBG)
+;; SPDX-License-Identifier: MIT
+#include "stdlib.fc";
+#include "tokens/governance.fc";
+
+const int PROPOSAL_THRESHOLD = 100000; ;; 100k tokens to create proposal
+const int VOTING_PERIOD = 604800;     ;; 7 days in seconds
+const int EXECUTION_DELAY = 172800;   ;; 2 days in seconds
+const int QUORUM = 4;                 ;; 40% of total supply must vote
+
+;; Storage variables
+global cell proposals;
+global cell votes;
+global int proposal_count;
+global cell token_holders;
+
+;; Proposal structure
+(cell, cell, int, cell) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_ref(),     ;; proposals
+        ds~load_ref(),     ;; votes
+        ds~load_uint(32),  ;; proposal_count
+        ds~load_ref()      ;; token_holders
+    );
+}
+
+() save_data(cell proposals, cell votes, int proposal_count, cell token_holders) impure inline {
+    set_data(begin_cell()
+        .store_ref(proposals)
+        .store_ref(votes)
+        .store_uint(proposal_count, 32)
+        .store_ref(token_holders)
+        .end_cell());
+}
+
+;; Create proposal
+() create_proposal(slice proposer, cell proposal_data) impure {
+    int proposer_balance = get_holder_balance(token_holders, proposer);
+    throw_unless(150, proposer_balance >= PROPOSAL_THRESHOLD);
+    
+    int proposal_id = proposal_count + 1;
+    cell new_proposal = store_proposal(
+        proposals,
+        proposal_id,
+        proposer,
+        proposal_data,
+        now(),
+        now() + VOTING_PERIOD
+    );
+    
+    save_data(new_proposal, votes, proposal_id, token_holders);
+}
+
+;; Cast vote
+() cast_vote(slice voter, int proposal_id, int support) impure {
+    int voting_power = get_holder_balance(token_holders, voter);
+    throw_unless(151, voting_power > 0);
+    throw_unless(152, is_active_proposal(proposals, proposal_id));
+    throw_unless(153, !has_voted(votes, proposal_id, voter));
+    
+    cell updated_votes = record_vote(votes, proposal_id, voter, support, voting_power);
+    save_data(proposals, updated_votes, proposal_count, token_holders);
+}
+
+;; Execute proposal
+() execute_proposal(int proposal_id) impure {
+    throw_unless(154, is_successful_proposal(proposals, votes, proposal_id, QUORUM));
+    throw_unless(155, now() >= get_proposal_end_time(proposals, proposal_id) + EXECUTION_DELAY);
+    
+    cell proposal_data = get_proposal_data(proposals, proposal_id);
+    ;; Execute proposal actions
+    ;; Implementation depends on proposal type
+}
+
+;; Get methods
+int get_proposal_state(int proposal_id) method_id {
+    return calculate_proposal_state(proposals, votes, proposal_id, QUORUM);
+}
+
+cell get_proposal_votes(int proposal_id) method_id {
+    return get_votes_for_proposal(votes, proposal_id);
+}
+
+int get_voting_power(slice address) method_id {
+    return get_holder_balance(token_holders, address);
+} 

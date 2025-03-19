@@ -1,0 +1,245 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Mindburn Aletheia - Project Guidelines & Standards
+
+## Project Overview
+Mindburn Aletheia is a human-in-the-loop AI verification platform connecting AI developers with human verifiers through Telegram's ecosystem. The platform leverages Telegram Bot API, Mini Apps, and TON blockchain to create a frictionless marketplace for AI verification tasks, enabling instant cryptocurrency payments and providing a robust API for developers to integrate human verification into their AI workflows.
+
+## Technology Stack
+- **Backend**: Node.js with TypeScript, deployed as AWS Lambda functions
+- **Orchestration**: AWS Step Functions for verification workflows
+- **API Layer**: AWS API Gateway with custom authorizers
+- **Frontend**: React for Mini Apps, Telegraf.js for Telegram Bot
+- **Database**: AWS DynamoDB with optimized access patterns
+- **Storage**: Amazon S3 for verification content
+- **Messaging**: AWS SQS for task buffering, SNS for notifications, EventBridge for events
+- **Blockchain**: TON for payments with batching optimization
+- **Monitoring**: AWS CloudWatch for logs and metrics, X-Ray for tracing
+- **Security**: AWS KMS for encryption, field-level encryption for sensitive data
+- **Deployment**: Serverless Framework with Infrastructure as Code (IaC)
+
+## Architecture Guidelines
+- **Microservices Architecture**: Implement five well-defined components with clear boundaries:
+  - Developer Platform: API Gateway, Lambda, CloudFront for dashboard
+  - Task Management System: SQS, Lambda, Step Functions, DynamoDB
+  - Worker Interface: Telegram Bot API, Mini Apps, TON Connect
+  - Verification Engine: Lambda functions with multi-method verification
+  - Payment System: TON blockchain with batched transactions
+- **Event-Driven Design**: Use SQS as buffers between components, DynamoDB Streams with SNS for notifications
+- **API Contracts**: Strictly adhere to the API contracts defined in the technical specification
+- **Database Design**: Follow the DynamoDB schema design with composite keys and GSIs as defined
+
+## Code Style & Formatting
+- Follow Airbnb Style Guide for JavaScript/TypeScript
+- Implement TypeScript interfaces for all API contracts as defined in the technical specification
+- Use ESLint and Prettier with standardized configuration
+- Maintain 80% test coverage minimum with Jest
+- Document all API endpoints using OpenAPI/Swagger
+- Use JSDoc comments for all functions and interfaces
+
+## Telegram Integration
+- **Telegram Bot**: Implement using Telegraf.js following the message flows defined in the TelegramBotHandlers interface
+- **Mini Apps**: Build with React following Telegram's design guidelines
+- **UI Components**: Utilize the native UI components (BottomButton, SecondaryButton, PopUp)
+- **Authentication**: Implement secure Telegram-based authentication as defined in the MiniAppAPI interface
+- **TON Connect**: Integrate TON Connect 2.0 for secure wallet interactions
+- **Responsive Design**: Ensure adaptive designs that support full-screen mode
+- **Theme Adaptation**: Support both light and dark themes via Telegram theming
+
+## TON Blockchain Integration
+- **TON Payments**: Implement as defined in the TONIntegrationAPI interface
+- **Batched Transactions**: Use payment batching to minimize transaction fees for micropayments
+- **TON Connect**: Follow TON Connect 2.0 protocol for secure wallet interactions
+- **Fraud Prevention**: Implement security measures as defined in the security specifications
+- **Error Handling**: Build robust recovery mechanisms for blockchain transactions
+- **Layer 2 Readiness**: Design with compatibility for TON's upcoming Layer 2 Payment Network
+
+## AWS Best Practices
+- **Lambda Optimization**:
+  - Use container images for complex verification functions
+  - Allocate 1792MB memory for optimal price/performance
+  - Implement provisioned concurrency for critical paths
+  - Use Lambda Extensions for observability and security
+- **DynamoDB Optimization**:
+  - Design access patterns using composite keys as defined in the data model schemas
+  - Implement sparse GSIs to minimize costs
+  - Configure automatic capacity scaling based on traffic patterns
+- **Step Functions**:
+  - Use task tokens for human verification workflows
+  - Implement error handling and retry logic
+  - Design state machines as defined in the Step Functions workflow definition
+
+## Security Guidelines
+- **Zero-Trust Model**:
+  - Implement function-specific temporary credentials via STS
+  - Apply least-privilege permissions using fine-grained IAM policies
+  - Use API authorizers as defined in the APIAuthorizerFunction interface
+- **Data Protection**:
+  - Implement field-level encryption as defined in the DataEncryptionService interface
+  - Use separate KMS keys for different data categories
+  - Enable client-side encryption for PII
+- **Audit Logging**:
+  - Log all security events as defined in the AuditLoggingService interface
+  - Track data access with detailed actor information
+  - Implement comprehensive error logging
+- **Fraud Detection**:
+  - Implement behavioral analysis for suspicious patterns
+  - Use IP and device fingerprinting for risk assessment
+  - Create consensus-based reporting for potential fraud
+
+## Development Workflow
+- **Branch Strategy**:
+  - main (production)
+  - develop (integration)
+  - feature/[component]-[feature] (development)
+- **Code Reviews**:
+  - Require two approvals for all pull requests
+  - Enforce test coverage requirements
+  - Verify API contract compliance
+- **CI/CD Pipeline**:
+  - Run unit and integration tests
+  - Perform security scanning
+  - Generate API documentation
+  - Deploy to staging environment
+  - Run smoke tests before production deployment
+- **Testing Strategy**:
+  - Unit test all Lambda functions
+  - Integration test API interfaces
+  - End-to-end test critical workflows
+  - Mock external services (Telegram, TON) for testing
+
+## Project Structure
+- **Component-Based Organization**:
+  ```
+  /
+  ├── developer-platform/
+  │   ├── api/
+  │   ├── dashboard/
+  │   └── webhooks/
+  ├── task-management/
+  │   ├── distributor/
+  │   ├── orchestrator/
+  │   └── step-functions/
+  ├── worker-interface/
+  │   ├── telegram-bot/
+  │   ├── mini-app/
+  │   └── notification-service/
+  ├── verification-engine/
+  │   ├── verification-service/
+  │   ├── result-consolidator/
+  │   └── quality-control/
+  ├── payment-system/
+  │   ├── processor/
+  │   ├── batch-manager/
+  │   └── ton-integration/
+  ├── common/
+  │   ├── models/
+  │   ├── utils/
+  │   └── security/
+  └── infrastructure/
+      ├── serverless/
+      ├── dynamodb/
+      └── monitoring/
+  ```
+- **Co-location Policy**: Keep related code (handlers, models, tests) together
+- **Configuration Management**: Store environment-specific configuration in SSM Parameter Store
+- **Naming Conventions**: Follow established patterns in technical specification
+
+## Documentation Requirements
+- **API Documentation**:
+  - Document all API endpoints based on the contracts defined in the technical specification
+  - Include request/response examples for all endpoints
+  - Specify error codes and messages
+- **Architecture Documentation**:
+  - Create detailed diagrams for each component
+  - Document component interactions
+  - Explain event flows and state transitions
+- **Database Documentation**:
+  - Document all DynamoDB tables with their partition keys, sort keys, and GSIs
+  - Explain access patterns for common queries
+  - Document denormalization strategies
+- **Integration Documentation**:
+  - Detail Telegram Bot and Mini App integration
+  - Document TON blockchain interactions
+  - Specify webhook formats and protocols
+
+## Performance Requirements
+- **API Response Times**:
+  - Public API endpoints: <200ms (p95)
+  - Worker API endpoints: <300ms (p95)
+  - Webhook delivery: <500ms (p95)
+- **Mini App Performance**:
+  - Initial load: <1.5s
+  - Interaction response: <100ms
+  - Animation frame rate: 60fps
+- **Task Processing**:
+  - Task distribution: <1s
+  - Worker notification: <2s
+  - Result consolidation: <3s
+- **Payment Processing**:
+  - Transaction submission: <5s
+  - Batch processing: <30s per batch of 100
+  - Balance updates: <10s after confirmation
+
+## Do Not Modify Without Approval
+- **API Contracts**: The interfaces defined in the technical specification are considered stable
+- **Data Models**: The DynamoDB schema definitions require migration planning before changes
+- **Step Functions Workflows**: State machine definitions require thorough testing before modification
+- **Security Controls**: Authentication, authorization, and encryption mechanisms
+- **Event Schemas**: The formats of messages passed between components via SNS/SQS
+- **Verification Algorithms**: Core consolidation and quality control algorithms
+
+## Approved Libraries & Frameworks
+- **Backend**:
+  - AWS SDK v3 for AWS services
+  - Telegraf.js for Telegram Bot development
+  - Express.js for Lambda API handlers
+  - Joi for request validation
+  - zod for TypeScript schema validation
+- **Frontend**:
+  - React for Mini App development
+  - TonConnect SDK for wallet integration
+  - tailwindcss for styling (using only standard classes)
+  - React Query for data fetching
+- **Testing**:
+  - Jest for unit testing
+  - Supertest for API testing
+  - AWS SDK Mock for AWS service mocking
+- **Infrastructure**:
+  - Serverless Framework for deployment
+  - AWS CDK for complex infrastructure
+  - serverless-plugin-typescript
+  - serverless-dynamodb-local
+
+## Local Development Environment
+- **Docker Configuration**:
+  - Docker Compose for local service orchestration
+  - LocalStack for AWS service emulation
+  - Redis for local caching
+- **Telegram Testing**:
+  - Use ngrok for webhook testing
+  - Create test bot for development
+  - Implement mock Mini App container
+- **TON Integration**:
+  - Use TON testnet for development
+  - Create test wallets with faucet
+  - Mock TON Connect for UI testing
+- **Testing Strategy**:
+  - Run component tests in isolation
+  - Create mock data for integration tests
+  - Test event flows using local message queues
+  - Simulate verification workflows
+- **Environment Variables**:
+  - Use dotenv for local configuration
+  - Keep secrets in .env.local (gitignored)
+  - Document all required environment variables
+
+## Deployment Environments
+- **Development**: For continuous integration and feature testing
+- **Staging**: For pre-production testing and integration
+- **Production**: For live service
+- **Environment-Specific Configuration**: Store in AWS SSM Parameter Store
+- **Deployment Approval Process**: Require review for staging and production deployments

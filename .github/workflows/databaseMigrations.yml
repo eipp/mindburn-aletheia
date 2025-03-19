@@ -1,0 +1,127 @@
+name: Database Migrations
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/migrations/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/migrations/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run migrations'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20.x'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run migration tests
+        run: npm run test:migrations
+
+  plan:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate migration plan
+        run: |
+          npm run migrations:plan > migration-plan.txt
+        env:
+          NODE_ENV: ${{ github.event.inputs.environment || 'staging' }}
+      
+      - name: Upload migration plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-plan
+          path: migration-plan.txt
+
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Download migration plan
+        uses: actions/download-artifact@v4
+        with:
+          name: migration-plan
+      
+      - name: Apply migrations
+        run: npm run migrations:apply
+        env:
+          NODE_ENV: ${{ github.event.inputs.environment || 'staging' }}
+          DYNAMODB_ENDPOINT: ${{ secrets.DYNAMODB_ENDPOINT }}
+          POSTGRES_CONNECTION: ${{ secrets.POSTGRES_CONNECTION }}
+      
+      - name: Verify migrations
+        run: npm run migrations:verify
+        env:
+          NODE_ENV: ${{ github.event.inputs.environment || 'staging' }}
+      
+      - name: Notify on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "Migration failed in ${{ github.event.inputs.environment || 'staging' }}! Check the logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} 

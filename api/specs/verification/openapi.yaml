@@ -1,0 +1,213 @@
+openapi: 3.0.3
+info:
+  title: Mindburn Aletheia Verification API
+  version: 1.0.0
+  description: Internal API for processing and validating worker submissions
+
+servers:
+  - url: https://verification-api.mindburn.org/v1
+    description: Production server
+  - url: https://staging-verification-api.mindburn.org/v1
+    description: Staging server
+
+components:
+  securitySchemes:
+    internalApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    VerificationSubmission:
+      type: object
+      required:
+        - assignmentId
+        - workerId
+        - result
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        assignmentId:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        result:
+          type: object
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        metadata:
+          type: object
+          properties:
+            deviceInfo:
+              type: object
+            timeSpent:
+              type: integer
+            interactionData:
+              type: object
+        submittedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    VerificationResult:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACCEPTED, REJECTED, NEEDS_REVIEW]
+        score:
+          type: number
+        feedback:
+          type: string
+        verifiedAt:
+          type: string
+          format: date-time
+
+paths:
+  /submissions:
+    post:
+      summary: Submit a verification result
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationSubmission'
+      responses:
+        '201':
+          description: Submission accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          description: Invalid submission
+        '404':
+          description: Assignment not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /submissions/{submissionId}/verify:
+    post:
+      summary: Verify a submission
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Verification completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '404':
+          description: Submission not found
+      x-rateLimit:
+        requests: 1000
+        period: 60
+
+  /tasks/{taskId}/aggregate:
+    post:
+      summary: Aggregate verification results for a task
+      security:
+        - internalApiKey: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Results aggregated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: string
+                    format: uuid
+                  aggregatedResult:
+                    type: object
+                  confidence:
+                    type: number
+                  submissionCount:
+                    type: integer
+                  consensus:
+                    type: object
+        '404':
+          description: Task not found
+      x-rateLimit:
+        requests: 500
+        period: 60
+
+  /quality-control:
+    post:
+      summary: Run quality control checks on submissions
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskId
+              properties:
+                taskId:
+                  type: string
+                  format: uuid
+                threshold:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+      responses:
+        '200':
+          description: Quality control completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flaggedSubmissions:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  qualityScore:
+                    type: number
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        action:
+                          type: string
+                        details:
+                          type: object
+      x-rateLimit:
+        requests: 100
+        period: 60 

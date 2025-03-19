@@ -1,0 +1,297 @@
+service: mindburn-task-management
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 1792
+  timeout: 30
+  logRetentionInDays: 14
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    TASK_NOTIFICATION_TOPIC: !Ref TaskNotificationTopic
+    WORKER_NOTIFICATION_TOPIC: !Ref WorkerNotificationTopic
+    TASK_ASSIGNMENT_QUEUE: !Ref TaskAssignmentQueue
+    TASK_EXPIRATION_QUEUE: !Ref TaskExpirationQueue
+    RESULTS_PROCESSING_QUEUE: !Ref ResultsProcessingQueue
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource:
+            - !GetAtt TasksTable.Arn
+            - !GetAtt WorkersTable.Arn
+            - !GetAtt ResultsTable.Arn
+            - !GetAtt WorkerMetricsTable.Arn
+            - !Sub ${TasksTable.Arn}/index/*
+            - !Sub ${WorkersTable.Arn}/index/*
+            - !Sub ${ResultsTable.Arn}/index/*
+            - !Sub ${WorkerMetricsTable.Arn}/index/*
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            - !GetAtt TaskAssignmentQueue.Arn
+            - !GetAtt TaskExpirationQueue.Arn
+            - !GetAtt ResultsProcessingQueue.Arn
+            - !GetAtt TaskAssignmentDLQ.Arn
+            - !GetAtt ResultsProcessingDLQ.Arn
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource:
+            - !Ref TaskNotificationTopic
+            - !Ref WorkerNotificationTopic
+        - Effect: Allow
+          Action:
+            - cloudwatch:PutMetricData
+          Resource: "*"
+
+functions:
+  taskCreation:
+    handler: src/handlers/TaskCreationHandler.handler
+    events:
+      - http:
+          path: /tasks
+          method: post
+          cors: true
+    environment:
+      NODE_OPTIONS: --enable-source-maps
+
+  taskAssignment:
+    handler: src/handlers/TaskAssignmentHandler.handler
+    events:
+      - sqs:
+          arn: !GetAtt TaskAssignmentQueue.Arn
+          batchSize: 1
+    environment:
+      NODE_OPTIONS: --enable-source-maps
+
+  taskCompletion:
+    handler: src/handlers/TaskCompletionHandler.handler
+    events:
+      - http:
+          path: /tasks/{taskId}/submissions
+          method: post
+          cors: true
+    environment:
+      NODE_OPTIONS: --enable-source-maps
+
+  resultsConsolidation:
+    handler: src/handlers/ResultsConsolidationHandler.handler
+    events:
+      - sqs:
+          arn: !GetAtt ResultsProcessingQueue.Arn
+          batchSize: 1
+    environment:
+      NODE_OPTIONS: --enable-source-maps
+
+  taskExpiration:
+    handler: src/handlers/TaskExpirationHandler.handler
+    events:
+      - sqs:
+          arn: !GetAtt TaskExpirationQueue.Arn
+          batchSize: 1
+    environment:
+      NODE_OPTIONS: --enable-source-maps
+
+resources:
+  Resources:
+    # DynamoDB Tables
+    TasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-tasks
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: taskId
+            AttributeType: S
+          - AttributeName: status
+            AttributeType: S
+          - AttributeName: type
+            AttributeType: S
+        KeySchema:
+          - AttributeName: taskId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: StatusIndex
+            KeySchema:
+              - AttributeName: status
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: TypeIndex
+            KeySchema:
+              - AttributeName: type
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+    WorkersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-workers
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: workerId
+            AttributeType: S
+          - AttributeName: status
+            AttributeType: S
+          - AttributeName: level
+            AttributeType: N
+          - AttributeName: availabilityStatus
+            AttributeType: S
+          - AttributeName: activeTaskCount
+            AttributeType: N
+        KeySchema:
+          - AttributeName: workerId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: StatusIndex
+            KeySchema:
+              - AttributeName: status
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: AvailableWorkersIndex
+            KeySchema:
+              - AttributeName: availabilityStatus
+                KeyType: HASH
+              - AttributeName: level
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: WorkerLoadIndex
+            KeySchema:
+              - AttributeName: availabilityStatus
+                KeyType: HASH
+              - AttributeName: activeTaskCount
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    ResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-results
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: taskId
+            AttributeType: S
+          - AttributeName: workerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: taskId
+            KeyType: HASH
+          - AttributeName: workerId
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: WorkerIndex
+            KeySchema:
+              - AttributeName: workerId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    WorkerMetricsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-worker-metrics
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: workerId
+            AttributeType: S
+          - AttributeName: metricType
+            AttributeType: S
+        KeySchema:
+          - AttributeName: workerId
+            KeyType: HASH
+          - AttributeName: metricType
+            KeyType: RANGE
+
+    # SQS Queues
+    TaskAssignmentDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-task-assignment-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    TaskAssignmentQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-task-assignment
+        VisibilityTimeout: 300
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt TaskAssignmentDLQ.Arn
+          maxReceiveCount: 3
+
+    TaskExpirationDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-task-expiration-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    TaskExpirationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-task-expiration
+        VisibilityTimeout: 300
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt TaskExpirationDLQ.Arn
+          maxReceiveCount: 3
+
+    ResultsProcessingDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-results-processing-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    ResultsProcessingQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-results-processing
+        VisibilityTimeout: 600
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ResultsProcessingDLQ.Arn
+          maxReceiveCount: 3
+
+    # SNS Topics
+    TaskNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${self:provider.stage}-task-notifications
+
+    WorkerNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${self:provider.stage}-worker-notifications
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+  - serverless-iam-roles-per-function
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    exclude:
+      - aws-sdk
+    target: node18
+    platform: node
+    concurrency: 10
+
+  serverless-offline:
+    httpPort: 4000
+    lambdaPort: 4002 

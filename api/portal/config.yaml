@@ -1,0 +1,92 @@
+portal:
+  name: Mindburn Aletheia Developer Portal
+  theme:
+    primary: '#0066FF'
+    secondary: '#00CC99'
+    dark: true
+    
+  features:
+    - apiDocs
+    - playground
+    - sdkDownloads
+    - authentication
+    - billing
+    - support
+    
+  navigation:
+    - title: Getting Started
+      items:
+        - quickstart
+        - authentication
+        - concepts
+        
+    - title: APIs
+      items:
+        - rest-api
+        - graphql-api
+        - webhooks
+        - sdks
+        
+    - title: Guides
+      items:
+        - custom-verification
+        - task-types
+        - webhook-integration
+        - error-handling
+        
+    - title: Reference
+      items:
+        - api-reference
+        - graphql-schema
+        - sdk-reference
+        - error-codes
+        
+  playground:
+    features:
+      - requestBuilder
+      - responseInspector
+      - schemaExplorer
+      - codeSamples
+      - authentication
+    environments:
+      - name: Sandbox
+        url: https://sandbox-api.mindburn.org
+      - name: Production
+        url: https://api.mindburn.org
+        
+  authentication:
+    methods:
+      - apiKey
+      - oauth2
+    flows:
+      - authorization_code
+      - client_credentials
+      
+  rateLimit:
+    display: true
+    quotaTracking: true
+    
+  analytics:
+    enabled: true
+    metrics:
+      - requests
+      - latency
+      - errors
+      - usage
+      
+  support:
+    channels:
+      - documentation
+      - github
+      - discord
+      - email
+    
+  seo:
+    title: Mindburn Aletheia API Documentation
+    description: Developer documentation for integrating with the Mindburn Aletheia platform
+    keywords:
+      - api
+      - documentation
+      - verification
+      - blockchain
+      - ton 

@@ -1,0 +1,142 @@
+Resources:
+  DeveloperPortalBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: mindburn-developer-portal
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DeveloperPortalOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Access identity for developer portal bucket
+
+  DeveloperPortalBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DeveloperPortalBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${DeveloperPortalOriginAccessIdentity}
+            Action: s3:GetObject
+            Resource: !Sub ${DeveloperPortalBucket.Arn}/*
+
+  DeveloperPortalCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: developers.mindburn.org
+      ValidationMethod: DNS
+
+  DeveloperPortalDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - developers.mindburn.org
+        Origins:
+          - DomainName: !GetAtt DeveloperPortalBucket.RegionalDomainName
+            Id: S3Origin
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${DeveloperPortalOriginAccessIdentity}
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          DefaultTTL: 3600
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          MaxTTL: 86400
+          MinTTL: 0
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref DeveloperPortalCertificate
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  DeveloperPortalDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: mindburn.org.
+      Name: developers.mindburn.org.
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt DeveloperPortalDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2 # CloudFront hosted zone ID
+
+  DeveloperPortalWAF:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: mindburn-developer-portal
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: RateLimit
+          Priority: 1
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+        - Name: BlockMaliciousRequests
+          Priority: 2
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: BlockMaliciousRequests
+
+  DeveloperPortalWebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${DeveloperPortalDistribution}
+      WebACLArn: !GetAtt DeveloperPortalWAF.Arn
+
+Outputs:
+  DeveloperPortalURL:
+    Description: Developer Portal URL
+    Value: !Sub https://developers.mindburn.org
+  DeveloperPortalDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref DeveloperPortalDistribution 

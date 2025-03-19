@@ -1,0 +1,99 @@
+graph TB
+    subgraph "Client Interfaces"
+        DevAPI[Developer API]
+        DevDash[Developer Dashboard]
+        TeleBot[Telegram Bot]
+        TeleApp[Telegram Mini App]
+    end
+    
+    subgraph "API Layer"
+        APIGW[API Gateway]
+        APIAuth[API Authorizer]
+        WebHooks[Webhook Service]
+    end
+    
+    subgraph "Task Processing"
+        TaskMgr[Task Manager Lambda]
+        TaskDist[Task Distributor Lambda]
+        TaskQueue[SQS Task Queue]
+        TaskSF[Task Step Functions]
+    end
+    
+    subgraph "Worker Services"
+        WorkerMgr[Worker Manager]
+        WorkerMatch[Worker Matching Engine]
+        NotifSvc[Notification Service]
+    end
+    
+    subgraph "Verification Services"
+        VerEngine[Verification Engine]
+        VerConsol[Result Consolidator]
+        QualitySvc[Quality Control]
+    end
+    
+    subgraph "Payment Services"
+        PaymtProc[Payment Processor]
+        PaymtBatch[Payment Batcher]
+        TONInteg[TON Integration]
+    end
+    
+    subgraph "Storage & Persistence"
+        TasksDB[(Tasks DynamoDB)]
+        WorkersDB[(Workers DynamoDB)]
+        ResultsDB[(Results DynamoDB)]
+        PaymentsDB[(Payments DynamoDB)]
+        ContentS3[(Content S3)]
+    end
+    
+    subgraph "External Systems"
+        TeleAPI[Telegram API]
+        TONAPI[TON Blockchain]
+    end
+    
+    %% Client to API connections
+    DevAPI --> APIGW
+    DevDash --> APIGW
+    TeleBot --> APIGW
+    TeleApp --> APIGW
+    
+    %% API Layer connections
+    APIGW --> APIAuth
+    APIGW --> TaskMgr
+    APIGW --> WorkerMgr
+    APIGW --> WebHooks
+    
+    %% Task Processing connections
+    TaskMgr --> TasksDB
+    TaskMgr --> TaskQueue
+    TaskQueue --> TaskDist
+    TaskDist --> TaskSF
+    TaskSF --> VerEngine
+    TaskSF --> ContentS3
+    
+    %% Worker Services connections
+    WorkerMgr --> WorkersDB
+    TaskDist --> WorkerMatch
+    WorkerMatch --> WorkersDB
+    WorkerMatch --> NotifSvc
+    NotifSvc --> TeleAPI
+    
+    %% Verification Services connections
+    VerEngine --> ResultsDB
+    VerEngine --> VerConsol
+    VerConsol --> QualitySvc
+    QualitySvc --> ResultsDB
+    
+    %% Payment Services connections
+    VerEngine --> PaymtProc
+    PaymtProc --> PaymentsDB
+    PaymtProc --> PaymtBatch
+    PaymtBatch --> TONInteg
+    TONInteg --> TONAPI
+    
+    %% External connections
+    TeleBot --> TeleAPI
+    TeleApp --> TeleAPI
+    
+    %% Feedback loops
+    WebHooks --> DevAPI
+    ResultsDB --> TaskSF
